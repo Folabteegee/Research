@@ -1,64 +1,178 @@
-import Image from "next/image";
+"use client";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import {
+  BookOpen,
+  Search,
+  Library,
+  Brain,
+  ArrowRight,
+  GraduationCap,
+} from "lucide-react";
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white overflow-hidden w-full h-full fixed inset-0">
+      {/* Animated background elements - full bleed with no white edges */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+        <div className="absolute -top-1/4 -right-1/4 w-1/2 h-1/2 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
+        <div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-cyan-600 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse animation-delay-2000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-full bg-sky-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse animation-delay-4000"></div>
+      </div>
+
+      {/* Floating academic icons - edge to edge with no margins */}
+      <div className="absolute inset-0">
+        {[...Array(12)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute text-white/10"
+            initial={{ y: 0, rotate: 0 }}
+            animate={{
+              y: [0, -30, 0],
+              rotate: [0, 8, 0],
+            }}
+            transition={{
+              duration: 5,
+              repeat: Infinity,
+              delay: i * 0.3,
+            }}
+            style={{
+              left: `${i * 8.3}%`,
+              top: `${Math.random() * 100}%`,
+              fontSize: `${24 + Math.random() * 24}px`,
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <BookOpen size="1em" />
+          </motion.div>
+        ))}
+      </div>
+
+      <main className="relative z-10 flex flex-col items-center justify-center min-h-screen text-center w-full h-full overflow-hidden">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="w-full max-w-7xl mx-auto px-4"
+        >
+          {/* Logo/Brand */}
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            className=" mt-10 mb-5 inline-flex items-center gap-3 bg-white/10 backdrop-blur-sm px-6 py-3 rounded-full border border-white/20"
           >
-            Documentation
-          </a>
-        </div>
+            <GraduationCap className="text-blue-300" size={24} />
+            <span className="font-semibold text-blue-200">
+              Research Companion
+            </span>
+          </motion.div>
+
+          {/* Main Heading */}
+          <motion.h1
+            className="text-6xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-white via-blue-200 to-cyan-200 bg-clip-text text-transparent"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+          >
+            Research
+            <span className="block text-transparent bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text">
+              Reimagined
+            </span>
+          </motion.h1>
+
+          {/* Subtitle */}
+          <motion.p
+            className="text-xl md:text-2xl text-blue-100 leading-relaxed mb-12 max-w-4xl mx-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+          >
+            Transform your academic workflow with intelligent research
+            management. Powered by{" "}
+            <span className="text-blue-300 font-semibold">Zotero</span> and{" "}
+            <span className="text-cyan-300 font-semibold">OpenAlex</span> APIs.
+          </motion.p>
+
+          {/* Feature Icons */}
+          <motion.div
+            className="flex justify-center gap-4 md:gap-8 mb-12 flex-wrap"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7, duration: 0.8 }}
+          >
+            {[
+              { icon: Search, label: "Discover", color: "text-blue-400" },
+              { icon: Library, label: "Organize", color: "text-cyan-400" },
+              { icon: Brain, label: "Analyze", color: "text-sky-400" },
+              { icon: BookOpen, label: "Read", color: "text-blue-400" },
+            ].map((item, index) => (
+              <motion.div
+                key={item.label}
+                className="flex flex-col items-center group"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <div className="bg-white/10 backdrop-blur-sm p-3 md:p-4 rounded-2xl border border-white/20 mb-2 group-hover:bg-white/20 transition-all duration-300">
+                  <item.icon
+                    className={`${item.color} group-hover:scale-110 transition-transform duration-300`}
+                    size={28}
+                  />
+                </div>
+                <span className="text-sm text-blue-200 font-medium">
+                  {item.label}
+                </span>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* CTA Buttons */}
+          <motion.div
+            className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center w-full"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9, duration: 0.8 }}
+          >
+            <Link
+              href="/auth/login"
+              className="w-full sm:w-auto flex justify-center"
+            >
+              <motion.button
+                className="group bg-white text-slate-900 font-semibold px-6 md:px-8 py-3 md:py-4 rounded-2xl hover:bg-gray-100 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl w-full sm:w-auto justify-center text-base md:text-lg"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Get Started
+                <ArrowRight
+                  className="group-hover:translate-x-1 transition-transform duration-300"
+                  size={20}
+                />
+              </motion.button>
+            </Link>
+
+            <Link
+              href="/auth/signup"
+              className="w-full sm:w-auto flex justify-center"
+            >
+              <motion.button
+                className="group bg-transparent border-2 border-white/30 text-white font-semibold px-6 md:px-8 py-3 md:py-4 rounded-2xl hover:bg-white/10 hover:border-white/50 transition-all duration-300 backdrop-blur-sm w-full sm:w-auto text-base md:text-lg"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Create Account
+              </motion.button>
+            </Link>
+          </motion.div>
+
+          {/* Trust badge */}
+          <motion.div
+            className="mt-8 mb-10 text-sm md:text-base text-blue-300/70"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.1, duration: 0.8 }}
+          >
+            Trusted by researchers from top institutions worldwide
+          </motion.div>
+        </motion.div>
       </main>
     </div>
   );
