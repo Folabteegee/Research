@@ -106,44 +106,6 @@ export default function LibraryPage() {
                 )}
               </div>
             </div>
-
-            {/* Stats Bar */}
-            {savedPapers.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8"
-              >
-                <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
-                  <div className="text-2xl font-bold text-[#49BBBD]">
-                    {savedPapers.length}
-                  </div>
-                  <div className="text-sm text-gray-600">Total Papers</div>
-                </div>
-                <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
-                  <div className="text-2xl font-bold text-[#49BBBD]">
-                    {new Set(savedPapers.map((p) => p.year)).size}
-                  </div>
-                  <div className="text-sm text-gray-600">Publication Years</div>
-                </div>
-                <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
-                  <div className="text-2xl font-bold text-[#49BBBD]">
-                    {new Set(savedPapers.map((p) => p.journal)).size}
-                  </div>
-                  <div className="text-sm text-gray-600">Journals</div>
-                </div>
-                <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
-                  <div className="text-2xl font-bold text-[#49BBBD]">
-                    {
-                      new Set(savedPapers.flatMap((p) => p.author.split(", ")))
-                        .size
-                    }
-                  </div>
-                  <div className="text-sm text-gray-600">Unique Authors</div>
-                </div>
-              </motion.div>
-            )}
           </motion.header>
 
           {/* Empty State */}
