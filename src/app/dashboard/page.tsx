@@ -15,6 +15,9 @@ import {
   Brain,
   Library,
   BarChart3,
+  FileText,
+  Users,
+  Clock,
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -26,144 +29,112 @@ export default function DashboardPage() {
       description: "Find works by keyword, author, or topic using OpenAlex",
       href: "/search",
       icon: Search,
-      color: "from-blue-500 to-cyan-500",
-      bgColor: "bg-blue-500/10",
-      borderColor: "border-blue-500/20",
+      color: "bg-[#49BBBD]",
+      stats: "25K+ Papers",
     },
     {
       title: "My Library",
       description: "View and manage your Zotero collections",
       href: "/library",
       icon: BookOpen,
-      color: "from-purple-500 to-blue-500",
-      bgColor: "bg-purple-500/10",
-      borderColor: "border-purple-500/20",
+      color: "bg-[#49BBBD]",
+      stats: "500+ Items",
     },
     {
       title: "Explore Trends",
       description: "See trending research topics and authors",
       href: "/explore",
       icon: TrendingUp,
-      color: "from-cyan-500 to-blue-500",
-      bgColor: "bg-cyan-500/10",
-      borderColor: "border-cyan-500/20",
+      color: "bg-[#49BBBD]",
+      stats: "50+ Trends",
     },
     {
       title: "Research Analytics",
       description: "Analyze your reading patterns and interests",
       href: "/analytics",
       icon: BarChart3,
-      color: "from-indigo-500 to-purple-500",
-      bgColor: "bg-indigo-500/10",
-      borderColor: "border-indigo-500/20",
+      color: "bg-[#49BBBD]",
+      stats: "15 Charts",
     },
     {
       title: "Collections",
       description: "Organize your research into smart collections",
       href: "/collections",
       icon: Library,
-      color: "from-sky-500 to-blue-500",
-      bgColor: "bg-sky-500/10",
-      borderColor: "border-sky-500/20",
+      color: "bg-[#49BBBD]",
+      stats: "10 Collections",
     },
     {
       title: "Recommendations",
       description: "Get personalized paper recommendations",
       href: "/recommendations",
       icon: Brain,
-      color: "from-violet-500 to-purple-500",
-      bgColor: "bg-violet-500/10",
-      borderColor: "border-violet-500/20",
+      color: "bg-[#49BBBD]",
+      stats: "AI Powered",
     },
   ];
 
+  const stats = [
+    { label: "Papers Saved", value: "0", icon: FileText, change: "+0" },
+    { label: "Collections", value: "0", icon: Library, change: "+0" },
+    { label: "Reading Time", value: "0h", icon: Clock, change: "+0h" },
+    { label: "Collaborators", value: "0", icon: Users, change: "+0" },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white overflow-hidden w-full h-full fixed inset-0">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
-        <div className="absolute -top-1/4 -right-1/4 w-1/2 h-1/2 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
-        <div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-cyan-600 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse animation-delay-2000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-full bg-sky-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse animation-delay-4000"></div>
-      </div>
+    <div className="min-h-screen bg-[url('https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3840&q=80')] text-gray-900 overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3840&q=80')] "></div>
 
-      {/* Floating icons */}
-      <div className="absolute inset-0">
-        {[...Array(8)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute text-white/5"
-            initial={{ y: 0, rotate: 0 }}
-            animate={{
-              y: [0, -20, 0],
-              rotate: [0, 5, 0],
-            }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              delay: i * 0.7,
-            }}
-            style={{
-              left: `${i * 15}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-          >
-            <Brain size={28} />
-          </motion.div>
-        ))}
-      </div>
-
-      <div className="relative z-10 min-h-screen w-full h-full overflow-y-auto">
+      <div className="relative z-10 min-h-screen">
         <div className="p-6">
-          {/* Quote Ticker */}
-          <div className="pt-4">
-            <QuoteTicker />
-          </div>
-
           {/* Header */}
           <motion.header
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 pt-8 gap-4"
+            className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 pt-8 gap-4"
           >
-            <div className="flex items-center gap-4">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="bg-white/10 backdrop-blur-sm p-3 rounded-2xl border border-white/20"
-              >
-                <User className="text-blue-300" size={32} />
-              </motion.div>
-              <div>
-                <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
-                  Welcome back,
-                </h1>
-                <p className="text-xl text-blue-200/80 mt-1">
-                  {user?.name || "Researcher"} 👋
-                </p>
+            <div className="flex justify-between items-center w-full">
+              <div className="flex items-center gap-4">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="bg-[#49BBBD] p-3 rounded-2xl shadow-lg"
+                >
+                  <User className="text-white" size={32} />
+                </motion.div>
+                <div>
+                  <h1 className="text-3xl lg:text-4xl font-bold text-gray-900">
+                    Welcome,
+                  </h1>
+                  <p className="text-lg text-gray-600 mt-1">
+                    {user?.name || "Researcher"} 👋
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="flex gap-3">
-              <Link href="/settings">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-3 rounded-2xl border border-white/20 hover:bg-white/20 transition-all duration-300"
-                >
-                  <Settings size={20} className="text-blue-300" />
-                  <span className="text-blue-200">Settings</span>
-                </motion.button>
-              </Link>
-              <Link href="/achievements">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-3 rounded-2xl border border-white/20 hover:bg-white/20 transition-all duration-300"
-                >
-                  <Award size={20} className="text-cyan-300" />
-                  <span className="text-cyan-200">Achievements</span>
-                </motion.button>
-              </Link>
+              <div className="flex gap-3">
+                <Link href="/settings">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex items-center gap-2 bg-white px-4 py-3 rounded-2xl border border-gray-200 hover:border-[#49BBBD] transition-all duration-300 shadow-sm hover:shadow-md"
+                  >
+                    <Settings size={20} className="text-gray-600" />
+                    <span className="text-gray-700"></span>
+                  </motion.button>
+                </Link>
+                <Link href="/achievements">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex items-center gap-2 bg-white px-4 py-3 rounded-2xl border border-gray-200 hover:border-[#49BBBD] transition-all duration-300 shadow-sm hover:shadow-md"
+                  >
+                    <Award size={20} className="text-gray-600" />
+                    <span className="text-gray-700"></span>
+                  </motion.button>
+                </Link>
+              </div>
             </div>
           </motion.header>
 
@@ -174,73 +145,46 @@ export default function DashboardPage() {
             transition={{ delay: 0.4, duration: 0.6 }}
             className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8"
           >
-            {/* Search Papers Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Link href="/search">
-                <motion.div
-                  whileHover={{ scale: 1.02, y: -5 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="h-full p-6 rounded-3xl backdrop-blur-sm border border-blue-500/20 bg-blue-500/10 hover:bg-white/5 transition-all duration-300 cursor-pointer group"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="p-3 rounded-2xl bg-gradient-to-r from-blue-500 to-cyan-500">
-                      <Search className="text-white" size={24} />
+            {dashboardCards.slice(0, 2).map((card, index) => (
+              <motion.div
+                key={card.title}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 + index * 0.1 }}
+              >
+                <Link href={card.href}>
+                  <motion.div
+                    whileHover={{ scale: 1.02, y: -5 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="h-full bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className={`p-3 rounded-xl ${card.color} shadow-md`}>
+                        <card.icon className="text-white" size={24} />
+                      </div>
+                      <ArrowRight
+                        className="text-gray-400 group-hover:text-[#49BBBD] group-hover:translate-x-1 transition-all duration-300"
+                        size={20}
+                      />
                     </div>
-                    <ArrowRight
-                      className="text-white/40 group-hover:text-white/60 group-hover:translate-x-1 transition-transform duration-300"
-                      size={20}
-                    />
-                  </div>
 
-                  <h3 className="text-xl font-semibold text-white mb-2">
-                    Search Papers
-                  </h3>
-                  <p className="text-blue-200/70 leading-relaxed">
-                    Find works by keyword, author, or topic using OpenAlex
-                  </p>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      {card.title}
+                    </h3>
+                    <p className="text-gray-600 leading-relaxed mb-3">
+                      {card.description}
+                    </p>
 
-                  <div className="mt-4 h-1 w-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full group-hover:w-16 transition-all duration-300" />
-                </motion.div>
-              </Link>
-            </motion.div>
-
-            {/* My Library Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <Link href="/library">
-                <motion.div
-                  whileHover={{ scale: 1.02, y: -5 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="h-full p-6 rounded-3xl backdrop-blur-sm border border-purple-500/20 bg-purple-500/10 hover:bg-white/5 transition-all duration-300 cursor-pointer group"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="p-3 rounded-2xl bg-gradient-to-r from-purple-500 to-blue-500">
-                      <BookOpen className="text-white" size={24} />
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-[#49BBBD] font-medium">
+                        {card.stats}
+                      </span>
+                      <div className="w-8 h-1 bg-[#49BBBD] rounded-full group-hover:w-12 transition-all duration-300" />
                     </div>
-                    <ArrowRight
-                      className="text-white/40 group-hover:text-white/60 group-hover:translate-x-1 transition-transform duration-300"
-                      size={20}
-                    />
-                  </div>
-
-                  <h3 className="text-xl font-semibold text-white mb-2">
-                    My Library
-                  </h3>
-                  <p className="text-blue-200/70 leading-relaxed">
-                    View and manage your Zotero collections
-                  </p>
-
-                  <div className="mt-4 h-1 w-12 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full group-hover:w-16 transition-all duration-300" />
-                </motion.div>
-              </Link>
-            </motion.div>
+                  </motion.div>
+                </Link>
+              </motion.div>
+            ))}
           </motion.section>
 
           {/* Secondary Dashboard Cards - 3 per row */}
@@ -255,58 +199,92 @@ export default function DashboardPage() {
                 key={card.title}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 + index * 0.1 }}
+                transition={{ delay: 0.7 + index * 0.1 }}
               >
                 <Link href={card.href}>
                   <motion.div
                     whileHover={{ scale: 1.02, y: -5 }}
                     whileTap={{ scale: 0.98 }}
-                    className={`h-full p-6 rounded-3xl backdrop-blur-sm border ${card.borderColor} ${card.bgColor} hover:bg-white/5 transition-all duration-300 cursor-pointer group`}
+                    className="h-full bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group"
                   >
                     <div className="flex items-start justify-between mb-4">
-                      <div
-                        className={`p-3 rounded-2xl bg-gradient-to-r ${card.color}`}
-                      >
+                      <div className={`p-3 rounded-xl ${card.color} shadow-md`}>
                         <card.icon className="text-white" size={24} />
                       </div>
                       <ArrowRight
-                        className="text-white/40 group-hover:text-white/60 group-hover:translate-x-1 transition-transform duration-300"
+                        className="text-gray-400 group-hover:text-[#49BBBD] group-hover:translate-x-1 transition-all duration-300"
                         size={20}
                       />
                     </div>
 
-                    <h3 className="text-xl font-semibold text-white mb-2">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
                       {card.title}
                     </h3>
-                    <p className="text-blue-200/70 leading-relaxed">
+                    <p className="text-gray-600 leading-relaxed mb-3">
                       {card.description}
                     </p>
 
-                    <div
-                      className={`mt-4 h-1 w-12 bg-gradient-to-r ${card.color} rounded-full group-hover:w-16 transition-all duration-300`}
-                    />
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-[#49BBBD] font-medium">
+                        {card.stats}
+                      </span>
+                      <div className="w-8 h-1 bg-[#49BBBD] rounded-full group-hover:w-12 transition-all duration-300" />
+                    </div>
                   </motion.div>
                 </Link>
               </motion.div>
             ))}
           </motion.section>
 
-          {/* Recent Activity */}
+          {/* Recent Activity & Quick Actions */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8, duration: 0.6 }}
-            className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6"
+            className="grid grid-cols-1 lg:grid-cols-2 gap-6"
           >
-            <h2 className="text-2xl font-bold text-white mb-4">
-              Recent Activity
-            </h2>
-            <div className="text-center py-8">
-              <BookOpen className="mx-auto text-white/20 mb-3" size={48} />
-              <p className="text-white/40">No recent activity</p>
-              <p className="text-white/30 text-sm mt-1">
-                Start exploring to see your research journey
-              </p>
+            {/* Recent Activity */}
+            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Recent Activity
+              </h2>
+              <div className="text-center py-8">
+                <BookOpen className="mx-auto text-gray-300 mb-3" size={48} />
+                <p className="text-gray-500">No recent activity</p>
+                <p className="text-gray-400 text-sm mt-1">
+                  Start exploring to see your research journey
+                </p>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Quick Actions
+              </h2>
+              <div className="space-y-3">
+                <motion.button
+                  whileHover={{ x: 5 }}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:border-[#49BBBD] hover:bg-[#49BBBD]/5 transition-all duration-300"
+                >
+                  <Search size={20} className="text-[#49BBBD]" />
+                  <span className="text-gray-700">Quick Search</span>
+                </motion.button>
+                <motion.button
+                  whileHover={{ x: 5 }}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:border-[#49BBBD] hover:bg-[#49BBBD]/5 transition-all duration-300"
+                >
+                  <BookOpen size={20} className="text-[#49BBBD]" />
+                  <span className="text-gray-700">Add New Paper</span>
+                </motion.button>
+                <motion.button
+                  whileHover={{ x: 5 }}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:border-[#49BBBD] hover:bg-[#49BBBD]/5 transition-all duration-300"
+                >
+                  <Brain size={20} className="text-[#49BBBD]" />
+                  <span className="text-gray-700">Get Recommendations</span>
+                </motion.button>
+              </div>
             </div>
           </motion.section>
         </div>

@@ -46,7 +46,6 @@ export default function SignUpPage() {
 
     const { name, email, password, confirmPassword } = formData;
 
-    // basic validation
     if (password !== confirmPassword) {
       setError("Passwords do not match!");
       setLoading(false);
@@ -71,69 +70,77 @@ export default function SignUpPage() {
   const passwordStrength = formData.password.length >= 6;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white overflow-hidden w-full h-full fixed inset-0">
-      {/* Animated background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
-        <div className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
-        <div className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-cyan-600 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse animation-delay-2000"></div>
-        <div className="absolute top-1/3 right-1/4 w-1/3 h-1/3 bg-sky-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse animation-delay-4000"></div>
-      </div>
+    <div className="min-h-screen bg-white flex">
+      {/* Left Side - Image Section */}
+      <div className="hidden lg:flex lg:w-1/2 bg-[#49BBBD] relative">
+        <div
+          className="absolute inset-0 bg-cover m-10 rounded-4xl bg-center"
+          style={{
+            backgroundImage:
+              "url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')",
+          }}
+        />
+        <div className="absolute inset-0 bg-[#49BBBD]/40" />
 
-      {/* Floating elements */}
-      <div className="absolute inset-0">
-        {[...Array(6)].map((_, i) => (
+        {/* Content Overlay */}
+        <div className="relative z-10 flex flex-col justify-center items-center text-white p-12 w-full">
           <motion.div
-            key={i}
-            className="absolute text-white/5"
-            initial={{ y: 0, rotate: 0 }}
-            animate={{
-              y: [0, -25, 0],
-              rotate: [0, -5, 0],
-            }}
-            transition={{
-              duration: 7,
-              repeat: Infinity,
-              delay: i * 0.8,
-            }}
-            style={{
-              left: `${i * 18}%`,
-              top: `${Math.random() * 100}%`,
-            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center max-w-md"
           >
-            <Brain size={36} />
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-sm">
+                <Brain className="text-white" size={32} />
+              </div>
+            </div>
+            <h1 className="text-4xl font-bold mb-4">Research Companion</h1>
+            <p className="text-white/90 text-lg leading-relaxed">
+              Join thousands of researchers who are transforming their academic
+              workflow with intelligent research management.
+            </p>
           </motion.div>
-        ))}
+        </div>
       </div>
 
-      <main className="relative z-10 flex items-center justify-center min-h-screen w-full">
+      {/* Right Side - Form Section */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6">
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6 }}
-          className="w-full max-w-md mx-4"
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
+          className="w-full max-w-md"
         >
+          {/* Mobile Header */}
+          <div className="lg:hidden text-center mb-8 ">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="bg-[#49BBBD] p-3 rounded-2xl">
+                <Brain className="text-white" size={32} />
+              </div>
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900">
+              Research Companion
+            </h2>
+            <p className="text-gray-600 mt-2">
+              Start your research journey today
+            </p>
+          </div>
+
           <form
             onSubmit={handleSubmit}
-            className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl p-8 w-full"
+            className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100"
           >
-            {/* Header */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
               className="text-center mb-8"
             >
-              <div className="inline-flex items-center gap-3 mb-4">
-                <div className="bg-cyan-500/20 p-3 rounded-2xl border border-cyan-400/30">
-                  <User className="text-cyan-300" size={32} />
-                </div>
-              </div>
-              <h2 className="text-4xl font-bold bg-gradient-to-r from-cyan-200 to-blue-200 bg-clip-text text-transparent">
-                Join Research Hub
+              <h2 className="text-3xl font-bold text-gray-900">
+                Create Account
               </h2>
-              <p className="text-blue-100/80 mt-2">
-                Start your research journey today
-              </p>
+              <p className="text-gray-600 mt-2">Join our research community</p>
             </motion.div>
 
             {/* Messages */}
@@ -141,9 +148,9 @@ export default function SignUpPage() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="mb-6 p-4 bg-red-500/20 border border-red-400/30 rounded-2xl backdrop-blur-sm"
+                className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl"
               >
-                <p className="text-red-200 text-sm text-center">{error}</p>
+                <p className="text-red-600 text-sm text-center">{error}</p>
               </motion.div>
             )}
 
@@ -151,9 +158,9 @@ export default function SignUpPage() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="mb-6 p-4 bg-green-500/20 border border-green-400/30 rounded-2xl backdrop-blur-sm"
+                className="mb-6 p-4 bg-green-50 border border-green-200 rounded-2xl"
               >
-                <p className="text-green-200 text-sm text-center flex items-center justify-center gap-2">
+                <p className="text-green-600 text-sm text-center flex items-center justify-center gap-2">
                   <CheckCircle size={16} />
                   {success}
                 </p>
@@ -170,14 +177,14 @@ export default function SignUpPage() {
               >
                 <div className="relative">
                   <User
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-cyan-300/70"
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
                     size={20}
                   />
                   <input
                     type="text"
                     name="name"
                     placeholder="Full Name"
-                    className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/30 transition-all duration-300 backdrop-blur-sm"
+                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#49BBBD] focus:border-[#49BBBD] transition-all duration-300"
                     value={formData.name}
                     onChange={handleChange}
                     required
@@ -193,14 +200,14 @@ export default function SignUpPage() {
               >
                 <div className="relative">
                   <Mail
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-300/70"
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
                     size={20}
                   />
                   <input
                     type="email"
                     name="email"
                     placeholder="Email Address"
-                    className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/30 transition-all duration-300 backdrop-blur-sm"
+                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#49BBBD] focus:border-[#49BBBD] transition-all duration-300"
                     value={formData.email}
                     onChange={handleChange}
                     required
@@ -216,14 +223,14 @@ export default function SignUpPage() {
               >
                 <div className="relative">
                   <Lock
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-300/70"
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
                     size={20}
                   />
                   <input
                     type={showPassword ? "text" : "password"}
                     name="password"
                     placeholder="Password"
-                    className="w-full pl-12 pr-12 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/30 transition-all duration-300 backdrop-blur-sm"
+                    className="w-full pl-12 pr-12 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#49BBBD] focus:border-[#49BBBD] transition-all duration-300"
                     value={formData.password}
                     onChange={handleChange}
                     required
@@ -231,7 +238,7 @@ export default function SignUpPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-blue-300/70 hover:text-blue-200 transition-colors"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -244,10 +251,10 @@ export default function SignUpPage() {
                   >
                     <div
                       className={`w-2 h-2 rounded-full ${
-                        passwordStrength ? "bg-green-400" : "bg-yellow-400"
+                        passwordStrength ? "bg-green-500" : "bg-yellow-500"
                       }`}
                     />
-                    <span className="text-xs text-blue-200/70">
+                    <span className="text-xs text-gray-600">
                       {passwordStrength
                         ? "Strong password"
                         : "At least 6 characters"}
@@ -264,14 +271,14 @@ export default function SignUpPage() {
               >
                 <div className="relative">
                   <Lock
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-cyan-300/70"
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
                     size={20}
                   />
                   <input
                     type={showConfirmPassword ? "text" : "password"}
                     name="confirmPassword"
                     placeholder="Confirm Password"
-                    className="w-full pl-12 pr-12 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/30 transition-all duration-300 backdrop-blur-sm"
+                    className="w-full pl-12 pr-12 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#49BBBD] focus:border-[#49BBBD] transition-all duration-300"
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     required
@@ -279,7 +286,7 @@ export default function SignUpPage() {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-cyan-300/70 hover:text-cyan-200 transition-colors"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                   >
                     {showConfirmPassword ? (
                       <EyeOff size={20} />
@@ -296,8 +303,8 @@ export default function SignUpPage() {
                       animate={{ opacity: 1 }}
                       className="mt-2 flex items-center gap-2"
                     >
-                      <CheckCircle size={14} className="text-green-400" />
-                      <span className="text-xs text-green-400/80">
+                      <CheckCircle size={14} className="text-green-500" />
+                      <span className="text-xs text-green-600">
                         Passwords match
                       </span>
                     </motion.div>
@@ -315,7 +322,7 @@ export default function SignUpPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full group bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg hover:shadow-xl"
+                className="w-full group bg-[#49BBBD] hover:bg-[#3aa8a9] text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg hover:shadow-xl"
               >
                 {loading ? (
                   <div className="flex items-center gap-2">
@@ -324,7 +331,7 @@ export default function SignUpPage() {
                   </div>
                 ) : (
                   <>
-                    <span>Start Researching</span>
+                    <span>Create Account</span>
                     <ArrowRight
                       className="group-hover:translate-x-1 transition-transform duration-300"
                       size={20}
@@ -341,19 +348,19 @@ export default function SignUpPage() {
               transition={{ delay: 0.8 }}
               className="mt-6 text-center"
             >
-              <p className="text-blue-200/70">
+              <p className="text-gray-600">
                 Already have an account?{" "}
                 <a
                   href="/auth/login"
-                  className="text-cyan-300 hover:text-cyan-200 font-semibold underline-offset-4 hover:underline transition-colors"
+                  className="text-[#49BBBD] hover:text-[#3aa8a9] font-semibold underline-offset-4 hover:underline transition-colors"
                 >
-                  Continue your journey
+                  Sign in here
                 </a>
               </p>
             </motion.div>
           </form>
         </motion.div>
-      </main>
+      </div>
     </div>
   );
 }

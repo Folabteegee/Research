@@ -30,68 +30,73 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white overflow-hidden w-full h-full fixed inset-0">
-      {/* Animated background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
-        <div className="absolute -top-1/4 -right-1/4 w-1/2 h-1/2 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
-        <div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-cyan-600 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse animation-delay-2000"></div>
-      </div>
+    <div className="min-h-screen bg-white flex">
+      {/* Left Side - Image Section */}
+      <div className="hidden lg:flex lg:w-1/2 bg-[#49BBBD] relative">
+        <div
+          className="absolute inset-0 bg-cover rounded-4xl m-10 bg-center"
+          style={{
+            backgroundImage:
+              "url('https://images.unsplash.com/photo-1589998059171-988d887df646?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2076&q=80')",
+          }}
+        />
+        <div className="absolute inset-0 bg-[#49BBBD]/40" />
 
-      {/* Floating elements */}
-      <div className="absolute inset-0">
-        {[...Array(8)].map((_, i) => (
+        {/* Content Overlay */}
+        <div className="relative z-10 flex flex-col justify-center items-center text-white p-12 w-full">
           <motion.div
-            key={i}
-            className="absolute text-white/5"
-            initial={{ y: 0, rotate: 0 }}
-            animate={{
-              y: [0, -20, 0],
-              rotate: [0, 5, 0],
-            }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              delay: i * 0.7,
-            }}
-            style={{
-              left: `${i * 15}%`,
-              top: `${Math.random() * 100}%`,
-            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center max-w-md"
           >
-            <Brain size={32} />
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-sm">
+                <Brain className="text-white" size={32} />
+              </div>
+            </div>
+            <h1 className="text-4xl font-bold mb-4">Research Companion</h1>
+            <p className="text-white/90 text-lg leading-relaxed">
+              Welcome back! Continue your research journey with intelligent
+              tools and seamless organization.
+            </p>
           </motion.div>
-        ))}
+        </div>
       </div>
 
-      <main className="relative z-10 flex items-center justify-center min-h-screen w-full">
+      {/* Right Side - Form Section */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6">
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6 }}
-          className="w-full max-w-md mx-4"
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
+          className="w-full max-w-md"
         >
+          {/* Mobile Header */}
+          <div className="lg:hidden text-center mb-8">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="bg-[#49BBBD] p-3 rounded-2xl">
+                <Brain className="text-white" size={32} />
+              </div>
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900">
+              Research Companion
+            </h2>
+            <p className="text-gray-600 mt-2">Welcome back to your research</p>
+          </div>
+
           <form
             onSubmit={handleSubmit}
-            className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl p-8 w-full"
+            className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100"
           >
-            {/* Header */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
               className="text-center mb-8"
             >
-              <div className="inline-flex items-center gap-3 mb-4">
-                <div className="bg-blue-500/20 p-3 rounded-2xl border border-blue-400/30">
-                  <Brain className="text-blue-300" size={32} />
-                </div>
-              </div>
-              <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-200 to-cyan-200 bg-clip-text text-transparent">
-                Welcome Back
-              </h2>
-              <p className="text-blue-100/80 mt-2">
-                Continue your research journey
-              </p>
+              <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
+              <p className="text-gray-600 mt-2">Sign in to your account</p>
             </motion.div>
 
             {/* Error Message */}
@@ -99,14 +104,14 @@ export default function LoginPage() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="mb-6 p-4 bg-red-500/20 border border-red-400/30 rounded-2xl backdrop-blur-sm"
+                className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl"
               >
-                <p className="text-red-200 text-sm text-center">{error}</p>
+                <p className="text-red-600 text-sm text-center">{error}</p>
               </motion.div>
             )}
 
             {/* Form Fields */}
-            <div className="space-y-6">
+            <div className="space-y-5">
               {/* Email Field */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -115,13 +120,13 @@ export default function LoginPage() {
               >
                 <div className="relative">
                   <Mail
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-300/70"
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
                     size={20}
                   />
                   <input
                     type="email"
                     placeholder="Email address"
-                    className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/30 transition-all duration-300 backdrop-blur-sm"
+                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#49BBBD] focus:border-[#49BBBD] transition-all duration-300"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -137,13 +142,13 @@ export default function LoginPage() {
               >
                 <div className="relative">
                   <Lock
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-300/70"
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
                     size={20}
                   />
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder="Password"
-                    className="w-full pl-12 pr-12 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/30 transition-all duration-300 backdrop-blur-sm"
+                    className="w-full pl-12 pr-12 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#49BBBD] focus:border-[#49BBBD] transition-all duration-300"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -151,7 +156,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-blue-300/70 hover:text-blue-200 transition-colors"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -169,7 +174,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full group bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg hover:shadow-xl"
+                className="w-full group bg-[#49BBBD] hover:bg-[#3aa8a9] text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg hover:shadow-xl"
               >
                 {loading ? (
                   <div className="flex items-center gap-2">
@@ -178,7 +183,7 @@ export default function LoginPage() {
                   </div>
                 ) : (
                   <>
-                    <span>Continue Research</span>
+                    <span>Sign In</span>
                     <ArrowRight
                       className="group-hover:translate-x-1 transition-transform duration-300"
                       size={20}
@@ -195,19 +200,19 @@ export default function LoginPage() {
               transition={{ delay: 0.6 }}
               className="mt-6 text-center"
             >
-              <p className="text-blue-200/70">
-                New to Research Companion?{" "}
+              <p className="text-gray-600">
+                Don't have an account?{" "}
                 <a
                   href="/auth/signup"
-                  className="text-cyan-300 hover:text-cyan-200 font-semibold underline-offset-4 hover:underline transition-colors"
+                  className="text-[#49BBBD] hover:text-[#3aa8a9] font-semibold underline-offset-4 hover:underline transition-colors"
                 >
-                  Start your journey
+                  Create account
                 </a>
               </p>
             </motion.div>
           </form>
         </motion.div>
-      </main>
+      </div>
     </div>
   );
 }
