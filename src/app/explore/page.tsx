@@ -1,7 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useApi } from "@/context/ApiContext";
-import { addXP } from "@/lib/gamification";
+import { useAuth } from "@/context/AuthContext";
+import {
+  addXP,
+  unlockAchievement,
+  checkSavedAchievements,
+} from "@/lib/gamification";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -13,14 +18,17 @@ import {
   Calendar,
   Building,
   ArrowRight,
-  Sparkles,
 } from "lucide-react";
 
 export default function ExplorePage() {
-  const { papers, fetchPapers, quote, fetchQuote } = useApi();
+  const { papers, fetchPapers } = useApi();
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeTopic, setActiveTopic] = useState("");
+
+  // Get user ID for gamification
+  const userId = user?.uid;
 
   const trendingTopics = [
     {
@@ -43,8 +51,12 @@ export default function ExplorePage() {
     },
   ];
 
+  // Get user-specific storage key
+  const getUserLibraryKey = () => {
+    return userId ? `savedPapers_${userId}` : "savedPapers_guest";
+  };
+
   useEffect(() => {
-    fetchQuote();
     if (papers.length === 0) fetchTrendingPapers();
   }, []);
 
@@ -56,6 +68,20 @@ export default function ExplorePage() {
         topic ||
         trendingTopics[Math.floor(Math.random() * trendingTopics.length)].name;
       await fetchPapers(searchTopic);
+
+      // Track search for gamification
+      const searchesKey = userId ? `searches_${userId}` : "searches_guest";
+      const currentSearches = parseInt(
+        localStorage.getItem(searchesKey) || "0"
+      );
+      localStorage.setItem(searchesKey, String(currentSearches + 1));
+
+      // Add XP for exploring topics
+      const newXP = addXP(5, userId);
+      console.log(`+5 XP for exploring. Total XP: ${newXP}`);
+
+      // Trigger storage update for real-time sync
+      window.dispatchEvent(new Event("storage"));
     } finally {
       setLoading(false);
     }
@@ -68,6 +94,20 @@ export default function ExplorePage() {
     setActiveTopic("");
     try {
       await fetchPapers(search);
+
+      // Track search for gamification
+      const searchesKey = userId ? `searches_${userId}` : "searches_guest";
+      const currentSearches = parseInt(
+        localStorage.getItem(searchesKey) || "0"
+      );
+      localStorage.setItem(searchesKey, String(currentSearches + 1));
+
+      // Add XP for searching
+      const newXP = addXP(5, userId);
+      console.log(`+5 XP for searching. Total XP: ${newXP}`);
+
+      // Trigger storage update for real-time sync
+      window.dispatchEvent(new Event("storage"));
     } finally {
       setLoading(false);
     }
@@ -79,10 +119,32 @@ export default function ExplorePage() {
 
     if (openAccessUrl) {
       window.open(openAccessUrl, "_blank");
-      addXP(10);
+
+      // Add XP for reading with user ID
+      const newXP = addXP(10, userId);
+      console.log(`+10 XP for reading. Total XP: ${newXP}`);
+
+      // Track read count with user-specific key
+      const readKey = userId ? `reads_${userId}` : "reads_guest";
+      const readCount = parseInt(localStorage.getItem(readKey) || "0") + 1;
+      localStorage.setItem(readKey, readCount.toString());
+
+      // Force update achievements page
+      window.dispatchEvent(new Event("storage"));
     } else if (doiUrl) {
       window.open(doiUrl, "_blank");
-      addXP(10);
+
+      // Add XP for reading with user ID
+      const newXP = addXP(10, userId);
+      console.log(`+10 XP for reading. Total XP: ${newXP}`);
+
+      // Track read count with user-specific key
+      const readKey = userId ? `reads_${userId}` : "reads_guest";
+      const readCount = parseInt(localStorage.getItem(readKey) || "0") + 1;
+      localStorage.setItem(readKey, readCount.toString());
+
+      // Force update achievements page
+      window.dispatchEvent(new Event("storage"));
     } else {
       alert(
         "❌ This paper is not freely available. Try using Zotero or your institution's library."
@@ -91,10 +153,11 @@ export default function ExplorePage() {
   };
 
   const handleSave = (paper: any) => {
-    const stored = localStorage.getItem("savedPapers");
+    const userLibraryKey = getUserLibraryKey();
+    const stored = localStorage.getItem(userLibraryKey);
     const current = stored ? JSON.parse(stored) : [];
     const exists = current.some((p: any) => p.id === paper.id);
-    if (exists) return alert("Already saved!");
+    if (exists) return alert("Already saved to your library!");
 
     const newList = [
       ...current,
@@ -108,10 +171,23 @@ export default function ExplorePage() {
         url: paper.open_access?.url || paper.doi,
       },
     ];
-    localStorage.setItem("savedPapers", JSON.stringify(newList));
+    localStorage.setItem(userLibraryKey, JSON.stringify(newList));
 
-    addXP(10);
-    alert("✅ Paper saved to library! +10 XP earned!");
+    // Add XP and check achievements with user ID
+    const newXP = addXP(10, userId);
+    console.log(`+10 XP for saving. Total XP: ${newXP}`);
+
+    // Check saved papers achievements
+    checkSavedAchievements(userId);
+
+    alert(
+      `✅ Paper saved to your ${
+        user ? "personal" : "guest"
+      } library! +10 XP earned!`
+    );
+
+    // Force update achievements page
+    window.dispatchEvent(new Event("storage"));
   };
 
   return (
@@ -142,6 +218,12 @@ export default function ExplorePage() {
               Discover trending papers and explore cutting-edge research across
               various fields
             </p>
+            {user && (
+              <p className="text-sm text-[#49BBBD] mt-2">
+                Papers will be saved to your personal library • Earn XP for
+                exploring, saving, and reading!
+              </p>
+            )}
           </motion.header>
 
           {/* Search Form */}
@@ -170,6 +252,12 @@ export default function ExplorePage() {
               >
                 Search
               </button>
+            </div>
+            <div className="text-center mt-4">
+              <p className="text-sm text-gray-500">
+                🔍 +5 XP for searching/exploring • 💾 +10 XP for saving • 📖 +10
+                XP for reading
+              </p>
             </div>
           </motion.form>
 
@@ -201,23 +289,13 @@ export default function ExplorePage() {
                   <span className="text-sm font-medium text-gray-700 group-hover:text-[#49BBBD] transition-colors duration-300">
                     {topic.name}
                   </span>
+                  <div className="mt-2 text-xs text-[#49BBBD] font-medium">
+                    +5 XP
+                  </div>
                 </motion.button>
               ))}
             </div>
           </motion.section>
-
-          {/* Quote Section */}
-          {quote && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-2xl p-6 mb-8 text-center max-w-4xl mx-auto"
-            >
-              <Sparkles className="inline text-[#49BBBD] mb-2" size={20} />
-              <p className="text-lg text-gray-700 italic">"{quote}"</p>
-            </motion.div>
-          )}
 
           {/* Active Topic Indicator */}
           {activeTopic && (
@@ -227,7 +305,20 @@ export default function ExplorePage() {
               className="text-center mb-6"
             >
               <span className="bg-[#49BBBD] text-white px-4 py-2 rounded-full text-sm font-medium">
-                Showing results for: {activeTopic}
+                Showing results for: {activeTopic} • +5 XP earned!
+              </span>
+            </motion.div>
+          )}
+
+          {/* User Library Info */}
+          {user && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center mb-6"
+            >
+              <span className="bg-[#49BBBD]/10 text-[#49BBBD] px-4 py-2 rounded-full text-sm font-medium">
+                Saving to {user.email}'s personal library • Earn XP for actions!
               </span>
             </motion.div>
           )}
@@ -261,6 +352,16 @@ export default function ExplorePage() {
                   Research Papers
                   <span className="text-[#49BBBD] ml-2">({papers.length})</span>
                 </h2>
+                <div className="text-right">
+                  <p className="text-gray-600 text-sm">
+                    {activeTopic
+                      ? `Trending in ${activeTopic}`
+                      : "Explore research papers"}
+                  </p>
+                  <p className="text-[#49BBBD] text-xs mt-1">
+                    Earn XP for reading and saving!
+                  </p>
+                </div>
               </div>
 
               <div className="grid gap-6">
@@ -327,7 +428,7 @@ export default function ExplorePage() {
                           className="flex items-center gap-2 bg-[#49BBBD] hover:bg-[#3aa8a9] text-white px-4 py-2 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md text-sm font-medium"
                         >
                           <BookOpen size={16} />
-                          Read
+                          Read +10 XP
                         </motion.button>
                         <motion.button
                           whileHover={{ scale: 1.05 }}
@@ -339,7 +440,7 @@ export default function ExplorePage() {
                           className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md text-sm font-medium"
                         >
                           <Save size={16} />
-                          Save
+                          Save +10 XP
                         </motion.button>
                       </div>
                     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 export default function SignUpPage() {
-  const { signup } = useAuth();
+  const { signup, googleLogin, user } = useAuth();
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -30,6 +30,7 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
@@ -45,6 +46,12 @@ export default function SignUpPage() {
     setLoading(true);
 
     const { name, email, password, confirmPassword } = formData;
+
+    if (!name || !email || !password) {
+      setError("All fields are required.");
+      setLoading(false);
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match!");
@@ -62,8 +69,48 @@ export default function SignUpPage() {
       setSuccess("Account created successfully! Redirecting...");
       setTimeout(() => router.push("/dashboard"), 1500);
     } catch (err: any) {
-      setError(err.message || "Failed to create account.");
+      if (err.code === "auth/email-already-in-use") {
+        setError("This email is already registered. Please sign in instead.");
+      } else if (err.code === "auth/invalid-email") {
+        setError("Please enter a valid email address.");
+      } else if (err.code === "auth/weak-password") {
+        setError("Password is too weak. Please choose a stronger password.");
+      } else {
+        setError(err.message || "Failed to create account. Please try again.");
+      }
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSignUp = async () => {
+    try {
+      setGoogleLoading(true);
+      setError("");
+      const googleUser = await googleLogin();
+
+      if (googleUser) {
+        // Pre-fill the form with Google user data
+        setFormData((prev) => ({
+          ...prev,
+          name: googleUser.name,
+          email: googleUser.email,
+        }));
+        setSuccess(
+          "Google account connected! Please create a password to complete your registration."
+        );
+      }
+    } catch (err: any) {
+      if (err.code === "auth/popup-closed-by-user") {
+        setError("Google sign-up was cancelled.");
+      } else if (err.code === "auth/popup-blocked") {
+        setError("Popup was blocked. Please allow popups for this site.");
+      } else if (err.code === "auth/network-request-failed") {
+        setError("Network error. Please check your connection and try again.");
+      } else {
+        setError(err.message || "Google sign-up failed. Please try again.");
+      }
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -113,7 +160,7 @@ export default function SignUpPage() {
           className="w-full max-w-md"
         >
           {/* Mobile Header */}
-          <div className="lg:hidden text-center mb-8 ">
+          <div className="lg:hidden text-center mb-8">
             <div className="flex items-center justify-center gap-3 mb-4">
               <div className="bg-[#49BBBD] p-3 rounded-2xl">
                 <Brain className="text-white" size={32} />
@@ -167,13 +214,53 @@ export default function SignUpPage() {
               </motion.div>
             )}
 
+            {/* Google Sign Up Button */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="mb-6"
+            >
+              <button
+                type="button"
+                onClick={handleGoogleSignUp}
+                disabled={googleLoading}
+                className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-2xl py-4 hover:bg-gray-50 transition-all duration-300 disabled:opacity-50"
+              >
+                {googleLoading ? (
+                  <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <img
+                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                    alt="Google"
+                    className="w-5 h-5"
+                  />
+                )}
+                <span className="text-gray-700 font-medium">
+                  {googleLoading ? "Connecting..." : "Sign up with Google"}
+                </span>
+              </button>
+            </motion.div>
+
+            {/* Divider */}
+            <div className="relative mb-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">
+                  Or continue with email
+                </span>
+              </div>
+            </div>
+
             {/* Form Fields */}
             <div className="space-y-5">
               {/* Name Field */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
+                transition={{ delay: 0.4 }}
               >
                 <div className="relative">
                   <User
@@ -196,7 +283,7 @@ export default function SignUpPage() {
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 }}
+                transition={{ delay: 0.5 }}
               >
                 <div className="relative">
                   <Mail
@@ -219,7 +306,7 @@ export default function SignUpPage() {
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 }}
+                transition={{ delay: 0.6 }}
               >
                 <div className="relative">
                   <Lock
@@ -267,7 +354,7 @@ export default function SignUpPage() {
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 }}
+                transition={{ delay: 0.7 }}
               >
                 <div className="relative">
                   <Lock
@@ -316,7 +403,7 @@ export default function SignUpPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
+              transition={{ delay: 0.8 }}
               className="mt-8"
             >
               <button
@@ -345,7 +432,7 @@ export default function SignUpPage() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.8 }}
+              transition={{ delay: 0.9 }}
               className="mt-6 text-center"
             >
               <p className="text-gray-600">

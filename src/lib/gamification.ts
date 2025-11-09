@@ -57,24 +57,43 @@ function safeSetItem(key: string, value: string) {
   }
 }
 
+// --- User-specific key helpers ---
+function getUserXPKey(userId?: string): string {
+  return userId ? `userXP_${userId}` : "userXP_guest";
+}
+
+function getAchievementsKey(userId?: string): string {
+  return userId ? `achievements_${userId}` : "achievements_guest";
+}
+
+function getStreakKey(userId?: string): string {
+  return userId ? `streak_${userId}` : "streak_guest";
+}
+
+function getLastVisitKey(userId?: string): string {
+  return userId ? `lastVisit_${userId}` : "lastVisit_guest";
+}
+
 // --- XP & level ---
-export function getUserXP(): number {
-  const raw = safeGetItem("userXP") || "0";
+export function getUserXP(userId?: string): number {
+  const key = getUserXPKey(userId);
+  const raw = safeGetItem(key) || "0";
   const val = parseInt(raw, 10);
   return Number.isNaN(val) ? 0 : val;
 }
 
-function setUserXP(xp: number) {
-  safeSetItem("userXP", String(xp));
+function setUserXP(xp: number, userId?: string) {
+  const key = getUserXPKey(userId);
+  safeSetItem(key, String(xp));
 }
 
-export function addXP(points: number) {
-  const current = getUserXP();
+export function addXP(points: number, userId?: string) {
+  const current = getUserXP(userId);
   const updated = current + Math.max(0, Math.floor(points));
-  setUserXP(updated);
+  setUserXP(updated, userId);
 
   // Check for achievements that depend on XP
-  checkXPBasedAchievements(updated);
+  checkXPBasedAchievements(updated, userId);
 
   // Notify other tabs/windows (storage event)
   try {
@@ -94,9 +113,10 @@ export function getLevel(xp: number): number {
 }
 
 // --- Achievements storage & helpers ---
-export function getAchievements(): Achievement[] {
+export function getAchievements(userId?: string): Achievement[] {
   try {
-    const storedRaw = safeGetItem("achievements");
+    const key = getAchievementsKey(userId);
+    const storedRaw = safeGetItem(key);
     const stored = storedRaw ? JSON.parse(storedRaw) : [];
     // merge with baseAchievements so new badges are added automatically
     const merged = baseAchievements.map((base) => {
@@ -112,12 +132,13 @@ export function getAchievements(): Achievement[] {
   }
 }
 
-function saveAchievements(list: Achievement[]) {
-  safeSetItem("achievements", JSON.stringify(list));
+function saveAchievements(list: Achievement[], userId?: string) {
+  const key = getAchievementsKey(userId);
+  safeSetItem(key, JSON.stringify(list));
 }
 
-export function unlockAchievement(id: string) {
-  const list = getAchievements();
+export function unlockAchievement(id: string, userId?: string) {
+  const list = getAchievements(userId);
   let changed = false;
   const updated = list.map((a) => {
     if (a.id === id && !a.unlocked) {
@@ -127,7 +148,7 @@ export function unlockAchievement(id: string) {
     return a;
   });
   if (changed) {
-    saveAchievements(updated);
+    saveAchievements(updated, userId);
     // also trigger storage event across tabs
     safeSetItem(
       "lastAchievementUnlock",
@@ -138,18 +159,19 @@ export function unlockAchievement(id: string) {
 }
 
 // --- XP-based achievement checks ---
-function checkXPBasedAchievements(currentXP: number) {
+function checkXPBasedAchievements(currentXP: number, userId?: string) {
   // first-read (>=10 xp)
-  if (currentXP >= 10) unlockAchievement("first-read");
+  if (currentXP >= 10) unlockAchievement("first-read", userId);
   // ten-read (>=100 xp) -> corresponds roughly to 10 reads at 10xp each
-  if (currentXP >= 100) unlockAchievement("ten-read");
+  if (currentXP >= 100) unlockAchievement("ten-read", userId);
   // other XP thresholds can be added here
 }
 
 // --- Saved-papers related checks ---
-export function getSavedPapersCount(): number {
+export function getSavedPapersCount(userId?: string): number {
   try {
-    const raw = safeGetItem("savedPapers");
+    const key = userId ? `savedPapers_${userId}` : "savedPapers_guest";
+    const raw = safeGetItem(key);
     const arr = raw ? JSON.parse(raw) : [];
     return Array.isArray(arr) ? arr.length : 0;
   } catch {
@@ -160,21 +182,24 @@ export function getSavedPapersCount(): number {
 /**
  * Call this after saving/removing papers so achievements based on saved count are checked.
  */
-export function checkSavedAchievements() {
-  const count = getSavedPapersCount();
-  if (count >= 5) unlockAchievement("five-saved");
+export function checkSavedAchievements(userId?: string) {
+  const count = getSavedPapersCount(userId);
+  if (count >= 5) unlockAchievement("five-saved", userId);
   // more saved thresholds can be added here
 }
 
 // --- Streak (safe and tolerant) ---
-export function updateStreak() {
+export function updateStreak(userId?: string) {
   try {
     const today = new Date();
     const todayStr = today.toDateString();
 
-    const lastRaw = safeGetItem("lastVisit");
+    const lastVisitKey = getLastVisitKey(userId);
+    const streakKey = getStreakKey(userId);
+
+    const lastRaw = safeGetItem(lastVisitKey);
     const lastDate = lastRaw ? new Date(lastRaw) : null;
-    let streak = parseInt(safeGetItem("streak") || "0", 10);
+    let streak = parseInt(safeGetItem(streakKey) || "0", 10);
     if (Number.isNaN(streak)) streak = 0;
 
     if (!lastDate || lastDate.toDateString() !== todayStr) {
@@ -203,27 +228,28 @@ export function updateStreak() {
         streak = 1;
       }
 
-      safeSetItem("streak", String(streak));
-      safeSetItem("lastVisit", todayStr);
+      safeSetItem(streakKey, String(streak));
+      safeSetItem(lastVisitKey, todayStr);
 
-      if (streak >= 3) unlockAchievement("streak-3");
+      if (streak >= 3) unlockAchievement("streak-3", userId);
     }
 
     return streak;
   } catch {
-    return parseInt(safeGetItem("streak") || "0", 10) || 0;
+    const streakKey = getStreakKey(userId);
+    return parseInt(safeGetItem(streakKey) || "0", 10) || 0;
   }
 }
 
 // --- utility to reset (dev/testing) ---
-export function resetGamification() {
-  safeSetItem("userXP", "0");
+export function resetGamification(userId?: string) {
+  safeSetItem(getUserXPKey(userId), "0");
   safeSetItem(
-    "achievements",
+    getAchievementsKey(userId),
     JSON.stringify(baseAchievements.map((b) => ({ ...b })))
   );
-  safeSetItem("streak", "0");
-  safeSetItem("lastVisit", "");
+  safeSetItem(getStreakKey(userId), "0");
+  safeSetItem(getLastVisitKey(userId), "");
 }
 
 // export additional helpers if needed

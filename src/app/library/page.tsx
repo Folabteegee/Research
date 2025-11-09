@@ -14,14 +14,28 @@ import {
   Library,
 } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LibraryPage() {
+  const { user } = useAuth();
   const [savedPapers, setSavedPapers] = useState<any[]>([]);
 
+  // Get user-specific storage key
+  const getUserLibraryKey = () => {
+    return user ? `savedPapers_${user.uid}` : "savedPapers_guest";
+  };
+
   useEffect(() => {
-    const stored = localStorage.getItem("savedPapers");
-    if (stored) setSavedPapers(JSON.parse(stored));
-  }, []);
+    if (user) {
+      const userLibraryKey = getUserLibraryKey();
+      const stored = localStorage.getItem(userLibraryKey);
+      if (stored) {
+        setSavedPapers(JSON.parse(stored));
+      } else {
+        setSavedPapers([]);
+      }
+    }
+  }, [user]);
 
   const handleReadFullPaper = (paper: any) => {
     if (paper.link) {
@@ -34,7 +48,8 @@ export default function LibraryPage() {
   const handleRemove = (id: string) => {
     const updated = savedPapers.filter((paper) => paper.id !== id);
     setSavedPapers(updated);
-    localStorage.setItem("savedPapers", JSON.stringify(updated));
+    const userLibraryKey = getUserLibraryKey();
+    localStorage.setItem(userLibraryKey, JSON.stringify(updated));
   };
 
   const handleRemoveAll = () => {
@@ -42,7 +57,8 @@ export default function LibraryPage() {
       confirm("Are you sure you want to remove all papers from your library?")
     ) {
       setSavedPapers([]);
-      localStorage.removeItem("savedPapers");
+      const userLibraryKey = getUserLibraryKey();
+      localStorage.removeItem(userLibraryKey);
     }
   };
 
@@ -78,6 +94,11 @@ export default function LibraryPage() {
                     {savedPapers.length} saved paper
                     {savedPapers.length !== 1 ? "s" : ""}
                   </p>
+                  {user && (
+                    <p className="text-sm text-gray-500 mt-1">
+                      Personal library for {user.email}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -122,8 +143,8 @@ export default function LibraryPage() {
                   Your Library is Empty
                 </h2>
                 <p className="text-gray-600 mb-6">
-                  Start building your research collection by saving papers from
-                  search results.
+                  Start building your personal research collection by saving
+                  papers from search results.
                 </p>
                 <Link href="/search">
                   <motion.button

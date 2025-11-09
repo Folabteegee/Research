@@ -4,7 +4,12 @@ import { useState } from "react";
 import { searchPapers } from "@/lib/api/openAlex";
 import { useRouter } from "next/navigation";
 import { useZotero } from "@/context/ZoteroContext";
-import { addXP, unlockAchievement } from "@/lib/gamification";
+import { useAuth } from "@/context/AuthContext";
+import {
+  addXP,
+  unlockAchievement,
+  checkSavedAchievements,
+} from "@/lib/gamification";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -25,6 +30,15 @@ export default function SearchPage() {
   const [error, setError] = useState("");
   const router = useRouter();
   const { library } = useZotero();
+  const { user } = useAuth();
+
+  // Get user ID for gamification
+  const userId = user?.uid;
+
+  // Get user-specific storage key
+  const getUserLibraryKey = () => {
+    return userId ? `savedPapers_${userId}` : "savedPapers_guest";
+  };
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,8 +49,24 @@ export default function SearchPage() {
     try {
       const data = await searchPapers(query);
       setResults(data.results || []);
-    } catch (err) {
-      setError("Failed to fetch results. Please check your connection.");
+
+      // Track search for gamification
+      const searchesKey = userId ? `searches_${userId}` : "searches_guest";
+      const currentSearches = parseInt(
+        localStorage.getItem(searchesKey) || "0"
+      );
+      localStorage.setItem(searchesKey, String(currentSearches + 1));
+
+      // Add XP for searching
+      const newXP = addXP(5, userId);
+      console.log(`+5 XP for searching. Total XP: ${newXP}`);
+
+      // Trigger storage update for real-time sync
+      window.dispatchEvent(new Event("storage"));
+    } catch (err: any) {
+      setError(
+        err.message || "Failed to fetch results. Please check your connection."
+      );
     } finally {
       setLoading(false);
     }
@@ -47,11 +77,12 @@ export default function SearchPage() {
   };
 
   const handleSave = (paper: any) => {
-    const stored = localStorage.getItem("savedPapers");
+    const userLibraryKey = getUserLibraryKey();
+    const stored = localStorage.getItem(userLibraryKey);
     const existing = stored ? JSON.parse(stored) : [];
 
     if (existing.find((p: any) => p.id === paper.id)) {
-      alert("Already saved to library!");
+      alert("Already saved to your library!");
       return;
     }
 
@@ -70,15 +101,18 @@ export default function SearchPage() {
     };
 
     const updated = [...existing, newItem];
-    localStorage.setItem("savedPapers", JSON.stringify(updated));
-    alert("✅ Paper saved to your Zotero library!");
+    localStorage.setItem(userLibraryKey, JSON.stringify(updated));
+    alert(`✅ Paper saved to your ${user ? "personal" : "guest"} library!`);
 
-    const newXP = addXP(10);
+    // Add XP and check achievements with user ID
+    const newXP = addXP(10, userId);
     console.log(`+10 XP for saving. Total XP: ${newXP}`);
 
-    const saveCount = updated.length;
-    if (saveCount >= 1) unlockAchievement("first-read");
-    if (saveCount >= 5) unlockAchievement("five-saved");
+    // Check saved papers achievements
+    checkSavedAchievements(userId);
+
+    // Force update achievements page
+    window.dispatchEvent(new Event("storage"));
   };
 
   const handleReadFullPaper = (paper: any) => {
@@ -91,16 +125,70 @@ export default function SearchPage() {
     if (url) {
       window.open(url, "_blank");
 
-      const newXP = addXP(10);
+      // Add XP for reading with user ID
+      const newXP = addXP(10, userId);
       console.log(`+10 XP for reading. Total XP: ${newXP}`);
 
-      const readCount = parseInt(localStorage.getItem("readCount") || "0") + 1;
-      localStorage.setItem("readCount", readCount.toString());
+      // Track read count with user-specific key
+      const readKey = userId ? `reads_${userId}` : "reads_guest";
+      const readCount = parseInt(localStorage.getItem(readKey) || "0") + 1;
+      localStorage.setItem(readKey, readCount.toString());
 
-      if (readCount >= 1) unlockAchievement("first-read");
-      if (readCount >= 10) unlockAchievement("ten-read");
+      // Track detailed reading data for analytics
+      trackReading(paper);
+
+      // Force update achievements page
+      window.dispatchEvent(new Event("storage"));
     } else {
       alert("Full paper link not available for this item.");
+    }
+  };
+
+  // Track detailed reading data for analytics
+  const trackReading = (paper: any) => {
+    const readKey = userId ? `reads_${userId}` : "reads_guest";
+
+    try {
+      // Try to get existing reading data
+      const existingData = localStorage.getItem(readKey);
+      let readPapers: any[] = [];
+
+      if (existingData) {
+        try {
+          const parsed = JSON.parse(existingData);
+          if (Array.isArray(parsed)) {
+            readPapers = parsed;
+          }
+          // If it's a number (old format), we'll start fresh with array
+        } catch (error) {
+          // If parsing fails, start with empty array
+          console.log("Starting fresh reading tracking array");
+        }
+      }
+
+      const readingRecord = {
+        paperId: paper.id,
+        title: paper.display_name,
+        readAt: new Date().toISOString(),
+        authors:
+          paper.authorships
+            ?.map((a: any) => a.author.display_name)
+            .join(", ") || "Unknown author",
+        journal: paper.host_venue?.display_name || "N/A",
+        year: paper.publication_year || "N/A",
+        url:
+          paper.primary_location?.landing_page_url ||
+          paper.primary_location?.source?.url ||
+          "",
+      };
+
+      // Keep only the last 100 reads to prevent storage from growing too large
+      const updatedReads = [readingRecord, ...readPapers.slice(0, 99)];
+      localStorage.setItem(readKey, JSON.stringify(updatedReads));
+
+      console.log(`📖 Reading tracked: ${paper.display_name}`);
+    } catch (error) {
+      console.error("Error tracking reading:", error);
     }
   };
 
@@ -132,6 +220,12 @@ export default function SearchPage() {
               Discover academic papers using OpenAlex database. Search by topic,
               author, or keywords.
             </p>
+            {user && (
+              <p className="text-sm text-[#49BBBD] mt-2">
+                Papers will be saved to your personal library • Earn XP for
+                searching, saving, and reading!
+              </p>
+            )}
           </motion.header>
 
           {/* Search Form */}
@@ -161,6 +255,12 @@ export default function SearchPage() {
               >
                 {loading ? "Searching..." : "Search"}
               </button>
+            </div>
+            <div className="text-center mt-4">
+              <p className="text-sm text-gray-500">
+                🔍 +5 XP for searching • 💾 +10 XP for saving • 📖 +10 XP for
+                reading
+              </p>
             </div>
           </motion.form>
 
@@ -229,9 +329,16 @@ export default function SearchPage() {
                     ({results.length})
                   </span>
                 </h2>
-                <p className="text-gray-600 text-sm">
-                  Found {results.length} papers for "{query}"
-                </p>
+                <div className="text-right">
+                  <p className="text-gray-600 text-sm">
+                    Found {results.length} papers for "{query}"
+                  </p>
+                  {user && (
+                    <p className="text-[#49BBBD] text-xs mt-1">
+                      Saving to {user.email}'s library • Earn XP for actions!
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div className="grid gap-6">
@@ -299,7 +406,7 @@ export default function SearchPage() {
                           className="flex items-center gap-2 bg-[#49BBBD] hover:bg-[#3aa8a9] text-white px-4 py-2 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md text-sm font-medium"
                         >
                           <Save size={16} />
-                          Save
+                          Save +10 XP
                         </motion.button>
                         <motion.button
                           whileHover={{ scale: 1.05 }}
@@ -311,7 +418,7 @@ export default function SearchPage() {
                           className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md text-sm font-medium"
                         >
                           <BookOpen size={16} />
-                          Read
+                          Read +10 XP
                         </motion.button>
                       </div>
                     </div>

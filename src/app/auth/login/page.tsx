@@ -1,31 +1,94 @@
 "use client";
-import { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
+
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Mail, Lock, ArrowRight, Brain } from "lucide-react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  ArrowRight,
+  Brain,
+  CheckCircle,
+} from "lucide-react";
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, googleLogin, user } = useAuth();
   const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setError("");
+    setSuccess("");
+
+    if (!email || !password) {
+      setError("Please fill in all fields.");
+      return;
+    }
+
     setLoading(true);
     try {
       await login(email, password);
-      router.push("/dashboard");
+      setSuccess("Login successful! Redirecting...");
+      setTimeout(() => router.push("/dashboard"), 1000);
     } catch (err: any) {
-      setError(err.message || "Login failed. Please try again.");
+      if (err.code === "auth/user-not-found") {
+        setError("No account found with this email. Please sign up first.");
+      } else if (err.code === "auth/wrong-password") {
+        setError("Incorrect password. Please try again.");
+      } else if (err.code === "auth/invalid-email") {
+        setError("Please enter a valid email address.");
+      } else if (err.code === "auth/too-many-requests") {
+        setError("Too many failed attempts. Please try again later.");
+      } else if (err.code === "auth/network-request-failed") {
+        setError("Network error. Please check your connection and try again.");
+      } else {
+        setError("Login failed. Please check your credentials and try again.");
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      setGoogleLoading(true);
+      setError("");
+      const googleUser = await googleLogin();
+
+      if (googleUser) {
+        // Pre-fill the email field with Google user data
+        setEmail(googleUser.email);
+        setSuccess(
+          "Google account connected! Please enter your password to sign in."
+        );
+      }
+    } catch (err: any) {
+      if (err.code === "auth/popup-closed-by-user") {
+        setError("Google sign-in was cancelled.");
+      } else if (err.code === "auth/popup-blocked") {
+        setError("Popup was blocked. Please allow popups for this site.");
+      } else if (err.code === "auth/network-request-failed") {
+        setError("Network error. Please check your connection and try again.");
+      } else if (err.code === "auth/user-not-found") {
+        setError(
+          "No account found with this Google email. Please sign up first."
+        );
+      } else {
+        setError(err.message || "Google sign-in failed. Please try again.");
+      }
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -34,10 +97,10 @@ export default function LoginPage() {
       {/* Left Side - Image Section */}
       <div className="hidden lg:flex lg:w-1/2 bg-[#49BBBD] relative">
         <div
-          className="absolute inset-0 bg-cover rounded-4xl m-10 bg-center"
+          className="absolute inset-0 bg-cover m-10 rounded-4xl bg-center"
           style={{
             backgroundImage:
-              "url('https://images.unsplash.com/photo-1589998059171-988d887df646?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2076&q=80')",
+              "url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')",
           }}
         />
         <div className="absolute inset-0 bg-[#49BBBD]/40" />
@@ -99,7 +162,7 @@ export default function LoginPage() {
               <p className="text-gray-600 mt-2">Sign in to your account</p>
             </motion.div>
 
-            {/* Error Message */}
+            {/* Messages */}
             {error && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -110,13 +173,66 @@ export default function LoginPage() {
               </motion.div>
             )}
 
+            {success && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="mb-6 p-4 bg-green-50 border border-green-200 rounded-2xl"
+              >
+                <p className="text-green-600 text-sm text-center flex items-center justify-center gap-2">
+                  <CheckCircle size={16} />
+                  {success}
+                </p>
+              </motion.div>
+            )}
+
+            {/* Google Login Button */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="mb-6"
+            >
+              <button
+                type="button"
+                onClick={handleGoogleLogin}
+                disabled={googleLoading}
+                className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-2xl py-4 hover:bg-gray-50 transition-all duration-300 disabled:opacity-50"
+              >
+                {googleLoading ? (
+                  <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <img
+                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                    alt="Google"
+                    className="w-5 h-5"
+                  />
+                )}
+                <span className="text-gray-700 font-medium">
+                  {googleLoading ? "Connecting..." : "Sign in with Google"}
+                </span>
+              </button>
+            </motion.div>
+
+            {/* Divider */}
+            <div className="relative mb-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">
+                  Or continue with email
+                </span>
+              </div>
+            </div>
+
             {/* Form Fields */}
             <div className="space-y-5">
               {/* Email Field */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
+                transition={{ delay: 0.4 }}
               >
                 <div className="relative">
                   <Mail
@@ -125,7 +241,7 @@ export default function LoginPage() {
                   />
                   <input
                     type="email"
-                    placeholder="Email address"
+                    placeholder="Email Address"
                     className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#49BBBD] focus:border-[#49BBBD] transition-all duration-300"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -138,7 +254,7 @@ export default function LoginPage() {
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 }}
+                transition={{ delay: 0.5 }}
               >
                 <div className="relative">
                   <Lock
@@ -168,7 +284,7 @@ export default function LoginPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
+              transition={{ delay: 0.6 }}
               className="mt-8"
             >
               <button
@@ -179,7 +295,7 @@ export default function LoginPage() {
                 {loading ? (
                   <div className="flex items-center gap-2">
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Signing in...</span>
+                    <span>Signing In...</span>
                   </div>
                 ) : (
                   <>
@@ -197,17 +313,17 @@ export default function LoginPage() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
+              transition={{ delay: 0.7 }}
               className="mt-6 text-center"
             >
               <p className="text-gray-600">
                 Don't have an account?{" "}
-                <a
+                <Link
                   href="/auth/signup"
                   className="text-[#49BBBD] hover:text-[#3aa8a9] font-semibold underline-offset-4 hover:underline transition-colors"
                 >
                   Create account
-                </a>
+                </Link>
               </p>
             </motion.div>
           </form>
