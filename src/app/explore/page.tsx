@@ -18,7 +18,23 @@ import {
   Calendar,
   Building,
   ArrowRight,
+  Sparkles,
+  Zap,
+  Target,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ExplorePage() {
   const { papers, fetchPapers } = useApi();
@@ -26,6 +42,7 @@ export default function ExplorePage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeTopic, setActiveTopic] = useState("");
+  const [activeTab, setActiveTab] = useState("trending");
 
   // Get user ID for gamification
   const userId = user?.uid;
@@ -35,19 +52,61 @@ export default function ExplorePage() {
       name: "Artificial Intelligence",
       icon: "🤖",
       color: "from-purple-500 to-blue-500",
+      description: "Machine learning, neural networks, and AI applications",
     },
-    { name: "Climate Change", icon: "🌍", color: "from-green-500 to-teal-500" },
-    { name: "Neuroscience", icon: "🧠", color: "from-pink-500 to-rose-500" },
+    {
+      name: "Climate Change",
+      icon: "🌍",
+      color: "from-green-500 to-teal-500",
+      description: "Environmental science and sustainability research",
+    },
+    {
+      name: "Neuroscience",
+      icon: "🧠",
+      color: "from-pink-500 to-rose-500",
+      description: "Brain research and cognitive sciences",
+    },
     {
       name: "Renewable Energy",
       icon: "⚡",
       color: "from-yellow-500 to-orange-500",
+      description: "Solar, wind, and sustainable energy solutions",
     },
-    { name: "Microbiology", icon: "🔬", color: "from-blue-500 to-cyan-500" },
+    {
+      name: "Microbiology",
+      icon: "🔬",
+      color: "from-blue-500 to-cyan-500",
+      description: "Microorganisms and biomedical research",
+    },
     {
       name: "Quantum Computing",
       icon: "⚛️",
       color: "from-indigo-500 to-purple-500",
+      description: "Quantum algorithms and computing technologies",
+    },
+  ];
+
+  const researchCategories = [
+    {
+      name: "Computer Science",
+      topics: [
+        "Machine Learning",
+        "Cybersecurity",
+        "Data Science",
+        "Software Engineering",
+      ],
+    },
+    {
+      name: "Life Sciences",
+      topics: ["Genetics", "Bioinformatics", "Ecology", "Pharmacology"],
+    },
+    {
+      name: "Physical Sciences",
+      topics: ["Physics", "Chemistry", "Astronomy", "Materials Science"],
+    },
+    {
+      name: "Social Sciences",
+      topics: ["Psychology", "Economics", "Sociology", "Political Science"],
     },
   ];
 
@@ -191,7 +250,7 @@ export default function ExplorePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 text-gray-900">
       {/* Background Pattern */}
       <div className="fixed inset-0 bg-white">
         <div className="absolute inset-0 bg-[radial-gradient(#49BBBD_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,black_70%,transparent_100%)] opacity-5"></div>
@@ -219,10 +278,15 @@ export default function ExplorePage() {
               various fields
             </p>
             {user && (
-              <p className="text-sm text-[#49BBBD] mt-2">
-                Papers will be saved to your personal library • Earn XP for
-                exploring, saving, and reading!
-              </p>
+              <div className="flex items-center justify-center gap-2 mt-2">
+                <Badge
+                  variant="outline"
+                  className="bg-[#49BBBD]/10 text-[#49BBBD] border-[#49BBBD]/20"
+                >
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  Earn XP for exploring, saving, and reading!
+                </Badge>
+              </div>
             )}
           </motion.header>
 
@@ -236,77 +300,185 @@ export default function ExplorePage() {
           >
             <div className="relative max-w-3xl mx-auto">
               <Search
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 z-10"
                 size={24}
               />
-              <input
+              <Input
                 type="text"
                 placeholder="Search for specific papers, authors, or research topics..."
-                className="w-full pl-14 pr-4 py-4 bg-white border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#49BBBD] focus:border-[#49BBBD] transition-all duration-300 shadow-sm text-lg"
+                className="w-full pl-12 pr-32 py-6 bg-white border-2 border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#49BBBD] focus:border-[#49BBBD] transition-all duration-300 shadow-sm text-lg"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
-              <button
+              <Button
                 type="submit"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-[#49BBBD] hover:bg-[#3aa8a9] text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-[#49BBBD] hover:bg-[#3aa8a9] text-white font-semibold px-6 py-2 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg"
               >
                 Search
-              </button>
+              </Button>
             </div>
             <div className="text-center mt-4">
-              <p className="text-sm text-gray-500">
+              <Badge variant="outline" className="bg-white/50 backdrop-blur-sm">
                 🔍 +5 XP for searching/exploring • 💾 +10 XP for saving • 📖 +10
                 XP for reading
-              </p>
+              </Badge>
             </div>
           </motion.form>
 
-          {/* Trending Topics */}
-          <motion.section
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.6 }}
-            className="mb-12"
+          {/* Content Tabs */}
+          <Tabs
+            defaultValue="trending"
+            className="mb-8"
+            onValueChange={setActiveTab}
           >
-            <h2 className="text-2xl font-semibold text-gray-900 mb-6 text-center">
-              Trending Research Topics
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              {trendingTopics.map((topic, index) => (
-                <motion.button
-                  key={topic.name}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.4 + index * 0.1 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => fetchTrendingPapers(topic.name)}
-                  className={`bg-white p-4 rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 text-center group ${
-                    activeTopic === topic.name ? "ring-2 ring-[#49BBBD]" : ""
-                  }`}
-                >
-                  <div className="text-2xl mb-2">{topic.icon}</div>
-                  <span className="text-sm font-medium text-gray-700 group-hover:text-[#49BBBD] transition-colors duration-300">
-                    {topic.name}
-                  </span>
-                  <div className="mt-2 text-xs text-[#49BBBD] font-medium">
-                    +5 XP
-                  </div>
-                </motion.button>
-              ))}
-            </div>
-          </motion.section>
+            <TabsList className="grid w-full grid-cols-2 bg-white/50 backdrop-blur-sm border border-gray-200/50">
+              <TabsTrigger value="trending" className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" />
+                Trending Topics
+              </TabsTrigger>
+              <TabsTrigger
+                value="categories"
+                className="flex items-center gap-2"
+              >
+                <Target className="h-4 w-4" />
+                Research Categories
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="trending">
+              <motion.section
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
+                className="mb-12"
+              >
+                <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Zap className="h-5 w-5 text-[#49BBBD]" />
+                      Hot Research Topics
+                    </CardTitle>
+                    <CardDescription>
+                      Explore the most popular and emerging research areas
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-3 md:grid-cols-6 gap-3 md:gap-4">
+                      {trendingTopics.map((topic, index) => (
+                        <motion.div
+                          key={topic.name}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.4 + index * 0.1 }}
+                        >
+                          <Card
+                            className={`bg-gradient-to-br ${
+                              topic.color
+                            } text-white cursor-pointer hover:shadow-lg transition-all duration-300 h-full ${
+                              activeTopic === topic.name
+                                ? "ring-2 ring-white ring-opacity-50"
+                                : ""
+                            }`}
+                            onClick={() => fetchTrendingPapers(topic.name)}
+                          >
+                            <CardContent className="p-3 md:p-4 text-center">
+                              <div className="text-xl md:text-2xl mb-1 md:mb-2">
+                                {topic.icon}
+                              </div>
+                              <h3 className="font-semibold text-xs md:text-sm mb-1 md:mb-2">
+                                {topic.name}
+                              </h3>
+                              <Badge
+                                variant="secondary"
+                                className="bg-white/20 text-white border-none text-xs"
+                              >
+                                +5 XP
+                              </Badge>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.section>
+            </TabsContent>
+
+            <TabsContent value="categories">
+              <motion.section
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
+                className="mb-12"
+              >
+                <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Brain className="h-5 w-5 text-[#49BBBD]" />
+                      Research Categories
+                    </CardTitle>
+                    <CardDescription>
+                      Browse papers by academic discipline and field
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {researchCategories.map((category, index) => (
+                        <motion.div
+                          key={category.name}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.4 + index * 0.1 }}
+                        >
+                          <Card className="bg-white border-gray-200/50 hover:shadow-lg transition-all duration-300">
+                            <CardHeader>
+                              <CardTitle className="text-lg">
+                                {category.name}
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="flex flex-wrap gap-2">
+                                {category.topics.map((topic) => (
+                                  <Badge
+                                    key={topic}
+                                    variant="outline"
+                                    className="cursor-pointer hover:bg-[#49BBBD] hover:text-white transition-colors"
+                                    onClick={() => {
+                                      setSearch(topic);
+                                      handleSearch({
+                                        preventDefault: () => {},
+                                      } as React.FormEvent);
+                                    }}
+                                  >
+                                    {topic}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.section>
+            </TabsContent>
+          </Tabs>
 
           {/* Active Topic Indicator */}
           {activeTopic && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center mb-6"
+              className="mb-6"
             >
-              <span className="bg-[#49BBBD] text-white px-4 py-2 rounded-full text-sm font-medium">
-                Showing results for: {activeTopic} • +5 XP earned!
-              </span>
+              <Alert className="bg-[#49BBBD]/10 border-[#49BBBD]/20">
+                <AlertDescription className="flex items-center justify-center gap-2">
+                  <Sparkles className="h-4 w-4 text-[#49BBBD]" />
+                  Showing results for: <strong>{activeTopic}</strong> • +5 XP
+                  earned!
+                </AlertDescription>
+              </Alert>
             </motion.div>
           )}
 
@@ -315,11 +487,14 @@ export default function ExplorePage() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center mb-6"
+              className="mb-6 text-center"
             >
-              <span className="bg-[#49BBBD]/10 text-[#49BBBD] px-4 py-2 rounded-full text-sm font-medium">
-                Saving to {user.email}'s personal library • Earn XP for actions!
-              </span>
+              <Badge
+                variant="outline"
+                className="bg-[#49BBBD]/10 text-[#49BBBD] border-[#49BBBD]/20"
+              >
+                Saving to {user.email}'s personal library
+              </Badge>
             </motion.div>
           )}
 
@@ -330,12 +505,18 @@ export default function ExplorePage() {
               animate={{ opacity: 1 }}
               className="text-center py-12"
             >
-              <div className="inline-flex items-center gap-3 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <div className="w-6 h-6 border-2 border-[#49BBBD] border-t-transparent rounded-full animate-spin" />
-                <span className="text-gray-600 font-medium">
-                  Exploring research papers...
-                </span>
-              </div>
+              <Card className="max-w-md mx-auto bg-white/70 backdrop-blur-sm border-gray-200/50">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 justify-center">
+                    <Skeleton className="w-6 h-6 rounded-full" />
+                    <Skeleton className="h-4 w-48" />
+                  </div>
+                  <div className="space-y-3 mt-4">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4 mx-auto" />
+                  </div>
+                </CardContent>
+              </Card>
             </motion.div>
           )}
 
@@ -347,22 +528,34 @@ export default function ExplorePage() {
               transition={{ delay: 0.6 }}
               className="space-y-6"
             >
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold text-gray-900">
-                  Research Papers
-                  <span className="text-[#49BBBD] ml-2">({papers.length})</span>
-                </h2>
-                <div className="text-right">
-                  <p className="text-gray-600 text-sm">
-                    {activeTopic
-                      ? `Trending in ${activeTopic}`
-                      : "Explore research papers"}
-                  </p>
-                  <p className="text-[#49BBBD] text-xs mt-1">
-                    Earn XP for reading and saving!
-                  </p>
-                </div>
-              </div>
+              <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50">
+                <CardContent className="p-6">
+                  <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                    <div>
+                      <CardTitle className="text-2xl">
+                        Research Papers
+                        <Badge
+                          variant="secondary"
+                          className="ml-2 bg-[#49BBBD] text-white"
+                        >
+                          {papers.length}
+                        </Badge>
+                      </CardTitle>
+                      <CardDescription>
+                        {activeTopic
+                          ? `Trending in ${activeTopic}`
+                          : "Explore research papers"}
+                      </CardDescription>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className="bg-[#49BBBD]/10 text-[#49BBBD] border-[#49BBBD]/20"
+                    >
+                      Earn XP for reading and saving!
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
 
               <div className="grid gap-6">
                 {papers.map((paper: any, index: number) => (
@@ -371,90 +564,113 @@ export default function ExplorePage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 * index }}
-                    className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group"
                   >
-                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                      {/* Paper Info */}
-                      <div className="flex-1">
-                        <h3 className="text-xl font-semibold text-gray-900 group-hover:text-[#49BBBD] transition-colors duration-300 mb-3">
-                          {paper.display_name}
-                        </h3>
+                    <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50 hover:shadow-lg transition-all duration-300 cursor-pointer group hover:border-[#49BBBD]/30">
+                      <CardContent className="p-6">
+                        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                          {/* Paper Info */}
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between mb-3">
+                              <CardTitle className="text-xl group-hover:text-[#49BBBD] transition-colors duration-300 pr-4">
+                                {paper.display_name}
+                              </CardTitle>
+                              {paper.cited_by_count > 100 && (
+                                <Badge
+                                  variant="outline"
+                                  className="bg-orange-50 text-orange-700 border-orange-200"
+                                >
+                                  Highly Cited
+                                </Badge>
+                              )}
+                            </div>
 
-                        {/* Authors */}
-                        {paper.authorships?.length > 0 && (
-                          <div className="flex items-center gap-2 mb-3">
-                            <User size={16} className="text-gray-400" />
-                            <span className="text-gray-600 text-sm">
-                              {paper.authorships
-                                .map((a: any) => a.author.display_name)
-                                .join(", ")}
-                            </span>
+                            {/* Authors */}
+                            {paper.authorships?.length > 0 && (
+                              <div className="flex items-center gap-2 mb-3">
+                                <User size={16} className="text-gray-400" />
+                                <span className="text-gray-600 text-sm">
+                                  {paper.authorships
+                                    .map((a: any) => a.author.display_name)
+                                    .join(", ")}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Journal and Year */}
+                            <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
+                              {paper.host_venue?.display_name && (
+                                <div className="flex items-center gap-1">
+                                  <Building size={14} />
+                                  <span>{paper.host_venue.display_name}</span>
+                                </div>
+                              )}
+                              {paper.publication_year && (
+                                <Badge
+                                  variant="outline"
+                                  className="bg-blue-50 text-blue-700 border-blue-200"
+                                >
+                                  <Calendar size={12} className="mr-1" />
+                                  {paper.publication_year}
+                                </Badge>
+                              )}
+                              {paper.cited_by_count > 0 && (
+                                <Badge
+                                  variant="outline"
+                                  className="bg-green-50 text-green-700 border-green-200"
+                                >
+                                  {paper.cited_by_count} citations
+                                </Badge>
+                              )}
+                            </div>
+
+                            {/* Abstract Preview */}
+                            {paper.abstract && (
+                              <CardDescription className="leading-relaxed line-clamp-2">
+                                {paper.abstract}
+                              </CardDescription>
+                            )}
                           </div>
-                        )}
 
-                        {/* Journal and Year */}
-                        <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
-                          {paper.host_venue?.display_name && (
-                            <div className="flex items-center gap-1">
-                              <Building size={14} />
-                              <span>{paper.host_venue.display_name}</span>
-                            </div>
-                          )}
-                          {paper.publication_year && (
-                            <div className="flex items-center gap-1">
-                              <Calendar size={14} />
-                              <span>Published {paper.publication_year}</span>
-                            </div>
-                          )}
+                          {/* Action Buttons */}
+                          <div className="flex lg:flex-col gap-2 lg:gap-3">
+                            <Button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleReadFull(paper);
+                              }}
+                              className="bg-[#49BBBD] hover:bg-[#3aa8a9] text-white shadow-sm hover:shadow-md"
+                              size="sm"
+                            >
+                              <BookOpen className="mr-2 h-4 w-4" />
+                              Read +10 XP
+                            </Button>
+                            <Button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSave(paper);
+                              }}
+                              variant="outline"
+                              size="sm"
+                              className="border-gray-300 hover:border-[#49BBBD] hover:bg-[#49BBBD]/5"
+                            >
+                              <Save className="mr-2 h-4 w-4" />
+                              Save +10 XP
+                            </Button>
+                          </div>
                         </div>
 
-                        {/* Abstract Preview */}
-                        {paper.abstract && (
-                          <p className="text-gray-600 text-sm leading-relaxed line-clamp-2">
-                            {paper.abstract}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex lg:flex-col gap-2 lg:gap-3">
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleReadFull(paper);
-                          }}
-                          className="flex items-center gap-2 bg-[#49BBBD] hover:bg-[#3aa8a9] text-white px-4 py-2 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md text-sm font-medium"
-                        >
-                          <BookOpen size={16} />
-                          Read +10 XP
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSave(paper);
-                          }}
-                          className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md text-sm font-medium"
-                        >
-                          <Save size={16} />
-                          Save +10 XP
-                        </motion.button>
-                      </div>
-                    </div>
-
-                    {/* View Details Arrow */}
-                    <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
-                      <span className="text-xs text-gray-500">
-                        Click to view details
-                      </span>
-                      <ArrowRight
-                        className="text-gray-400 group-hover:text-[#49BBBD] group-hover:translate-x-1 transition-all duration-300"
-                        size={16}
-                      />
-                    </div>
+                        {/* View Details Arrow */}
+                        <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
+                          <span className="text-xs text-gray-500">
+                            Click to view details
+                          </span>
+                          <ArrowRight
+                            className="text-gray-400 group-hover:text-[#49BBBD] group-hover:translate-x-1 transition-all duration-300"
+                            size={16}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
                   </motion.div>
                 ))}
               </div>
@@ -468,16 +684,25 @@ export default function ExplorePage() {
               animate={{ opacity: 1 }}
               className="text-center py-12"
             >
-              <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm max-w-md mx-auto">
-                <Search className="mx-auto text-gray-300 mb-4" size={48} />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  No papers found
-                </h3>
-                <p className="text-gray-600">
-                  Try searching for a different topic or explore trending
-                  research areas above.
-                </p>
-              </div>
+              <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50 max-w-md mx-auto">
+                <CardContent className="p-8">
+                  <Search className="mx-auto text-gray-300 mb-4" size={48} />
+                  <CardTitle className="text-lg font-semibold text-gray-900 mb-2">
+                    No papers found
+                  </CardTitle>
+                  <CardDescription className="text-gray-600">
+                    Try searching for a different topic or explore trending
+                    research areas above.
+                  </CardDescription>
+                  <Button
+                    variant="outline"
+                    className="mt-4 border-[#49BBBD] text-[#49BBBD] hover:bg-[#49BBBD] hover:text-white"
+                    onClick={() => setSearch("")}
+                  >
+                    Clear Search
+                  </Button>
+                </CardContent>
+              </Card>
             </motion.div>
           )}
         </div>

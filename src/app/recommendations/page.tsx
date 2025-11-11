@@ -21,7 +21,38 @@ import {
   RefreshCw,
   Star,
   Lightbulb,
+  Plus,
+  X,
 } from "lucide-react";
+
+// Shadcn Components
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface RecommendationRequest {
   interests: string[];
@@ -41,6 +72,7 @@ export default function RecommendationPage() {
     maxResults: 10,
   });
   const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState("interests");
   const router = useRouter();
   const { user } = useAuth();
 
@@ -113,9 +145,7 @@ export default function RecommendationPage() {
     papers.forEach((paper) => {
       // Simple keyword extraction from title
       const title = paper.title?.toLowerCase() || "";
-
       title.split(/\s+/).forEach((word: string) => {
-        // Remove punctuation and filter meaningful words
         const cleanWord = word.replace(/[^\w]/g, "");
         if (cleanWord.length > 4 && !commonWords.has(cleanWord)) {
           keywords.add(cleanWord);
@@ -123,7 +153,7 @@ export default function RecommendationPage() {
       });
     });
 
-    return Array.from(keywords).slice(0, 8); // Limit to 8 interests
+    return Array.from(keywords).slice(0, 8);
   };
 
   const addInterest = () => {
@@ -236,44 +266,25 @@ export default function RecommendationPage() {
 
     if (url) {
       window.open(url, "_blank");
-
-      // Add XP for reading with user ID
       const newXP = addXP(10, userId);
       console.log(`+10 XP for reading. Total XP: ${newXP}`);
-
-      // Track read count with user-specific key
-      const readKey = userId ? `reads_${userId}` : "reads_guest";
-      const readCount = parseInt(localStorage.getItem(readKey) || "0") + 1;
-      localStorage.setItem(readKey, readCount.toString());
-
-      // Track detailed reading data for analytics
       trackReading(paper);
-
-      // Force update achievements page
       window.dispatchEvent(new Event("storage"));
     } else {
       alert("Full paper link not available for this item.");
     }
   };
 
-  // Track detailed reading data for analytics
   const trackReading = (paper: any) => {
     const readKey = userId ? `reads_${userId}` : "reads_guest";
-
     try {
-      // Try to get existing reading data
       const existingData = localStorage.getItem(readKey);
       let readPapers: any[] = [];
-
       if (existingData) {
         try {
           const parsed = JSON.parse(existingData);
-          if (Array.isArray(parsed)) {
-            readPapers = parsed;
-          }
-          // If it's a number (old format), we'll start fresh with array
+          if (Array.isArray(parsed)) readPapers = parsed;
         } catch (error) {
-          // If parsing fails, start with empty array
           console.log("Starting fresh reading tracking array");
         }
       }
@@ -294,10 +305,8 @@ export default function RecommendationPage() {
           "",
       };
 
-      // Keep only the last 100 reads to prevent storage from growing too large
       const updatedReads = [readingRecord, ...readPapers.slice(0, 99)];
       localStorage.setItem(readKey, JSON.stringify(updatedReads));
-
       console.log(`📖 Reading tracked: ${paper.display_name}`);
     } catch (error) {
       console.error("Error tracking reading:", error);
@@ -333,391 +342,445 @@ export default function RecommendationPage() {
               reading history
             </p>
             {user && (
-              <p className="text-sm text-[#49BBBD]">
+              <p className="text-sm text-[#49BBBD] mt-2">
                 Powered by AI • Earn 15 XP for generating recommendations
               </p>
             )}
           </motion.header>
 
-          {/* Recommendation Configuration */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-2xl p-6 mb-8 border border-gray-200 shadow-sm"
-          >
-            <div className="grid md:grid-cols-2 gap-8">
-              {/* Interests Section */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Target size={20} className="text-[#49BBBD]" />
-                  Research Interests
-                </h3>
-                <p className="text-gray-600 text-sm mb-4">
-                  Add topics you're interested in. AI will find relevant papers.
-                </p>
-
-                <div className="flex gap-2 mb-4">
-                  <input
-                    type="text"
-                    value={currentInterest}
-                    onChange={(e) => setCurrentInterest(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && addInterest()}
-                    placeholder="e.g., deep learning, neuroscience..."
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                  <button
-                    onClick={addInterest}
-                    className="bg-[#49BBBD] shadow-2xl text-white px-4 py-2 rounded-lg hover:bg-[#49BBBD]/60 transition-colors"
+          {/* Main Content */}
+          <div className="grid lg:grid-cols-4 gap-6">
+            {/* Sidebar */}
+            <div className="lg:col-span-1 space-y-6">
+              <Card className="bg-white/80 backdrop-blur-sm border-gray-200/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Target className="text-[#49BBBD]" size={20} />
+                    Configuration
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Tabs
+                    value={activeTab}
+                    onValueChange={setActiveTab}
+                    className="w-full"
                   >
-                    Add
-                  </button>
-                </div>
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="interests">Interests</TabsTrigger>
+                      <TabsTrigger value="filters">Filters</TabsTrigger>
+                    </TabsList>
 
-                <div className="flex flex-wrap gap-2">
-                  {userInterests.map((interest, index) => (
-                    <motion.span
-                      key={interest}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="bg-[#49BBBD]/30 text-[#49BBBD] px-3 py-1 rounded-full text-sm flex items-center gap-1"
-                    >
-                      {interest}
-                      <button
-                        onClick={() => removeInterest(interest)}
-                        className="hover:text-green-300"
-                      >
-                        ×
-                      </button>
-                    </motion.span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Filters Section */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Filter size={20} className="text-[#49BBBD]" />
-                  Recommendation Filters
-                </h3>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Publication Years: {filters.yearsRange[0]} -{" "}
-                      {filters.yearsRange[1]}
-                    </label>
-                    <div className="flex gap-4">
-                      <input
-                        type="number"
-                        value={filters.yearsRange[0]}
-                        onChange={(e) =>
-                          setFilters({
-                            ...filters,
-                            yearsRange: [
-                              parseInt(e.target.value),
-                              filters.yearsRange[1],
-                            ],
-                          })
-                        }
-                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <input
-                        type="number"
-                        value={filters.yearsRange[1]}
-                        onChange={(e) =>
-                          setFilters({
-                            ...filters,
-                            yearsRange: [
-                              filters.yearsRange[0],
-                              parseInt(e.target.value),
-                            ],
-                          })
-                        }
-                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Number of Recommendations: {filters.maxResults}
-                    </label>
-                    <select
-                      value={filters.maxResults}
-                      onChange={(e) =>
-                        setFilters({
-                          ...filters,
-                          maxResults: parseInt(e.target.value),
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value={5}>5 papers</option>
-                      <option value={10}>10 papers</option>
-                      <option value={15}>15 papers</option>
-                      <option value={20}>20 papers</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Generate Button */}
-            <div className="text-center mt-6">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={generateRecommendations}
-                disabled={loading || userInterests.length === 0}
-                className="bg-[#49BBBD] hover:from-purple-600 hover:to-pink-600 text-white font-semibold px-8 py-4 rounded-xl transition-all duration-300 disabled:opacity-50 shadow-lg hover:shadow-xl"
-              >
-                {loading ? (
-                  <div className="flex items-center gap-2">
-                    <RefreshCw size={20} className="animate-spin" />
-                    Generating AI Recommendations...
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Sparkles size={20} />
-                    Generate AI Recommendations +15 XP
-                  </div>
-                )}
-              </motion.button>
-            </div>
-          </motion.section>
-
-          {/* Error Message */}
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="max-w-3xl mx-auto mb-8 p-4 bg-red-50 border border-red-200 rounded-2xl"
-            >
-              <p className="text-red-600 text-center font-medium">{error}</p>
-            </motion.div>
-          )}
-
-          {/* Recommendations Grid */}
-          {recommendations.length > 0 && (
-            <motion.section
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="space-y-6"
-            >
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
-                  <Lightbulb className="text-yellow-500" size={24} />
-                  Personalized Recommendations
-                  <span className="text-purple-500 ml-2">
-                    ({recommendations.length})
-                  </span>
-                </h2>
-                <div className="text-right">
-                  <p className="text-gray-600 text-sm">
-                    Filtered for {filters.yearsRange[0]}-{filters.yearsRange[1]}
-                  </p>
-                  <p className="text-purple-500 text-xs mt-1">
-                    Sorted by relevance to your interests
-                  </p>
-                </div>
-              </div>
-
-              {/* Year Filter Summary */}
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="text-blue-500" size={16} />
-                    <span className="text-sm text-blue-700 font-medium">
-                      Showing papers from {filters.yearsRange[0]} to{" "}
-                      {filters.yearsRange[1]}
-                    </span>
-                  </div>
-                  <div className="text-xs text-blue-600">
-                    {
-                      recommendations.filter(
-                        (p) =>
-                          p.publication_year >= filters.yearsRange[0] &&
-                          p.publication_year <= filters.yearsRange[1]
-                      ).length
-                    }{" "}
-                    papers in range
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid gap-6">
-                {recommendations.map((item, index) => {
-                  const isInYearRange =
-                    item.publication_year &&
-                    item.publication_year >= filters.yearsRange[0] &&
-                    item.publication_year <= filters.yearsRange[1];
-
-                  return (
-                    <motion.div
-                      key={item.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 * index }}
-                      className={`bg-white p-6 rounded-2xl border transition-all duration-300 cursor-pointer group relative ${
-                        isInYearRange
-                          ? "border-gray-200 shadow-sm hover:shadow-lg"
-                          : "border-orange-200 bg-orange-50 shadow-sm"
-                      }`}
-                      onClick={() => handleNavigate(item.id?.split("/").pop())}
-                    >
-                      {/* AI Recommendation Badge */}
-                      <div className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
-                        <Sparkles size={12} />
-                        AI Recommended
-                      </div>
-
-                      {/* Year Range Indicator */}
-                      {!isInYearRange && (
-                        <div className="absolute -top-2 -left-2 bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                          Outside Year Range
+                    <TabsContent value="interests" className="space-y-4">
+                      <div className="space-y-3">
+                        <div className="flex gap-2">
+                          <Input
+                            type="text"
+                            value={currentInterest}
+                            onChange={(e) => setCurrentInterest(e.target.value)}
+                            onKeyPress={(e) =>
+                              e.key === "Enter" && addInterest()
+                            }
+                            placeholder="e.g., deep learning"
+                            className="flex-1"
+                          />
+                          <Button onClick={addInterest} size="icon">
+                            <Plus size={16} />
+                          </Button>
                         </div>
-                      )}
 
-                      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                        {/* Paper Info */}
-                        <div className="flex-1">
-                          <h3 className="text-xl font-semibold text-gray-900 group-hover:text-purple-500 transition-colors duration-300 mb-3">
-                            {item.display_name}
-                          </h3>
-
-                          {/* Authors */}
-                          {item.authorships?.length > 0 && (
-                            <div className="flex items-center gap-2 mb-3">
-                              <User size={16} className="text-gray-400" />
-                              <span className="text-gray-600 text-sm">
-                                {item.authorships
-                                  .map((a: any) => a.author.display_name)
-                                  .join(", ")}
-                              </span>
-                            </div>
-                          )}
-
-                          {/* Journal and Year */}
-                          <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
-                            {item.host_venue?.display_name && (
-                              <div className="flex items-center gap-1">
-                                <Building size={14} />
-                                <span>{item.host_venue.display_name}</span>
-                              </div>
-                            )}
-                            {item.publication_year && (
-                              <div
-                                className={`flex items-center gap-1 ${
-                                  isInYearRange
-                                    ? "text-green-600 font-semibold"
-                                    : "text-orange-600"
-                                }`}
+                        <div className="flex flex-wrap gap-2">
+                          {userInterests.map((interest) => (
+                            <Badge
+                              key={interest}
+                              variant="secondary"
+                              className="flex items-center gap-1"
+                            >
+                              {interest}
+                              <button
+                                onClick={() => removeInterest(interest)}
+                                className="hover:text-destructive"
                               >
-                                <Calendar size={14} />
-                                <span>Published {item.publication_year}</span>
+                                <X size={12} />
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="filters" className="space-y-4">
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">
+                            Publication Years
+                          </label>
+                          <div className="flex gap-2">
+                            <Input
+                              type="number"
+                              value={filters.yearsRange[0]}
+                              onChange={(e) =>
+                                setFilters({
+                                  ...filters,
+                                  yearsRange: [
+                                    parseInt(e.target.value),
+                                    filters.yearsRange[1],
+                                  ],
+                                })
+                              }
+                            />
+                            <Input
+                              type="number"
+                              value={filters.yearsRange[1]}
+                              onChange={(e) =>
+                                setFilters({
+                                  ...filters,
+                                  yearsRange: [
+                                    filters.yearsRange[0],
+                                    parseInt(e.target.value),
+                                  ],
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">
+                            Number of Results
+                          </label>
+                          <Select
+                            value={filters.maxResults.toString()}
+                            onValueChange={(value) =>
+                              setFilters({
+                                ...filters,
+                                maxResults: parseInt(value),
+                              })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="5">5 papers</SelectItem>
+                              <SelectItem value="10">10 papers</SelectItem>
+                              <SelectItem value="15">15 papers</SelectItem>
+                              <SelectItem value="20">20 papers</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+
+                  <Separator className="my-4" />
+
+                  <Button
+                    onClick={generateRecommendations}
+                    disabled={loading || userInterests.length === 0}
+                    className="w-full bg-[#49BBBD] hover:bg-[#3aa8a9]"
+                    size="lg"
+                  >
+                    {loading ? (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="mr-2 h-4 w-4" />
+                        Generate Recommendations
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Stats Card */}
+              {recommendations.length > 0 && (
+                <Card className="bg-white/80 backdrop-blur-sm border-gray-200/50">
+                  <CardHeader>
+                    <CardTitle className="text-lg">
+                      Recommendation Stats
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">
+                        Total Results
+                      </span>
+                      <Badge variant="outline">{recommendations.length}</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Year Range</span>
+                      <Badge variant="outline">
+                        {filters.yearsRange[0]} - {filters.yearsRange[1]}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">In Range</span>
+                      <Badge variant="outline">
+                        {
+                          recommendations.filter(
+                            (p) =>
+                              p.publication_year >= filters.yearsRange[0] &&
+                              p.publication_year <= filters.yearsRange[1]
+                          ).length
+                        }
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
+            {/* Main Content Area */}
+            <div className="lg:col-span-3">
+              {/* Error Message */}
+              {error && (
+                <Alert variant="destructive" className="mb-6">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              {/* Recommendations Grid */}
+              {recommendations.length > 0 ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="space-y-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-2xl flex items-center gap-2">
+                      <Lightbulb className="text-yellow-500" size={24} />
+                      Personalized Recommendations
+                    </CardTitle>
+                    <Badge variant="outline" className="text-sm">
+                      {recommendations.length} papers
+                    </Badge>
+                  </div>
+
+                  <div className="space-y-4">
+                    {recommendations.map((item, index) => {
+                      const isInYearRange =
+                        item.publication_year &&
+                        item.publication_year >= filters.yearsRange[0] &&
+                        item.publication_year <= filters.yearsRange[1];
+
+                      return (
+                        <motion.div
+                          key={item.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.1 * index }}
+                        >
+                          <Card
+                            className={`cursor-pointer transition-all duration-300 hover:shadow-lg ${
+                              !isInYearRange
+                                ? "border-orange-200 bg-orange-50"
+                                : ""
+                            }`}
+                            onClick={() =>
+                              handleNavigate(item.id?.split("/").pop())
+                            }
+                          >
+                            <CardContent className="p-6">
+                              {/* Header with Badges */}
+                              <div className="flex flex-wrap gap-2 mb-3">
+                                <Badge className="bg-gradient-to-r from-purple-500 to-pink-500">
+                                  <Sparkles className="w-3 h-3 mr-1" />
+                                  AI Recommended
+                                </Badge>
                                 {!isInYearRange && (
-                                  <span className="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full ml-1">
-                                    Outside filter
-                                  </span>
+                                  <Badge
+                                    variant="outline"
+                                    className="text-orange-600 border-orange-300"
+                                  >
+                                    Outside Year Range
+                                  </Badge>
+                                )}
+                                {item.relevance_score && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="ml-auto"
+                                  >
+                                    <TrendingUp className="w-3 h-3 mr-1" />
+                                    {(item.relevance_score * 100).toFixed(1)}%
+                                    Relevant
+                                  </Badge>
                                 )}
                               </div>
-                            )}
-                          </div>
 
-                          {/* Abstract Preview */}
-                          {item.abstract && (
-                            <p className="text-gray-600 text-sm leading-relaxed line-clamp-2">
-                              {item.abstract}
-                            </p>
-                          )}
+                              {/* Paper Title */}
+                              <h3 className="text-xl font-semibold mb-3 line-clamp-2 group-hover:text-[#49BBBD] transition-colors">
+                                {item.display_name}
+                              </h3>
 
-                          {/* Relevance Score */}
-                          {item.relevance_score && (
-                            <div className="flex items-center gap-2 mt-3">
-                              <TrendingUp
-                                size={14}
-                                className="text-green-500"
-                              />
-                              <span className="text-xs text-gray-500">
-                                Relevance:{" "}
-                                {(item.relevance_score * 100).toFixed(1)}%
-                              </span>
-                            </div>
-                          )}
-                        </div>
+                              {/* Metadata */}
+                              <div className="space-y-2 mb-4">
+                                {item.authorships?.length > 0 && (
+                                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                                    <User size={14} />
+                                    <span className="line-clamp-1">
+                                      {item.authorships
+                                        .map((a: any) => a.author.display_name)
+                                        .join(", ")}
+                                    </span>
+                                  </div>
+                                )}
 
-                        {/* Action Buttons */}
-                        <div className="flex lg:flex-col gap-2 lg:gap-3">
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSave(item);
-                            }}
-                            className="flex items-center gap-2 bg-[#49BBBD] hover:bg-[#3aa8a9] text-white px-4 py-2 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md text-sm font-medium"
-                          >
-                            <Save size={16} />
-                            Save +10 XP
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleReadFullPaper(item);
-                            }}
-                            className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md text-sm font-medium"
-                          >
-                            <BookOpen size={16} />
-                            Read +10 XP
-                          </motion.button>
-                        </div>
-                      </div>
+                                <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                                  {item.host_venue?.display_name && (
+                                    <div className="flex items-center gap-1">
+                                      <Building size={14} />
+                                      <span>
+                                        {item.host_venue.display_name}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {item.publication_year && (
+                                    <div
+                                      className={`flex items-center gap-1 ${
+                                        isInYearRange
+                                          ? "text-green-600"
+                                          : "text-orange-600"
+                                      }`}
+                                    >
+                                      <Calendar size={14} />
+                                      <span>
+                                        Published {item.publication_year}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
 
-                      {/* View Details Arrow */}
-                      <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
-                        <span className="text-xs text-gray-500">
-                          Click to view detailed information
-                        </span>
-                        <ArrowRight
-                          className="text-gray-400 group-hover:text-purple-500 group-hover:translate-x-1 transition-all duration-300"
-                          size={16}
+                              {/* Abstract Preview */}
+                              {item.abstract && (
+                                <p className="text-gray-600 text-sm leading-relaxed line-clamp-3 mb-4">
+                                  {item.abstract}
+                                </p>
+                              )}
+
+                              {/* Action Buttons */}
+                              <div className="flex justify-between items-center pt-4 border-t">
+                                <div className="flex gap-2">
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleSave(item);
+                                          }}
+                                        >
+                                          <Save className="w-4 h-4 mr-1" />
+                                          Save
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Save to library +10 XP</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleReadFullPaper(item);
+                                          }}
+                                        >
+                                          <BookOpen className="w-4 h-4 mr-1" />
+                                          Read
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Read full paper +10 XP</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </div>
+
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-gray-500"
+                                >
+                                  View Details
+                                  <ArrowRight className="w-4 h-4 ml-1" />
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              ) : (
+                /* Empty State */
+                !loading && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-center py-12"
+                  >
+                    <Card className="bg-white/80 backdrop-blur-sm border-gray-200/50 max-w-md mx-auto">
+                      <CardContent className="p-8">
+                        <Sparkles
+                          className="mx-auto text-gray-300 mb-4"
+                          size={48}
                         />
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </motion.section>
-          )}
+                        <CardTitle className="text-lg mb-2">
+                          Get Personalized Recommendations
+                        </CardTitle>
+                        <CardDescription className="mb-4">
+                          Add your research interests and let AI find the
+                          perfect papers for you.
+                        </CardDescription>
+                        <div className="text-sm text-gray-500 space-y-1 text-left">
+                          <p>✨ Based on your saved papers</p>
+                          <p>🎯 Tailored to your interests</p>
+                          <p>📚 Updated as you read more</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                )
+              )}
 
-          {/* Empty State */}
-          {!loading && recommendations.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-12"
-            >
-              <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm max-w-md mx-auto">
-                <Sparkles className="mx-auto text-gray-300 mb-4" size={48} />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Get Personalized Recommendations
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Add your research interests above and let AI find the perfect
-                  papers for you.
-                </p>
-                <div className="text-sm text-gray-500 space-y-1">
-                  <p>✨ Based on your saved papers</p>
-                  <p>🎯 Tailored to your interests</p>
-                  <p>📚 Updated as you read more</p>
+              {/* Loading State */}
+              {loading && (
+                <div className="space-y-4">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <Card
+                      key={index}
+                      className="bg-white/80 backdrop-blur-sm border-gray-200/50"
+                    >
+                      <CardContent className="p-6">
+                        <div className="space-y-3">
+                          <Skeleton className="h-6 w-3/4" />
+                          <Skeleton className="h-4 w-1/2" />
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-2/3" />
+                          <div className="flex gap-2 pt-4">
+                            <Skeleton className="h-8 w-20" />
+                            <Skeleton className="h-8 w-20" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
-              </div>
-            </motion.div>
-          )}
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

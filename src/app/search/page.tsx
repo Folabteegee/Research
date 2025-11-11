@@ -21,13 +21,29 @@ import {
   ArrowRight,
   Brain,
   Download,
+  Filter,
+  Sparkles,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [activeFilter, setActiveFilter] = useState("all");
   const router = useRouter();
   const { library } = useZotero();
   const { user } = useAuth();
@@ -192,8 +208,18 @@ export default function SearchPage() {
     }
   };
 
+  // Filter results based on active filter
+  const filteredResults = results.filter((paper) => {
+    if (activeFilter === "recent") {
+      return paper.publication_year >= 2020;
+    } else if (activeFilter === "highly-cited") {
+      return paper.cited_by_count > 100;
+    }
+    return true;
+  });
+
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-blue-100 text-gray-900">
       {/* Background Pattern */}
       <div className="fixed inset-0 bg-white">
         <div className="absolute inset-0 bg-[radial-gradient(#49BBBD_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,black_70%,transparent_100%)] opacity-5"></div>
@@ -221,7 +247,8 @@ export default function SearchPage() {
               author, or keywords.
             </p>
             {user && (
-              <p className="text-sm text-[#49BBBD] mt-2">
+              <p className="text-sm text-[#49BBBD] mt-2 flex items-center justify-center gap-2">
+                <Sparkles className="w-4 h-4" />
                 Papers will be saved to your personal library • Earn XP for
                 searching, saving, and reading!
               </p>
@@ -238,29 +265,36 @@ export default function SearchPage() {
           >
             <div className="relative max-w-3xl mx-auto">
               <Search
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 z-10"
                 size={24}
               />
-              <input
+              <Input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search for research papers, authors, topics, or keywords..."
-                className="w-full pl-14 pr-4 py-4 bg-white border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#49BBBD] focus:border-[#49BBBD] transition-all duration-300 shadow-sm text-lg"
+                className="w-full pl-12 pr-32 py-6 bg-white border-2 border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#49BBBD] focus:border-[#49BBBD] transition-all duration-300 shadow-sm text-lg"
               />
-              <button
+              <Button
                 type="submit"
                 disabled={loading}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-[#49BBBD] hover:bg-[#3aa8a9] text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 disabled:opacity-50 shadow-md hover:shadow-lg"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-[#49BBBD] hover:bg-[#3aa8a9] text-white font-semibold px-6 py-2 rounded-xl transition-all duration-300 disabled:opacity-50 shadow-md hover:shadow-lg"
               >
-                {loading ? "Searching..." : "Search"}
-              </button>
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Searching...
+                  </div>
+                ) : (
+                  "Search"
+                )}
+              </Button>
             </div>
             <div className="text-center mt-4">
-              <p className="text-sm text-gray-500">
+              <Badge variant="outline" className="bg-white/50 backdrop-blur-sm">
                 🔍 +5 XP for searching • 💾 +10 XP for saving • 📖 +10 XP for
                 reading
-              </p>
+              </Badge>
             </div>
           </motion.form>
 
@@ -269,9 +303,13 @@ export default function SearchPage() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="max-w-3xl mx-auto mb-8 p-4 bg-red-50 border border-red-200 rounded-2xl"
+              className="max-w-3xl mx-auto mb-8"
             >
-              <p className="text-red-600 text-center font-medium">{error}</p>
+              <Alert variant="destructive">
+                <AlertDescription className="text-center">
+                  {error}
+                </AlertDescription>
+              </Alert>
             </motion.div>
           )}
 
@@ -282,12 +320,18 @@ export default function SearchPage() {
               animate={{ opacity: 1 }}
               className="text-center py-12"
             >
-              <div className="inline-flex items-center gap-3 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <div className="w-6 h-6 border-2 border-[#49BBBD] border-t-transparent rounded-full animate-spin" />
-                <span className="text-gray-600 font-medium">
-                  Searching OpenAlex database...
-                </span>
-              </div>
+              <Card className="max-w-md mx-auto bg-white/70 backdrop-blur-sm border-gray-200/50">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="w-6 h-6 rounded-full" />
+                    <Skeleton className="h-4 flex-1" />
+                  </div>
+                  <div className="space-y-3 mt-4">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </div>
+                </CardContent>
+              </Card>
             </motion.div>
           )}
 
@@ -298,23 +342,32 @@ export default function SearchPage() {
               animate={{ opacity: 1 }}
               className="text-center py-12"
             >
-              <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm max-w-md mx-auto">
-                <Search className="mx-auto text-gray-300 mb-4" size={48} />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  No results found
-                </h3>
-                <p className="text-gray-600">
-                  No papers found for{" "}
-                  <span className="font-semibold">"{query}"</span>
-                </p>
-                <p className="text-gray-500 text-sm mt-2">
-                  Try different keywords or check your spelling
-                </p>
-              </div>
+              <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50 max-w-md mx-auto">
+                <CardContent className="p-8">
+                  <Search className="mx-auto text-gray-300 mb-4" size={48} />
+                  <CardTitle className="text-lg font-semibold text-gray-900 mb-2">
+                    No results found
+                  </CardTitle>
+                  <CardDescription className="text-gray-600">
+                    No papers found for{" "}
+                    <span className="font-semibold">"{query}"</span>
+                  </CardDescription>
+                  <p className="text-gray-500 text-sm mt-2">
+                    Try different keywords or check your spelling
+                  </p>
+                  <Button
+                    variant="outline"
+                    className="mt-4 border-[#49BBBD] text-[#49BBBD] hover:bg-[#49BBBD] hover:text-white"
+                    onClick={() => setQuery("")}
+                  >
+                    Clear Search
+                  </Button>
+                </CardContent>
+              </Card>
             </motion.div>
           )}
 
-          {/* Results Grid */}
+          {/* Results Section */}
           {!loading && results.length > 0 && (
             <motion.section
               initial={{ opacity: 0 }}
@@ -322,117 +375,178 @@ export default function SearchPage() {
               transition={{ delay: 0.3 }}
               className="space-y-6"
             >
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold text-gray-900">
-                  Search Results
-                  <span className="text-[#49BBBD] ml-2">
-                    ({results.length})
-                  </span>
-                </h2>
-                <div className="text-right">
-                  <p className="text-gray-600 text-sm">
-                    Found {results.length} papers for "{query}"
-                  </p>
-                  {user && (
-                    <p className="text-[#49BBBD] text-xs mt-1">
-                      Saving to {user.email}'s library • Earn XP for actions!
-                    </p>
-                  )}
-                </div>
-              </div>
+              {/* Results Header with Filters */}
+              <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50">
+                <CardContent className="p-6">
+                  <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                    <div>
+                      <h2 className="text-2xl font-semibold text-gray-900">
+                        Search Results
+                        <Badge
+                          variant="secondary"
+                          className="ml-2 bg-[#49BBBD] text-white"
+                        >
+                          {filteredResults.length}
+                        </Badge>
+                      </h2>
+                      <CardDescription>
+                        Found {results.length} papers for "{query}"
+                      </CardDescription>
+                      {user && (
+                        <Badge
+                          variant="outline"
+                          className="mt-1 bg-[#49BBBD]/10 text-[#49BBBD] border-[#49BBBD]/20"
+                        >
+                          Saving to {user.email}'s library
+                        </Badge>
+                      )}
+                    </div>
 
+                    {/* Filter Tabs */}
+                    <Tabs defaultValue="all" className="w-full lg:w-auto">
+                      <TabsList className="bg-white/50 border border-gray-200/50">
+                        <TabsTrigger
+                          value="all"
+                          onClick={() => setActiveFilter("all")}
+                        >
+                          All Papers
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="recent"
+                          onClick={() => setActiveFilter("recent")}
+                        >
+                          Recent
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="highly-cited"
+                          onClick={() => setActiveFilter("highly-cited")}
+                        >
+                          Highly Cited
+                        </TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Results Grid */}
               <div className="grid gap-6">
-                {results.map((item, index) => (
+                {filteredResults.map((item, index) => (
                   <motion.div
                     key={item.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 * index }}
-                    className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group"
-                    onClick={() => handleNavigate(item.id?.split("/").pop())}
                   >
-                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                      {/* Paper Info */}
-                      <div className="flex-1">
-                        <h3 className="text-xl font-semibold text-gray-900 group-hover:text-[#49BBBD] transition-colors duration-300 mb-3">
-                          {item.display_name}
-                        </h3>
+                    <Card
+                      className="bg-white/70 backdrop-blur-sm border-gray-200/50 hover:shadow-lg transition-all duration-300 cursor-pointer group hover:border-[#49BBBD]/30"
+                      onClick={() => handleNavigate(item.id?.split("/").pop())}
+                    >
+                      <CardContent className="p-6">
+                        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                          {/* Paper Info */}
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between mb-3">
+                              <CardTitle className="text-xl group-hover:text-[#49BBBD] transition-colors duration-300 pr-4">
+                                {item.display_name}
+                              </CardTitle>
+                              {item.cited_by_count > 100 && (
+                                <Badge
+                                  variant="outline"
+                                  className="bg-orange-50 text-orange-700 border-orange-200"
+                                >
+                                  Highly Cited
+                                </Badge>
+                              )}
+                            </div>
 
-                        {/* Authors */}
-                        {item.authorships?.length > 0 && (
-                          <div className="flex items-center gap-2 mb-3">
-                            <User size={16} className="text-gray-400" />
-                            <span className="text-gray-600 text-sm">
-                              {item.authorships
-                                .map((a: any) => a.author.display_name)
-                                .join(", ")}
-                            </span>
+                            {/* Authors */}
+                            {item.authorships?.length > 0 && (
+                              <div className="flex items-center gap-2 mb-3">
+                                <User size={16} className="text-gray-400" />
+                                <span className="text-gray-600 text-sm">
+                                  {item.authorships
+                                    .map((a: any) => a.author.display_name)
+                                    .join(", ")}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Journal and Year */}
+                            <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
+                              {item.host_venue?.display_name && (
+                                <div className="flex items-center gap-1">
+                                  <Building size={14} />
+                                  <span>{item.host_venue.display_name}</span>
+                                </div>
+                              )}
+                              {item.publication_year && (
+                                <Badge
+                                  variant="outline"
+                                  className="bg-blue-50 text-blue-700 border-blue-200"
+                                >
+                                  <Calendar size={12} className="mr-1" />
+                                  {item.publication_year}
+                                </Badge>
+                              )}
+                              {item.cited_by_count > 0 && (
+                                <Badge
+                                  variant="outline"
+                                  className="bg-green-50 text-green-700 border-green-200"
+                                >
+                                  {item.cited_by_count} citations
+                                </Badge>
+                              )}
+                            </div>
+
+                            {/* Abstract Preview */}
+                            {item.abstract && (
+                              <CardDescription className="leading-relaxed line-clamp-2">
+                                {item.abstract}
+                              </CardDescription>
+                            )}
                           </div>
-                        )}
 
-                        {/* Journal and Year */}
-                        <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
-                          {item.host_venue?.display_name && (
-                            <div className="flex items-center gap-1">
-                              <Building size={14} />
-                              <span>{item.host_venue.display_name}</span>
-                            </div>
-                          )}
-                          {item.publication_year && (
-                            <div className="flex items-center gap-1">
-                              <Calendar size={14} />
-                              <span>Published {item.publication_year}</span>
-                            </div>
-                          )}
+                          {/* Action Buttons */}
+                          <div className="flex lg:flex-col gap-2 lg:gap-3">
+                            <Button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSave(item);
+                              }}
+                              className="bg-[#49BBBD] hover:bg-[#3aa8a9] text-white shadow-sm hover:shadow-md"
+                              size="sm"
+                            >
+                              <Save size={16} className="mr-2" />
+                              Save +10 XP
+                            </Button>
+                            <Button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleReadFullPaper(item);
+                              }}
+                              variant="outline"
+                              size="sm"
+                              className="border-gray-300 hover:border-[#49BBBD] hover:bg-[#49BBBD]/5"
+                            >
+                              <BookOpen size={16} className="mr-2" />
+                              Read +10 XP
+                            </Button>
+                          </div>
                         </div>
 
-                        {/* Abstract Preview */}
-                        {item.abstract && (
-                          <p className="text-gray-600 text-sm leading-relaxed line-clamp-2">
-                            {item.abstract}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex lg:flex-col gap-2 lg:gap-3">
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSave(item);
-                          }}
-                          className="flex items-center gap-2 bg-[#49BBBD] hover:bg-[#3aa8a9] text-white px-4 py-2 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md text-sm font-medium"
-                        >
-                          <Save size={16} />
-                          Save +10 XP
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleReadFullPaper(item);
-                          }}
-                          className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md text-sm font-medium"
-                        >
-                          <BookOpen size={16} />
-                          Read +10 XP
-                        </motion.button>
-                      </div>
-                    </div>
-
-                    {/* View Details Arrow */}
-                    <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
-                      <span className="text-xs text-gray-500">
-                        Click to view details
-                      </span>
-                      <ArrowRight
-                        className="text-gray-400 group-hover:text-[#49BBBD] group-hover:translate-x-1 transition-all duration-300"
-                        size={16}
-                      />
-                    </div>
+                        {/* View Details Arrow */}
+                        <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
+                          <span className="text-xs text-gray-500">
+                            Click to view details
+                          </span>
+                          <ArrowRight
+                            className="text-gray-400 group-hover:text-[#49BBBD] group-hover:translate-x-1 transition-all duration-300"
+                            size={16}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
                   </motion.div>
                 ))}
               </div>

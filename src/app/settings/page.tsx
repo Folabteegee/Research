@@ -442,7 +442,9 @@ export default function SettingsPage() {
           className="text-center text-sm text-gray-500 dark:text-gray-400 mt-8"
         >
           <p>Research Companion v1.0.0</p>
-          <p className="mt-1">Built with ❤️ for researchers</p>
+          <p className="mt-1">
+            Built with ❤️ by Taiwo G. Afolabi for researchers
+          </p>
         </motion.div>
       </div>
     </div>
