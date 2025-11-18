@@ -116,10 +116,10 @@ export default function LibraryPage() {
   const userInitial = user?.email ? user.email.charAt(0).toUpperCase() : "U";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 text-gray-900">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Background Pattern */}
-      <div className="fixed inset-0 bg-white">
-        <div className="absolute inset-0 bg-[radial-gradient(#49BBBD_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,black_70%,transparent_100%)] opacity-5"></div>
+      <div className="fixed inset-0 bg-background">
+        <div className="absolute inset-0 bg-[radial-gradient(#49BBBD_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,black_70%,transparent_100%)] opacity-5 dark:opacity-10"></div>
       </div>
 
       <div className="relative z-10 min-h-screen">
@@ -141,7 +141,7 @@ export default function LibraryPage() {
                 </Avatar>
                 <div>
                   <div className="flex items-center gap-3">
-                    <h1 className="text-3xl lg:text-4xl font-bold text-gray-900">
+                    <h1 className="text-3xl lg:text-4xl font-bold text-foreground">
                       My Research Library
                     </h1>
                     <Badge
@@ -152,11 +152,11 @@ export default function LibraryPage() {
                       {savedPapers.length} items
                     </Badge>
                   </div>
-                  <p className="text-gray-600 mt-1">
+                  <p className="text-muted-foreground mt-1">
                     Your personal collection of saved research papers
                   </p>
                   {user && (
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       Personal library for {user.email}
                     </p>
                   )}
@@ -186,7 +186,7 @@ export default function LibraryPage() {
                     {savedPapers.length > 0 && (
                       <DropdownMenuItem
                         onClick={handleRemoveAll}
-                        className="text-red-600"
+                        className="text-red-600 dark:text-red-400"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
                         Clear All
@@ -206,7 +206,7 @@ export default function LibraryPage() {
               transition={{ delay: 0.2 }}
               className="mb-6"
             >
-              <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50">
+              <Card className="bg-card/50 backdrop-blur-sm border-border/50">
                 <CardContent className="p-6">
                   <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
                     <div className="flex-1 w-full">
@@ -214,12 +214,12 @@ export default function LibraryPage() {
                         placeholder="Search your library by title, author, or journal..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="bg-white/50 border-gray-200"
+                        className="bg-background/50 border-border"
                       />
                     </div>
 
                     <Tabs defaultValue="all" className="w-full lg:w-auto">
-                      <TabsList className="bg-white/50 border border-gray-200/50">
+                      <TabsList className="bg-background/50 border border-border/50">
                         <TabsTrigger
                           value="all"
                           onClick={() => setActiveFilter("all")}
@@ -241,7 +241,7 @@ export default function LibraryPage() {
                       </TabsList>
                     </Tabs>
 
-                    <Badge variant="outline" className="bg-white/50">
+                    <Badge variant="outline" className="bg-background/50">
                       {filteredPapers.length} of {savedPapers.length} papers
                     </Badge>
                   </div>
@@ -258,13 +258,16 @@ export default function LibraryPage() {
               transition={{ duration: 0.6 }}
               className="text-center py-16"
             >
-              <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50 max-w-md mx-auto">
+              <Card className="bg-card/50 backdrop-blur-sm border-border/50 max-w-md mx-auto">
                 <CardContent className="p-8">
-                  <BookOpen className="mx-auto text-gray-300 mb-4" size={64} />
-                  <CardTitle className="text-2xl font-semibold text-gray-900 mb-2">
+                  <BookOpen
+                    className="mx-auto text-muted-foreground/30 mb-4"
+                    size={64}
+                  />
+                  <CardTitle className="text-2xl font-semibold text-foreground mb-2">
                     Your Library is Empty
                   </CardTitle>
-                  <CardDescription className="text-gray-600 mb-6">
+                  <CardDescription className="text-muted-foreground mb-6">
                     Start building your personal research collection by saving
                     papers from search results.
                   </CardDescription>
@@ -312,7 +315,7 @@ export default function LibraryPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 * index }}
                 >
-                  <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50 hover:shadow-lg transition-all duration-300 cursor-pointer group hover:border-[#49BBBD]/30 h-full">
+                  <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300 cursor-pointer group hover:border-[#49BBBD]/30 h-full">
                     <CardContent className="p-6 flex flex-col h-full">
                       {/* Paper Header */}
                       <div className="flex items-start justify-between mb-4">
@@ -323,13 +326,13 @@ export default function LibraryPage() {
                           {paper.year && paper.year >= 2020 && (
                             <Badge
                               variant="outline"
-                              className="bg-green-50 text-green-700 border-green-200 text-xs"
+                              className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800 text-xs"
                             >
                               Recent
                             </Badge>
                           )}
                           <ArrowRight
-                            className="text-gray-400 group-hover:text-[#49BBBD] group-hover:translate-x-1 transition-all duration-300"
+                            className="text-muted-foreground group-hover:text-[#49BBBD] group-hover:translate-x-1 transition-all duration-300"
                             size={16}
                           />
                         </div>
@@ -343,14 +346,14 @@ export default function LibraryPage() {
                       {/* Paper Metadata */}
                       <div className="space-y-2 mb-4 flex-1">
                         {paper.author && paper.author !== "Unknown author" && (
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <User size={14} />
                             <span className="line-clamp-1">{paper.author}</span>
                           </div>
                         )}
 
                         {paper.journal && paper.journal !== "N/A" && (
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Building size={14} />
                             <span className="line-clamp-1">
                               {paper.journal}
@@ -359,7 +362,7 @@ export default function LibraryPage() {
                         )}
 
                         {paper.year && paper.year !== "N/A" && (
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Calendar size={14} />
                             <span>Published {paper.year}</span>
                           </div>
@@ -367,7 +370,7 @@ export default function LibraryPage() {
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="flex gap-2 pt-4 border-t border-gray-100">
+                      <div className="flex gap-2 pt-4 border-t border-border">
                         <Button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -387,7 +390,7 @@ export default function LibraryPage() {
                           }}
                           variant="outline"
                           size="sm"
-                          className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                          className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-900/20"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

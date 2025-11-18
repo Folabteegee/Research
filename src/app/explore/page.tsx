@@ -250,10 +250,10 @@ export default function ExplorePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 text-gray-900">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Background Pattern */}
-      <div className="fixed inset-0 bg-white">
-        <div className="absolute inset-0 bg-[radial-gradient(#49BBBD_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,black_70%,transparent_100%)] opacity-5"></div>
+      <div className="fixed inset-0 bg-background">
+        <div className="absolute inset-0 bg-[radial-gradient(#49BBBD_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,black_70%,transparent_100%)] opacity-5 dark:opacity-10"></div>
       </div>
 
       <div className="relative z-10 min-h-screen">
@@ -270,10 +270,10 @@ export default function ExplorePage() {
                 <TrendingUp className="text-white" size={32} />
               </div>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
               Explore Research Trends
             </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Discover trending papers and explore cutting-edge research across
               various fields
             </p>
@@ -300,13 +300,13 @@ export default function ExplorePage() {
           >
             <div className="relative max-w-3xl mx-auto">
               <Search
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 z-10"
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground z-10"
                 size={24}
               />
               <Input
                 type="text"
                 placeholder="Search for specific papers, authors, or research topics..."
-                className="w-full pl-12 pr-32 py-6 bg-white border-2 border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#49BBBD] focus:border-[#49BBBD] transition-all duration-300 shadow-sm text-lg"
+                className="w-full pl-12 pr-32 py-6 bg-card border-2 border-border rounded-2xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#49BBBD] focus:border-[#49BBBD] transition-all duration-300 shadow-sm text-lg"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -318,7 +318,7 @@ export default function ExplorePage() {
               </Button>
             </div>
             <div className="text-center mt-4">
-              <Badge variant="outline" className="bg-white/50 backdrop-blur-sm">
+              <Badge variant="outline" className="bg-card/50 backdrop-blur-sm">
                 🔍 +5 XP for searching/exploring • 💾 +10 XP for saving • 📖 +10
                 XP for reading
               </Badge>
@@ -331,7 +331,7 @@ export default function ExplorePage() {
             className="mb-8"
             onValueChange={setActiveTab}
           >
-            <TabsList className="grid w-full grid-cols-2 bg-white/50 backdrop-blur-sm border border-gray-200/50">
+            <TabsList className="grid w-full grid-cols-2 bg-background/50 backdrop-blur-sm border border-border/50">
               <TabsTrigger value="trending" className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4" />
                 Trending Topics
@@ -352,7 +352,7 @@ export default function ExplorePage() {
                 transition={{ delay: 0.3, duration: 0.6 }}
                 className="mb-12"
               >
-                <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50">
+                <Card className="bg-card/50 backdrop-blur-sm border-border/50">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Zap className="h-5 w-5 text-[#49BBBD]" />
@@ -411,7 +411,7 @@ export default function ExplorePage() {
                 transition={{ delay: 0.3, duration: 0.6 }}
                 className="mb-12"
               >
-                <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50">
+                <Card className="bg-card/50 backdrop-blur-sm border-border/50">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Brain className="h-5 w-5 text-[#49BBBD]" />
@@ -430,7 +430,7 @@ export default function ExplorePage() {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.4 + index * 0.1 }}
                         >
-                          <Card className="bg-white border-gray-200/50 hover:shadow-lg transition-all duration-300">
+                          <Card className="bg-card border-border/50 hover:shadow-lg transition-all duration-300">
                             <CardHeader>
                               <CardTitle className="text-lg">
                                 {category.name}
@@ -505,7 +505,7 @@ export default function ExplorePage() {
               animate={{ opacity: 1 }}
               className="text-center py-12"
             >
-              <Card className="max-w-md mx-auto bg-white/70 backdrop-blur-sm border-gray-200/50">
+              <Card className="max-w-md mx-auto bg-card/50 backdrop-blur-sm border-border/50">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3 justify-center">
                     <Skeleton className="w-6 h-6 rounded-full" />
@@ -528,7 +528,7 @@ export default function ExplorePage() {
               transition={{ delay: 0.6 }}
               className="space-y-6"
             >
-              <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50">
+              <Card className="bg-card/50 backdrop-blur-sm border-border/50">
                 <CardContent className="p-6">
                   <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                     <div>
@@ -565,7 +565,7 @@ export default function ExplorePage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 * index }}
                   >
-                    <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50 hover:shadow-lg transition-all duration-300 cursor-pointer group hover:border-[#49BBBD]/30">
+                    <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300 cursor-pointer group hover:border-[#49BBBD]/30">
                       <CardContent className="p-6">
                         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                           {/* Paper Info */}
@@ -577,7 +577,7 @@ export default function ExplorePage() {
                               {paper.cited_by_count > 100 && (
                                 <Badge
                                   variant="outline"
-                                  className="bg-orange-50 text-orange-700 border-orange-200"
+                                  className="bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800"
                                 >
                                   Highly Cited
                                 </Badge>
@@ -587,8 +587,11 @@ export default function ExplorePage() {
                             {/* Authors */}
                             {paper.authorships?.length > 0 && (
                               <div className="flex items-center gap-2 mb-3">
-                                <User size={16} className="text-gray-400" />
-                                <span className="text-gray-600 text-sm">
+                                <User
+                                  size={16}
+                                  className="text-muted-foreground"
+                                />
+                                <span className="text-muted-foreground text-sm">
                                   {paper.authorships
                                     .map((a: any) => a.author.display_name)
                                     .join(", ")}
@@ -597,7 +600,7 @@ export default function ExplorePage() {
                             )}
 
                             {/* Journal and Year */}
-                            <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
+                            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
                               {paper.host_venue?.display_name && (
                                 <div className="flex items-center gap-1">
                                   <Building size={14} />
@@ -607,7 +610,7 @@ export default function ExplorePage() {
                               {paper.publication_year && (
                                 <Badge
                                   variant="outline"
-                                  className="bg-blue-50 text-blue-700 border-blue-200"
+                                  className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800"
                                 >
                                   <Calendar size={12} className="mr-1" />
                                   {paper.publication_year}
@@ -616,7 +619,7 @@ export default function ExplorePage() {
                               {paper.cited_by_count > 0 && (
                                 <Badge
                                   variant="outline"
-                                  className="bg-green-50 text-green-700 border-green-200"
+                                  className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800"
                                 >
                                   {paper.cited_by_count} citations
                                 </Badge>
@@ -651,7 +654,7 @@ export default function ExplorePage() {
                               }}
                               variant="outline"
                               size="sm"
-                              className="border-gray-300 hover:border-[#49BBBD] hover:bg-[#49BBBD]/5"
+                              className="border-border hover:border-[#49BBBD] hover:bg-[#49BBBD]/5"
                             >
                               <Save className="mr-2 h-4 w-4" />
                               Save +10 XP
@@ -660,12 +663,12 @@ export default function ExplorePage() {
                         </div>
 
                         {/* View Details Arrow */}
-                        <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
-                          <span className="text-xs text-gray-500">
+                        <div className="flex justify-between items-center mt-4 pt-4 border-t border-border">
+                          <span className="text-xs text-muted-foreground">
                             Click to view details
                           </span>
                           <ArrowRight
-                            className="text-gray-400 group-hover:text-[#49BBBD] group-hover:translate-x-1 transition-all duration-300"
+                            className="text-muted-foreground group-hover:text-[#49BBBD] group-hover:translate-x-1 transition-all duration-300"
                             size={16}
                           />
                         </div>
@@ -684,13 +687,16 @@ export default function ExplorePage() {
               animate={{ opacity: 1 }}
               className="text-center py-12"
             >
-              <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50 max-w-md mx-auto">
+              <Card className="bg-card/50 backdrop-blur-sm border-border/50 max-w-md mx-auto">
                 <CardContent className="p-8">
-                  <Search className="mx-auto text-gray-300 mb-4" size={48} />
-                  <CardTitle className="text-lg font-semibold text-gray-900 mb-2">
+                  <Search
+                    className="mx-auto text-muted-foreground/30 mb-4"
+                    size={48}
+                  />
+                  <CardTitle className="text-lg font-semibold text-foreground mb-2">
                     No papers found
                   </CardTitle>
-                  <CardDescription className="text-gray-600">
+                  <CardDescription className="text-muted-foreground">
                     Try searching for a different topic or explore trending
                     research areas above.
                   </CardDescription>

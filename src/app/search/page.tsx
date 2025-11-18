@@ -219,10 +219,10 @@ export default function SearchPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-blue-100 text-gray-900">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Background Pattern */}
-      <div className="fixed inset-0 bg-white">
-        <div className="absolute inset-0 bg-[radial-gradient(#49BBBD_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,black_70%,transparent_100%)] opacity-5"></div>
+      <div className="fixed inset-0 bg-background">
+        <div className="absolute inset-0 bg-[radial-gradient(#49BBBD_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,black_70%,transparent_100%)] opacity-5 dark:opacity-10"></div>
       </div>
 
       <div className="relative z-10 min-h-screen">
@@ -239,10 +239,10 @@ export default function SearchPage() {
                 <Brain className="text-white" size={32} />
               </div>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
               Research Paper Search
             </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Discover academic papers using OpenAlex database. Search by topic,
               author, or keywords.
             </p>
@@ -265,7 +265,7 @@ export default function SearchPage() {
           >
             <div className="relative max-w-3xl mx-auto">
               <Search
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 z-10"
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground z-10"
                 size={24}
               />
               <Input
@@ -273,7 +273,7 @@ export default function SearchPage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search for research papers, authors, topics, or keywords..."
-                className="w-full pl-12 pr-32 py-6 bg-white border-2 border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#49BBBD] focus:border-[#49BBBD] transition-all duration-300 shadow-sm text-lg"
+                className="w-full pl-12 pr-32 py-6 bg-card border-2 border-border rounded-2xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#49BBBD] focus:border-[#49BBBD] transition-all duration-300 shadow-sm text-lg"
               />
               <Button
                 type="submit"
@@ -291,7 +291,7 @@ export default function SearchPage() {
               </Button>
             </div>
             <div className="text-center mt-4">
-              <Badge variant="outline" className="bg-white/50 backdrop-blur-sm">
+              <Badge variant="outline" className="bg-card/50 backdrop-blur-sm">
                 🔍 +5 XP for searching • 💾 +10 XP for saving • 📖 +10 XP for
                 reading
               </Badge>
@@ -320,7 +320,7 @@ export default function SearchPage() {
               animate={{ opacity: 1 }}
               className="text-center py-12"
             >
-              <Card className="max-w-md mx-auto bg-white/70 backdrop-blur-sm border-gray-200/50">
+              <Card className="max-w-md mx-auto bg-card/50 backdrop-blur-sm border-border/50">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3">
                     <Skeleton className="w-6 h-6 rounded-full" />
@@ -342,17 +342,20 @@ export default function SearchPage() {
               animate={{ opacity: 1 }}
               className="text-center py-12"
             >
-              <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50 max-w-md mx-auto">
+              <Card className="bg-card/50 backdrop-blur-sm border-border/50 max-w-md mx-auto">
                 <CardContent className="p-8">
-                  <Search className="mx-auto text-gray-300 mb-4" size={48} />
-                  <CardTitle className="text-lg font-semibold text-gray-900 mb-2">
+                  <Search
+                    className="mx-auto text-muted-foreground/30 mb-4"
+                    size={48}
+                  />
+                  <CardTitle className="text-lg font-semibold text-foreground mb-2">
                     No results found
                   </CardTitle>
-                  <CardDescription className="text-gray-600">
+                  <CardDescription className="text-muted-foreground">
                     No papers found for{" "}
                     <span className="font-semibold">"{query}"</span>
                   </CardDescription>
-                  <p className="text-gray-500 text-sm mt-2">
+                  <p className="text-muted-foreground text-sm mt-2">
                     Try different keywords or check your spelling
                   </p>
                   <Button
@@ -376,11 +379,11 @@ export default function SearchPage() {
               className="space-y-6"
             >
               {/* Results Header with Filters */}
-              <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50">
+              <Card className="bg-card/50 backdrop-blur-sm border-border/50">
                 <CardContent className="p-6">
                   <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                     <div>
-                      <h2 className="text-2xl font-semibold text-gray-900">
+                      <h2 className="text-2xl font-semibold text-foreground">
                         Search Results
                         <Badge
                           variant="secondary"
@@ -404,7 +407,7 @@ export default function SearchPage() {
 
                     {/* Filter Tabs */}
                     <Tabs defaultValue="all" className="w-full lg:w-auto">
-                      <TabsList className="bg-white/50 border border-gray-200/50">
+                      <TabsList className="bg-background/50 border border-border/50">
                         <TabsTrigger
                           value="all"
                           onClick={() => setActiveFilter("all")}
@@ -439,7 +442,7 @@ export default function SearchPage() {
                     transition={{ delay: 0.1 * index }}
                   >
                     <Card
-                      className="bg-white/70 backdrop-blur-sm border-gray-200/50 hover:shadow-lg transition-all duration-300 cursor-pointer group hover:border-[#49BBBD]/30"
+                      className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300 cursor-pointer group hover:border-[#49BBBD]/30"
                       onClick={() => handleNavigate(item.id?.split("/").pop())}
                     >
                       <CardContent className="p-6">
@@ -453,7 +456,7 @@ export default function SearchPage() {
                               {item.cited_by_count > 100 && (
                                 <Badge
                                   variant="outline"
-                                  className="bg-orange-50 text-orange-700 border-orange-200"
+                                  className="bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800"
                                 >
                                   Highly Cited
                                 </Badge>
@@ -463,8 +466,11 @@ export default function SearchPage() {
                             {/* Authors */}
                             {item.authorships?.length > 0 && (
                               <div className="flex items-center gap-2 mb-3">
-                                <User size={16} className="text-gray-400" />
-                                <span className="text-gray-600 text-sm">
+                                <User
+                                  size={16}
+                                  className="text-muted-foreground"
+                                />
+                                <span className="text-muted-foreground text-sm">
                                   {item.authorships
                                     .map((a: any) => a.author.display_name)
                                     .join(", ")}
@@ -473,7 +479,7 @@ export default function SearchPage() {
                             )}
 
                             {/* Journal and Year */}
-                            <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
+                            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
                               {item.host_venue?.display_name && (
                                 <div className="flex items-center gap-1">
                                   <Building size={14} />
@@ -483,7 +489,7 @@ export default function SearchPage() {
                               {item.publication_year && (
                                 <Badge
                                   variant="outline"
-                                  className="bg-blue-50 text-blue-700 border-blue-200"
+                                  className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800"
                                 >
                                   <Calendar size={12} className="mr-1" />
                                   {item.publication_year}
@@ -492,7 +498,7 @@ export default function SearchPage() {
                               {item.cited_by_count > 0 && (
                                 <Badge
                                   variant="outline"
-                                  className="bg-green-50 text-green-700 border-green-200"
+                                  className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800"
                                 >
                                   {item.cited_by_count} citations
                                 </Badge>
@@ -527,7 +533,7 @@ export default function SearchPage() {
                               }}
                               variant="outline"
                               size="sm"
-                              className="border-gray-300 hover:border-[#49BBBD] hover:bg-[#49BBBD]/5"
+                              className="border-border hover:border-[#49BBBD] hover:bg-[#49BBBD]/5"
                             >
                               <BookOpen size={16} className="mr-2" />
                               Read +10 XP
@@ -536,12 +542,12 @@ export default function SearchPage() {
                         </div>
 
                         {/* View Details Arrow */}
-                        <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
-                          <span className="text-xs text-gray-500">
+                        <div className="flex justify-between items-center mt-4 pt-4 border-t border-border">
+                          <span className="text-xs text-muted-foreground">
                             Click to view details
                           </span>
                           <ArrowRight
-                            className="text-gray-400 group-hover:text-[#49BBBD] group-hover:translate-x-1 transition-all duration-300"
+                            className="text-muted-foreground group-hover:text-[#49BBBD] group-hover:translate-x-1 transition-all duration-300"
                             size={16}
                           />
                         </div>

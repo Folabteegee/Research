@@ -407,10 +407,12 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-[#49BBBD] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your research analytics...</p>
+          <p className="text-muted-foreground">
+            Loading your research analytics...
+          </p>
         </div>
       </div>
     );
@@ -418,13 +420,13 @@ export default function AnalyticsPage() {
 
   if (!analyticsData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <BarChart3 className="mx-auto text-gray-400 mb-4" size={48} />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <BarChart3 className="mx-auto text-muted-foreground mb-4" size={48} />
+          <h2 className="text-xl font-semibold text-foreground mb-2">
             No Data Available
           </h2>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Save and read some papers to see your research analytics.
           </p>
         </div>
@@ -433,7 +435,12 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-blue-100 text-gray-900">
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Background Pattern */}
+      <div className="fixed inset-0 bg-background">
+        <div className="absolute inset-0 bg-[radial-gradient(#49BBBD_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,black_70%,transparent_100%)] opacity-5 dark:opacity-10"></div>
+      </div>
+
       <div className="relative z-10 min-h-screen">
         <div className="p-6 max-w-7xl mx-auto">
           {/* Header */}
@@ -448,10 +455,10 @@ export default function AnalyticsPage() {
                 <BarChart3 className="text-white" size={32} />
               </div>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
               Research Analytics
             </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Gain insights into your reading patterns and research habits
             </p>
           </motion.header>
@@ -467,7 +474,7 @@ export default function AnalyticsPage() {
               value={timeRange}
               onValueChange={(value: any) => setTimeRange(value)}
             >
-              <SelectTrigger className="w-32 bg-white/70 backdrop-blur-sm border-gray-200/50">
+              <SelectTrigger className="w-32 bg-card/50 backdrop-blur-sm border-border/50">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -492,24 +499,24 @@ export default function AnalyticsPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.3 + index * 0.1 }}
               >
-                <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50 hover:shadow-lg transition-all duration-300 h-full">
+                <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300 h-full">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-2xl font-bold text-gray-900">
+                        <p className="text-2xl font-bold text-foreground">
                           {stat.value}
                         </p>
-                        <p className="text-gray-600 text-sm font-medium">
+                        <p className="text-muted-foreground text-sm font-medium">
                           {stat.label}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
                           <Badge
                             variant="outline"
-                            className="text-xs bg-green-50 text-green-700 border-green-200"
+                            className="text-xs bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800"
                           >
                             {stat.change}
                           </Badge>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-muted-foreground">
                             {stat.description}
                           </span>
                         </div>
@@ -530,7 +537,7 @@ export default function AnalyticsPage() {
             onValueChange={setActiveTab}
             className="space-y-6"
           >
-            <TabsList className="grid w-full grid-cols-3 bg-white/50 backdrop-blur-sm border border-gray-200/50">
+            <TabsList className="grid w-full grid-cols-3 bg-card/50 backdrop-blur-sm border border-border/50">
               <TabsTrigger value="overview" className="flex items-center gap-2">
                 <Eye className="h-4 w-4" />
                 Overview
@@ -548,7 +555,7 @@ export default function AnalyticsPage() {
             <TabsContent value="overview" className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Reading Trend */}
-                <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50">
+                <Card className="bg-card/50 backdrop-blur-sm border-border/50">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <TrendingUp className="h-5 w-5 text-[#49BBBD]" />
@@ -559,10 +566,24 @@ export default function AnalyticsPage() {
                     <div className="h-80">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={analyticsData.readingTrend}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="month" />
-                          <YAxis />
-                          <Tooltip />
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="currentColor"
+                            className="opacity-30"
+                          />
+                          <XAxis
+                            dataKey="month"
+                            stroke="currentColor"
+                            className="text-sm"
+                          />
+                          <YAxis stroke="currentColor" className="text-sm" />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "hsl(var(--card))",
+                              borderColor: "hsl(var(--border))",
+                              color: "hsl(var(--foreground))",
+                            }}
+                          />
                           <Bar
                             dataKey="count"
                             fill="#49BBBD"
@@ -575,10 +596,10 @@ export default function AnalyticsPage() {
                 </Card>
 
                 {/* Top Journals */}
-                <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50">
+                <Card className="bg-card/50 backdrop-blur-sm border-border/50">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Building className="h-5 w-5 text-purple-500" />
+                      <Building className="h-5 w-5 text-[#49BBBD]" />
                       Top Journals
                     </CardTitle>
                   </CardHeader>
@@ -594,6 +615,9 @@ export default function AnalyticsPage() {
                             outerRadius={80}
                             fill="#8884d8"
                             dataKey="count"
+                            label={({ name, percent }) =>
+                              `${name} ${(percent * 100).toFixed(0)}%`
+                            }
                           >
                             {analyticsData.topJournals.map((entry, index) => (
                               <Cell
@@ -602,7 +626,13 @@ export default function AnalyticsPage() {
                               />
                             ))}
                           </Pie>
-                          <Tooltip />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "hsl(var(--card))",
+                              borderColor: "hsl(var(--border))",
+                              color: "hsl(var(--foreground))",
+                            }}
+                          />
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
@@ -614,10 +644,10 @@ export default function AnalyticsPage() {
             <TabsContent value="reading" className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Reading Time Patterns */}
-                <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50">
+                <Card className="bg-card/50 backdrop-blur-sm border-border/50">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Clock className="h-5 w-5 text-green-500" />
+                      <Clock className="h-5 w-5 text-[#49BBBD]" />
                       Reading Time Patterns
                     </CardTitle>
                   </CardHeader>
@@ -625,10 +655,24 @@ export default function AnalyticsPage() {
                     <div className="h-80">
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={analyticsData.readingTimePattern}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="hour" />
-                          <YAxis />
-                          <Tooltip />
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="currentColor"
+                            className="opacity-30"
+                          />
+                          <XAxis
+                            dataKey="hour"
+                            stroke="currentColor"
+                            className="text-sm"
+                          />
+                          <YAxis stroke="currentColor" className="text-sm" />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "hsl(var(--card))",
+                              borderColor: "hsl(var(--border))",
+                              color: "hsl(var(--foreground))",
+                            }}
+                          />
                           <Line
                             type="monotone"
                             dataKey="count"
@@ -642,7 +686,7 @@ export default function AnalyticsPage() {
                     {analyticsData.readingTimePattern.every(
                       (item) => item.count === 0
                     ) && (
-                      <div className="text-center mt-4 text-sm text-gray-500">
+                      <div className="text-center mt-4 text-sm text-muted-foreground">
                         Read some papers to see your reading time patterns
                       </div>
                     )}
@@ -650,10 +694,10 @@ export default function AnalyticsPage() {
                 </Card>
 
                 {/* Weekly Activity */}
-                <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50">
+                <Card className="bg-card/50 backdrop-blur-sm border-border/50">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Calendar className="h-5 w-5 text-indigo-500" />
+                      <Calendar className="h-5 w-5 text-[#49BBBD]" />
                       Weekly Reading Activity
                     </CardTitle>
                   </CardHeader>
@@ -661,10 +705,24 @@ export default function AnalyticsPage() {
                     <div className="h-80">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={analyticsData.weeklyActivity}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="day" />
-                          <YAxis />
-                          <Tooltip />
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="currentColor"
+                            className="opacity-30"
+                          />
+                          <XAxis
+                            dataKey="day"
+                            stroke="currentColor"
+                            className="text-sm"
+                          />
+                          <YAxis stroke="currentColor" className="text-sm" />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "hsl(var(--card))",
+                              borderColor: "hsl(var(--border))",
+                              color: "hsl(var(--foreground))",
+                            }}
+                          />
                           <Bar
                             dataKey="count"
                             fill="#6A0572"
@@ -676,7 +734,7 @@ export default function AnalyticsPage() {
                     {analyticsData.weeklyActivity.every(
                       (item) => item.count === 0
                     ) && (
-                      <div className="text-center mt-4 text-sm text-gray-500">
+                      <div className="text-center mt-4 text-sm text-muted-foreground">
                         Read some papers to see your weekly activity patterns
                       </div>
                     )}
@@ -688,10 +746,10 @@ export default function AnalyticsPage() {
             <TabsContent value="content" className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Publication Years */}
-                <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50">
+                <Card className="bg-card/50 backdrop-blur-sm border-border/50">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Calendar className="h-5 w-5 text-orange-500" />
+                      <Calendar className="h-5 w-5 text-[#49BBBD]" />
                       Publication Years
                     </CardTitle>
                   </CardHeader>
@@ -702,10 +760,30 @@ export default function AnalyticsPage() {
                           data={analyticsData.publicationYears}
                           layout="vertical"
                         >
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis type="number" />
-                          <YAxis type="category" dataKey="year" width={80} />
-                          <Tooltip />
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="currentColor"
+                            className="opacity-30"
+                          />
+                          <XAxis
+                            type="number"
+                            stroke="currentColor"
+                            className="text-sm"
+                          />
+                          <YAxis
+                            type="category"
+                            dataKey="year"
+                            width={80}
+                            stroke="currentColor"
+                            className="text-sm"
+                          />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "hsl(var(--card))",
+                              borderColor: "hsl(var(--border))",
+                              color: "hsl(var(--foreground))",
+                            }}
+                          />
                           <Bar
                             dataKey="count"
                             fill="#FF6B6B"
@@ -718,10 +796,10 @@ export default function AnalyticsPage() {
                 </Card>
 
                 {/* Top Authors */}
-                <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50">
+                <Card className="bg-card/50 backdrop-blur-sm border-border/50">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <User className="h-5 w-5 text-blue-500" />
+                      <User className="h-5 w-5 text-[#49BBBD]" />
                       Top Authors
                     </CardTitle>
                   </CardHeader>
@@ -732,7 +810,7 @@ export default function AnalyticsPage() {
                         .map((author, index) => (
                           <div
                             key={author.author}
-                            className="flex items-center justify-between p-3 rounded-lg border border-gray-200/50"
+                            className="flex items-center justify-between p-3 rounded-lg border border-border/50"
                           >
                             <div className="flex items-center gap-3">
                               <Badge
@@ -741,7 +819,7 @@ export default function AnalyticsPage() {
                               >
                                 #{index + 1}
                               </Badge>
-                              <span className="text-sm font-medium">
+                              <span className="text-sm font-medium text-foreground">
                                 {author.author}
                               </span>
                             </div>
@@ -764,9 +842,12 @@ export default function AnalyticsPage() {
             transition={{ delay: 0.8 }}
             className="text-center mt-8"
           >
-            <Card className="bg-white/70 backdrop-blur-sm border-gray-200/50 max-w-md mx-auto">
+            <Card className="bg-card/50 backdrop-blur-sm border-border/50 max-w-md mx-auto">
               <CardContent className="p-6">
-                <Download className="mx-auto text-gray-400 mb-3" size={32} />
+                <Download
+                  className="mx-auto text-muted-foreground mb-3"
+                  size={32}
+                />
                 <CardTitle className="text-lg mb-2">Export Your Data</CardTitle>
                 <CardDescription className="mb-4">
                   Download your complete research analytics in JSON format

@@ -112,6 +112,18 @@ export function getLevel(xp: number): number {
   return value >= 1 ? value : 1;
 }
 
+/**
+ * Calculate progress percentage to next level
+ * @param xp - Current XP
+ * @returns Progress percentage (0-100)
+ */
+export function getLevelProgress(xp: number): number {
+  const xpForCurrentLevel = (getLevel(xp) - 1) * 100;
+  const xpInCurrentLevel = xp - xpForCurrentLevel;
+  const progress = (xpInCurrentLevel / 100) * 100;
+  return Math.min(Math.max(progress, 0), 100);
+}
+
 // --- Achievements storage & helpers ---
 export function getAchievements(userId?: string): Achievement[] {
   try {
@@ -257,6 +269,7 @@ export default {
   getUserXP,
   addXP,
   getLevel,
+  getLevelProgress,
   getAchievements,
   unlockAchievement,
   updateStreak,

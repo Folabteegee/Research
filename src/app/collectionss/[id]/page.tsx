@@ -276,18 +276,18 @@ export default function CollectionDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-6">
+      <div className="min-h-screen bg-background text-foreground p-6">
         <div className="max-w-6xl mx-auto">
-          <Skeleton className="h-12 w-64 mb-6" />
+          <Skeleton className="h-12 w-64 mb-6 bg-muted" />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-4">
               {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-32 w-full" />
+                <Skeleton key={i} className="h-32 w-full bg-muted" />
               ))}
             </div>
             <div className="space-y-4">
-              <Skeleton className="h-48 w-full" />
-              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-48 w-full bg-muted" />
+              <Skeleton className="h-32 w-full bg-muted" />
             </div>
           </div>
         </div>
@@ -297,7 +297,7 @@ export default function CollectionDetailPage() {
 
   if (!collection) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <Alert className="max-w-md">
           <AlertDescription>
             Collection not found. Redirecting...
@@ -308,386 +308,449 @@ export default function CollectionDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      <div className="p-6 max-w-6xl mx-auto">
-        {/* Header */}
-        <motion.header
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="flex items-center gap-4 mb-6">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => router.push("/collections")}
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div
-              className="w-16 h-16 rounded-2xl flex items-center justify-center text-white"
-              style={{ backgroundColor: collection.color }}
-            >
-              <FileText size={28} />
-            </div>
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900">
-                {collection.name}
-              </h1>
-              <p className="text-gray-600">{collection.description}</p>
-            </div>
-            <div className="flex gap-2">
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline">
-                    <Edit3 className="w-4 h-4 mr-2" />
-                    Edit
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Edit Collection</DialogTitle>
-                  </DialogHeader>
-                  {/* Edit form would go here */}
-                </DialogContent>
-              </Dialog>
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Background Pattern */}
+      <div className="fixed inset-0 bg-background">
+        <div className="absolute inset-0 bg-[radial-gradient(#49BBBD_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,black_70%,transparent_100%)] opacity-5 dark:opacity-10"></div>
+      </div>
 
-              <Button onClick={() => setShowAddPapers(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Papers
+      <div className="relative z-10 min-h-screen">
+        <div className="p-6 max-w-6xl mx-auto">
+          {/* Header */}
+          <motion.header
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <div className="flex items-center gap-4 mb-6">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => router.push("/collections")}
+                className="border-border"
+              >
+                <ArrowLeft className="h-4 w-4" />
               </Button>
-            </div>
-          </div>
+              <div
+                className="w-16 h-16 rounded-2xl flex items-center justify-center text-white"
+                style={{ backgroundColor: collection.color }}
+              >
+                <FileText size={28} />
+              </div>
+              <div className="flex-1">
+                <h1 className="text-3xl font-bold text-foreground">
+                  {collection.name}
+                </h1>
+                <p className="text-muted-foreground">
+                  {collection.description}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="border-border">
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      Edit
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-background border-border">
+                    <DialogHeader>
+                      <DialogTitle className="text-foreground">
+                        Edit Collection
+                      </DialogTitle>
+                    </DialogHeader>
+                    {/* Edit form would go here */}
+                  </DialogContent>
+                </Dialog>
 
-          {/* Collection Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <Card>
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-gray-900">
-                  {collection.paperCount}
-                </div>
-                <div className="text-sm text-gray-600">Total Papers</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-gray-900">
-                  {new Set(collection.papers.map((p) => p.journal)).size}
-                </div>
-                <div className="text-sm text-gray-600">Journals</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-gray-900">
-                  {new Set(collection.papers.flatMap((p) => p.tags || [])).size}
-                </div>
-                <div className="text-sm text-gray-600">Unique Tags</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 text-center">
-                <div className="text-sm text-gray-600">Last Updated</div>
-                <div className="text-sm font-medium text-gray-900">
-                  {new Date(collection.updatedAt).toLocaleDateString()}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Tags */}
-          {collection.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-6">
-              {collection.tags.map((tag, index) => (
-                <Badge key={index} variant="secondary">
-                  <Tag className="w-3 h-3 mr-1" />
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          )}
-        </motion.header>
-
-        {/* Add Papers Dialog */}
-        <Dialog open={showAddPapers} onOpenChange={setShowAddPapers}>
-          <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
-            <DialogHeader>
-              <DialogTitle>Add Papers to Collection</DialogTitle>
-              <DialogDescription>
-                Select papers from your library to add to this collection.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="flex-1 overflow-hidden">
-              {/* Search and Controls */}
-              <div className="flex gap-2 mb-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Search papers..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <Button variant="outline" onClick={selectAllPapers}>
-                  {selectedPapers.length === availablePapers.length
-                    ? "Deselect All"
-                    : "Select All"}
+                <Button
+                  onClick={() => setShowAddPapers(true)}
+                  className="bg-[#49BBBD] hover:bg-[#3aa8a9] text-white"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Papers
                 </Button>
               </div>
+            </div>
 
-              {/* Papers List */}
-              <div className="overflow-y-auto max-h-96 space-y-2">
-                {filteredAvailablePapers.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    {availablePapers.length === 0
-                      ? "No papers available to add"
-                      : "No papers match your search"}
+            {/* Collection Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-foreground">
+                    {collection.paperCount}
                   </div>
-                ) : (
-                  filteredAvailablePapers.map((paper) => (
-                    <div
-                      key={paper.id}
-                      className={`flex items-center gap-4 p-3 rounded-lg border cursor-pointer transition-colors ${
-                        selectedPapers.includes(paper.id)
-                          ? "bg-blue-50 border-blue-200"
-                          : "hover:bg-gray-50"
-                      }`}
-                      onClick={() => togglePaperSelection(paper.id)}
-                    >
-                      <div
-                        className={`w-5 h-5 rounded border flex items-center justify-center ${
-                          selectedPapers.includes(paper.id)
-                            ? "bg-blue-600 border-blue-600 text-white"
-                            : "border-gray-300"
-                        }`}
-                      >
-                        {selectedPapers.includes(paper.id) && (
-                          <Check className="w-3 h-3" />
-                        )}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm line-clamp-2">
-                          {paper.title}
-                        </h4>
-                        <div className="flex items-center gap-2 text-xs text-gray-600 mt-1">
-                          <User className="w-3 h-3" />
-                          <span className="line-clamp-1">{paper.author}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-600">
-                          <Building className="w-3 h-3" />
-                          <span>{paper.journal}</span>
-                          <Calendar className="w-3 h-3" />
-                          <span>{paper.year}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            <DialogFooter>
-              <div className="flex items-center justify-between w-full">
-                <span className="text-sm text-gray-600">
-                  {selectedPapers.length} papers selected
-                </span>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowAddPapers(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={() => addPapersToCollection(selectedPapers)}
-                    disabled={selectedPapers.length === 0}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Selected Papers
-                  </Button>
-                </div>
-              </div>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Main Content */}
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="space-y-6"
-        >
-          <TabsList>
-            <TabsTrigger value="papers">
-              <FileText className="w-4 h-4 mr-2" />
-              Papers ({collection.paperCount})
-            </TabsTrigger>
-            <TabsTrigger value="analytics">
-              <BookOpen className="w-4 h-4 mr-2" />
-              Analytics
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="papers" className="space-y-4">
-            {/* Search Bar */}
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search papers in this collection..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select defaultValue="title">
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="title">Title</SelectItem>
-                  <SelectItem value="date">Date</SelectItem>
-                  <SelectItem value="author">Author</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Papers Grid */}
-            {filteredCollectionPapers.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <FileText className="mx-auto text-gray-300 mb-4" size={48} />
-                  <CardTitle className="text-lg mb-2">No Papers Yet</CardTitle>
-                  <CardDescription className="mb-4">
-                    {collection.paperCount === 0
-                      ? "This collection doesn't have any papers yet."
-                      : "No papers match your search."}
-                  </CardDescription>
-                  <Button onClick={() => setShowAddPapers(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Papers
-                  </Button>
+                  <div className="text-sm text-muted-foreground">
+                    Total Papers
+                  </div>
                 </CardContent>
               </Card>
-            ) : (
-              <div className="grid gap-4">
-                {filteredCollectionPapers.map((paper, index) => (
-                  <motion.div
-                    key={paper.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
+              <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-foreground">
+                    {new Set(collection.papers.map((p) => p.journal)).size}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Journals</div>
+                </CardContent>
+              </Card>
+              <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-foreground">
+                    {
+                      new Set(collection.papers.flatMap((p) => p.tags || []))
+                        .size
+                    }
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Unique Tags
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+                <CardContent className="p-4 text-center">
+                  <div className="text-sm text-muted-foreground">
+                    Last Updated
+                  </div>
+                  <div className="text-sm font-medium text-foreground">
+                    {new Date(collection.updatedAt).toLocaleDateString()}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Tags */}
+            {collection.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-6">
+                {collection.tags.map((tag, index) => (
+                  <Badge
+                    key={index}
+                    variant="secondary"
+                    className="bg-secondary text-secondary-foreground"
                   >
-                    <Card className="group hover:shadow-lg transition-all duration-300">
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-lg mb-2 line-clamp-2">
-                              {paper.title}
-                            </h3>
-
-                            <div className="space-y-1 text-sm text-gray-600 mb-3">
-                              <div className="flex items-center gap-1">
-                                <User size={14} />
-                                <span className="line-clamp-1">
-                                  {paper.author}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-4">
-                                <div className="flex items-center gap-1">
-                                  <Building size={14} />
-                                  <span>{paper.journal}</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <Calendar size={14} />
-                                  <span>{paper.year}</span>
-                                </div>
-                              </div>
-                            </div>
-
-                            {paper.tags && paper.tags.length > 0 && (
-                              <div className="flex flex-wrap gap-1">
-                                {paper.tags.map((tag, tagIndex) => (
-                                  <Badge
-                                    key={tagIndex}
-                                    variant="outline"
-                                    className="text-xs"
-                                  >
-                                    {tag}
-                                  </Badge>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                <MoreHorizontal size={16} />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  window.open(paper.link, "_blank")
-                                }
-                              >
-                                <BookOpen className="w-4 h-4 mr-2" />
-                                Read Paper
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  removePaperFromCollection(paper.id)
-                                }
-                                className="text-red-600"
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Remove from Collection
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
+                    <Tag className="w-3 h-3 mr-1" />
+                    {tag}
+                  </Badge>
                 ))}
               </div>
             )}
-          </TabsContent>
+          </motion.header>
 
-          <TabsContent value="analytics">
-            <Card>
-              <CardHeader>
-                <CardTitle>Collection Analytics</CardTitle>
-                <CardDescription>
-                  Insights about the papers in this collection
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-semibold mb-3">
-                      Journals Distribution
-                    </h4>
-                    {/* Journal distribution chart would go here */}
+          {/* Add Papers Dialog */}
+          <Dialog open={showAddPapers} onOpenChange={setShowAddPapers}>
+            <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col bg-background border-border">
+              <DialogHeader>
+                <DialogTitle className="text-foreground">
+                  Add Papers to Collection
+                </DialogTitle>
+                <DialogDescription>
+                  Select papers from your library to add to this collection.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="flex-1 overflow-hidden">
+                {/* Search and Controls */}
+                <div className="flex gap-2 mb-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      placeholder="Search papers..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 bg-background border-border"
+                    />
                   </div>
-                  <div>
-                    <h4 className="font-semibold mb-3">Publication Years</h4>
-                    {/* Year distribution chart would go here */}
+                  <Button
+                    variant="outline"
+                    onClick={selectAllPapers}
+                    className="border-border"
+                  >
+                    {selectedPapers.length === availablePapers.length
+                      ? "Deselect All"
+                      : "Select All"}
+                  </Button>
+                </div>
+
+                {/* Papers List */}
+                <div className="overflow-y-auto max-h-96 space-y-2">
+                  {filteredAvailablePapers.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      {availablePapers.length === 0
+                        ? "No papers available to add"
+                        : "No papers match your search"}
+                    </div>
+                  ) : (
+                    filteredAvailablePapers.map((paper) => (
+                      <div
+                        key={paper.id}
+                        className={`flex items-center gap-4 p-3 rounded-lg border cursor-pointer transition-colors ${
+                          selectedPapers.includes(paper.id)
+                            ? "bg-primary/10 border-primary/20"
+                            : "bg-card/50 border-border/50 hover:bg-accent/50"
+                        }`}
+                        onClick={() => togglePaperSelection(paper.id)}
+                      >
+                        <div
+                          className={`w-5 h-5 rounded border flex items-center justify-center ${
+                            selectedPapers.includes(paper.id)
+                              ? "bg-primary border-primary text-primary-foreground"
+                              : "border-muted-foreground/30"
+                          }`}
+                        >
+                          {selectedPapers.includes(paper.id) && (
+                            <Check className="w-3 h-3" />
+                          )}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm line-clamp-2 text-foreground">
+                            {paper.title}
+                          </h4>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                            <User className="w-3 h-3" />
+                            <span className="line-clamp-1">{paper.author}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Building className="w-3 h-3" />
+                            <span>{paper.journal}</span>
+                            <Calendar className="w-3 h-3" />
+                            <span>{paper.year}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <DialogFooter>
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-sm text-muted-foreground">
+                    {selectedPapers.length} papers selected
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowAddPapers(false)}
+                      className="border-border"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={() => addPapersToCollection(selectedPapers)}
+                      disabled={selectedPapers.length === 0}
+                      className="bg-[#49BBBD] hover:bg-[#3aa8a9] text-white"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Selected Papers
+                    </Button>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Main Content */}
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="space-y-6"
+          >
+            <TabsList className="bg-card/50 backdrop-blur-sm border-border/50">
+              <TabsTrigger
+                value="papers"
+                className="flex items-center gap-2 data-[state=active]:bg-background"
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Papers ({collection.paperCount})
+              </TabsTrigger>
+              <TabsTrigger
+                value="analytics"
+                className="flex items-center gap-2 data-[state=active]:bg-background"
+              >
+                <BookOpen className="w-4 h-4 mr-2" />
+                Analytics
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="papers" className="space-y-4">
+              {/* Search Bar */}
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    placeholder="Search papers in this collection..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-background border-border"
+                  />
+                </div>
+                <Select defaultValue="title">
+                  <SelectTrigger className="w-32 bg-background border-border">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border-border">
+                    <SelectItem value="title">Title</SelectItem>
+                    <SelectItem value="date">Date</SelectItem>
+                    <SelectItem value="author">Author</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Papers Grid */}
+              {filteredCollectionPapers.length === 0 ? (
+                <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+                  <CardContent className="p-8 text-center">
+                    <FileText
+                      className="mx-auto text-muted-foreground/30 mb-4"
+                      size={48}
+                    />
+                    <CardTitle className="text-lg mb-2 text-foreground">
+                      No Papers Yet
+                    </CardTitle>
+                    <CardDescription className="mb-4">
+                      {collection.paperCount === 0
+                        ? "This collection doesn't have any papers yet."
+                        : "No papers match your search."}
+                    </CardDescription>
+                    <Button
+                      onClick={() => setShowAddPapers(true)}
+                      className="bg-[#49BBBD] hover:bg-[#3aa8a9] text-white"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Papers
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid gap-4">
+                  {filteredCollectionPapers.map((paper, index) => (
+                    <motion.div
+                      key={paper.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <Card className="group hover:shadow-lg transition-all duration-300 bg-card/50 backdrop-blur-sm border-border/50">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-lg mb-2 line-clamp-2 text-foreground">
+                                {paper.title}
+                              </h3>
+
+                              <div className="space-y-1 text-sm text-muted-foreground mb-3">
+                                <div className="flex items-center gap-1">
+                                  <User size={14} />
+                                  <span className="line-clamp-1">
+                                    {paper.author}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                  <div className="flex items-center gap-1">
+                                    <Building size={14} />
+                                    <span>{paper.journal}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Calendar size={14} />
+                                    <span>{paper.year}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {paper.tags && paper.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {paper.tags.map((tag, tagIndex) => (
+                                    <Badge
+                                      key={tagIndex}
+                                      variant="outline"
+                                      className="text-xs border-border"
+                                    >
+                                      {tag}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="opacity-100 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <MoreHorizontal size={16} />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent
+                                align="end"
+                                className="bg-background border-border"
+                              >
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    window.open(paper.link, "_blank")
+                                  }
+                                >
+                                  <BookOpen className="w-4 h-4 mr-2" />
+                                  Read Paper
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    removePaperFromCollection(paper.id)
+                                  }
+                                  className="text-destructive"
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Remove from Collection
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="analytics">
+              <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+                <CardHeader>
+                  <CardTitle className="text-foreground">
+                    Collection Analytics
+                  </CardTitle>
+                  <CardDescription>
+                    Insights about the papers in this collection
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="font-semibold mb-3 text-foreground">
+                        Journals Distribution
+                      </h4>
+                      {/* Journal distribution chart would go here */}
+                      <div className="text-muted-foreground text-sm">
+                        Analytics visualization coming soon...
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-3 text-foreground">
+                        Publication Years
+                      </h4>
+                      {/* Year distribution chart would go here */}
+                      <div className="text-muted-foreground text-sm">
+                        Analytics visualization coming soon...
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
   );

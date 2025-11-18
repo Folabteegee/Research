@@ -180,6 +180,10 @@ export default function CollectionsPage() {
     const updatedCollections = [...collections, collection];
     setCollections(updatedCollections);
     saveCollections(updatedCollections);
+
+    // Trigger storage event to update dashboard
+    window.dispatchEvent(new Event("storage"));
+
     setNewCollection({ name: "", description: "", color: "#49BBBD", tags: [] });
     setShowCreateDialog(false);
   };
@@ -190,6 +194,10 @@ export default function CollectionsPage() {
     );
     setCollections(updatedCollections);
     saveCollections(updatedCollections);
+
+    // Trigger storage event to update dashboard
+    window.dispatchEvent(new Event("storage"));
+
     setEditingCollection(null);
   };
 
@@ -199,6 +207,9 @@ export default function CollectionsPage() {
     );
     setCollections(updatedCollections);
     saveCollections(updatedCollections);
+
+    // Trigger storage event to update dashboard
+    window.dispatchEvent(new Event("storage"));
   };
 
   const saveCollections = (collectionsToSave: Collection[]) => {
@@ -279,7 +290,7 @@ export default function CollectionsPage() {
   });
 
   const CollectionCard = ({ collection }: { collection: Collection }) => (
-    <Card className="group hover:shadow-lg transition-all duration-300 border-2 border-transparent hover:border-gray-200">
+    <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300 border-2 border-transparent hover:border-border group">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -290,7 +301,7 @@ export default function CollectionsPage() {
               <Folder size={24} />
             </div>
             <div>
-              <CardTitle className="text-lg line-clamp-1">
+              <CardTitle className="text-lg line-clamp-1 text-foreground">
                 {collection.name}
               </CardTitle>
               <CardDescription className="line-clamp-1">
@@ -303,7 +314,7 @@ export default function CollectionsPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                className="opacity-100 group-hover:opacity-100 transition-opacity"
               >
                 <MoreHorizontal size={16} />
               </Button>
@@ -326,7 +337,7 @@ export default function CollectionsPage() {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => deleteCollection(collection.id)}
-                className="text-red-600"
+                className="text-red-600 dark:text-red-400"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete
@@ -348,7 +359,7 @@ export default function CollectionsPage() {
             </Badge>
           )}
         </div>
-        <div className="flex items-center justify-between text-sm text-gray-600">
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>{collection.paperCount} papers</span>
           <span>
             Updated {new Date(collection.updatedAt).toLocaleDateString()}
@@ -369,10 +380,10 @@ export default function CollectionsPage() {
   );
 
   const PaperCard = ({ paper }: { paper: Paper }) => (
-    <Card className="group hover:shadow-lg transition-all duration-300">
+    <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300 group">
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
-          <h4 className="font-semibold line-clamp-2 text-sm leading-tight">
+          <h4 className="font-semibold line-clamp-2 text-sm leading-tight text-foreground">
             {paper.title}
           </h4>
           <DropdownMenu>
@@ -380,7 +391,7 @@ export default function CollectionsPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
+                className="opacity-100 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
               >
                 <MoreHorizontal size={14} />
               </Button>
@@ -404,14 +415,16 @@ export default function CollectionsPage() {
                     {collections.map((collection) => (
                       <div
                         key={collection.id}
-                        className="flex items-center justify-between p-2 rounded-lg border"
+                        className="flex items-center justify-between p-2 rounded-lg border border-border/50"
                       >
                         <div className="flex items-center gap-3">
                           <div
                             className="w-6 h-6 rounded"
                             style={{ backgroundColor: collection.color }}
                           />
-                          <span className="font-medium">{collection.name}</span>
+                          <span className="font-medium text-foreground">
+                            {collection.name}
+                          </span>
                         </div>
                         <Button
                           size="sm"
@@ -443,7 +456,7 @@ export default function CollectionsPage() {
                 </DialogContent>
               </Dialog>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-600">
+              <DropdownMenuItem className="text-red-600 dark:text-red-400">
                 <Trash2 className="w-4 h-4 mr-2" />
                 Remove from Library
               </DropdownMenuItem>
@@ -451,7 +464,7 @@ export default function CollectionsPage() {
           </DropdownMenu>
         </div>
 
-        <div className="space-y-1 text-xs text-gray-600">
+        <div className="space-y-1 text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
             <User size={12} />
             <span className="line-clamp-1">{paper.author}</span>
@@ -486,17 +499,22 @@ export default function CollectionsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-[#49BBBD] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your collections...</p>
+          <p className="text-muted-foreground">Loading your collections...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 text-gray-900">
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Background Pattern */}
+      <div className="fixed inset-0 bg-background">
+        <div className="absolute inset-0 bg-[radial-gradient(#49BBBD_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,black_70%,transparent_100%)] opacity-5 dark:opacity-10"></div>
+      </div>
+
       <div className="relative z-10 min-h-screen">
         <div className="p-6 max-w-7xl mx-auto">
           {/* Header */}
@@ -513,10 +531,10 @@ export default function CollectionsPage() {
                     <Library className="text-white" size={32} />
                   </div>
                 </div>
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
+                <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-2">
                   Collections
                 </h1>
-                <p className="text-xl text-gray-600">
+                <p className="text-xl text-muted-foreground">
                   Organize and manage your research papers
                 </p>
               </div>
@@ -541,7 +559,7 @@ export default function CollectionsPage() {
                   </DialogHeader>
                   <div className="space-y-4">
                     <div>
-                      <label className="text-sm font-medium mb-2 block">
+                      <label className="text-sm font-medium mb-2 block text-foreground">
                         Collection Name
                       </label>
                       <Input
@@ -556,7 +574,7 @@ export default function CollectionsPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium mb-2 block">
+                      <label className="text-sm font-medium mb-2 block text-foreground">
                         Description
                       </label>
                       <Input
@@ -571,7 +589,7 @@ export default function CollectionsPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium mb-2 block">
+                      <label className="text-sm font-medium mb-2 block text-foreground">
                         Color
                       </label>
                       <div className="flex gap-2 flex-wrap">
@@ -580,7 +598,7 @@ export default function CollectionsPage() {
                             key={color}
                             className={`w-8 h-8 rounded-full border-2 ${
                               newCollection.color === color
-                                ? "border-gray-900"
+                                ? "border-foreground"
                                 : "border-transparent"
                             }`}
                             style={{ backgroundColor: color }}
@@ -623,7 +641,7 @@ export default function CollectionsPage() {
               {editingCollection && (
                 <div className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium mb-2 block">
+                    <label className="text-sm font-medium mb-2 block text-foreground">
                       Collection Name
                     </label>
                     <Input
@@ -637,7 +655,7 @@ export default function CollectionsPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-2 block">
+                    <label className="text-sm font-medium mb-2 block text-foreground">
                       Description
                     </label>
                     <Input
@@ -651,7 +669,7 @@ export default function CollectionsPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-2 block">
+                    <label className="text-sm font-medium mb-2 block text-foreground">
                       Color
                     </label>
                     <div className="flex gap-2 flex-wrap">
@@ -660,7 +678,7 @@ export default function CollectionsPage() {
                           key={color}
                           className={`w-8 h-8 rounded-full border-2 ${
                             editingCollection.color === color
-                              ? "border-gray-900"
+                              ? "border-foreground"
                               : "border-transparent"
                           }`}
                           style={{ backgroundColor: color }}
@@ -700,7 +718,7 @@ export default function CollectionsPage() {
             onValueChange={setActiveTab}
             className="space-y-6"
           >
-            <TabsList className="grid w-full grid-cols-2 bg-white/50 backdrop-blur-sm border border-gray-200/50">
+            <TabsList className="grid w-full grid-cols-2 bg-card/50 backdrop-blur-sm border border-border/50">
               <TabsTrigger
                 value="collections"
                 className="flex items-center gap-2"
@@ -718,19 +736,19 @@ export default function CollectionsPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
               <div className="flex gap-2 w-full sm:w-auto">
                 <div className="relative flex-1 sm:flex-none">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
                     placeholder="Search collections..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 w-full sm:w-64"
+                    className="pl-10 w-full sm:w-64 bg-card/50 border-border"
                   />
                 </div>
                 <Select
                   value={sortBy}
                   onValueChange={(value: any) => setSortBy(value)}
                 >
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="w-32 bg-card/50 border-border">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -745,6 +763,7 @@ export default function CollectionsPage() {
                   onClick={() =>
                     setViewMode(viewMode === "grid" ? "list" : "grid")
                   }
+                  className="border-border"
                 >
                   {viewMode === "grid" ? (
                     <List size={16} />
@@ -792,13 +811,13 @@ export default function CollectionsPage() {
                   animate={{ opacity: 1 }}
                   className="text-center py-12"
                 >
-                  <Card className="bg-white/80 backdrop-blur-sm border-gray-200/50 max-w-md mx-auto">
+                  <Card className="bg-card/50 backdrop-blur-sm border-border/50 max-w-md mx-auto">
                     <CardContent className="p-8">
                       <Folder
-                        className="mx-auto text-gray-300 mb-4"
+                        className="mx-auto text-muted-foreground/30 mb-4"
                         size={48}
                       />
-                      <CardTitle className="text-lg mb-2">
+                      <CardTitle className="text-lg mb-2 text-foreground">
                         No Collections Yet
                       </CardTitle>
                       <CardDescription className="mb-4">
@@ -843,13 +862,13 @@ export default function CollectionsPage() {
                   animate={{ opacity: 1 }}
                   className="text-center py-12"
                 >
-                  <Card className="bg-white/80 backdrop-blur-sm border-gray-200/50 max-w-md mx-auto">
+                  <Card className="bg-card/50 backdrop-blur-sm border-border/50 max-w-md mx-auto">
                     <CardContent className="p-8">
                       <FileText
-                        className="mx-auto text-gray-300 mb-4"
+                        className="mx-auto text-muted-foreground/30 mb-4"
                         size={48}
                       />
-                      <CardTitle className="text-lg mb-2">
+                      <CardTitle className="text-lg mb-2 text-foreground">
                         No Papers Saved
                       </CardTitle>
                       <CardDescription className="mb-4">

@@ -314,10 +314,10 @@ export default function RecommendationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 text-gray-900">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Background Pattern */}
-      <div className="fixed inset-0 bg-white">
-        <div className="absolute inset-0 bg-[radial-gradient(#49BBBD_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,black_70%,transparent_100%)] opacity-5"></div>
+      <div className="fixed inset-0 bg-background">
+        <div className="absolute inset-0 bg-[radial-gradient(#49BBBD_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,black_70%,transparent_100%)] opacity-5 dark:opacity-10"></div>
       </div>
 
       <div className="relative z-10 min-h-screen">
@@ -334,10 +334,10 @@ export default function RecommendationPage() {
                 <Sparkles className="text-white" size={32} />
               </div>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
               AI Research Recommendations
             </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Get personalized paper recommendations based on your interests and
               reading history
             </p>
@@ -352,7 +352,7 @@ export default function RecommendationPage() {
           <div className="grid lg:grid-cols-4 gap-6">
             {/* Sidebar */}
             <div className="lg:col-span-1 space-y-6">
-              <Card className="bg-white/80 backdrop-blur-sm border-gray-200/50">
+              <Card className="bg-card/50 backdrop-blur-sm border-border/50">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <Target className="text-[#49BBBD]" size={20} />
@@ -365,7 +365,7 @@ export default function RecommendationPage() {
                     onValueChange={setActiveTab}
                     className="w-full"
                   >
-                    <TabsList className="grid w-full grid-cols-2">
+                    <TabsList className="grid w-full grid-cols-2 bg-muted/50">
                       <TabsTrigger value="interests">Interests</TabsTrigger>
                       <TabsTrigger value="filters">Filters</TabsTrigger>
                     </TabsList>
@@ -381,7 +381,7 @@ export default function RecommendationPage() {
                               e.key === "Enter" && addInterest()
                             }
                             placeholder="e.g., deep learning"
-                            className="flex-1"
+                            className="flex-1 bg-background border-border"
                           />
                           <Button onClick={addInterest} size="icon">
                             <Plus size={16} />
@@ -393,12 +393,12 @@ export default function RecommendationPage() {
                             <Badge
                               key={interest}
                               variant="secondary"
-                              className="flex items-center gap-1"
+                              className="flex items-center gap-1 bg-secondary text-secondary-foreground"
                             >
                               {interest}
                               <button
                                 onClick={() => removeInterest(interest)}
-                                className="hover:text-destructive"
+                                className="hover:text-destructive ml-1"
                               >
                                 <X size={12} />
                               </button>
@@ -411,7 +411,7 @@ export default function RecommendationPage() {
                     <TabsContent value="filters" className="space-y-4">
                       <div className="space-y-3">
                         <div>
-                          <label className="text-sm font-medium mb-2 block">
+                          <label className="text-sm font-medium mb-2 block text-foreground">
                             Publication Years
                           </label>
                           <div className="flex gap-2">
@@ -427,6 +427,7 @@ export default function RecommendationPage() {
                                   ],
                                 })
                               }
+                              className="bg-background border-border"
                             />
                             <Input
                               type="number"
@@ -440,12 +441,13 @@ export default function RecommendationPage() {
                                   ],
                                 })
                               }
+                              className="bg-background border-border"
                             />
                           </div>
                         </div>
 
                         <div>
-                          <label className="text-sm font-medium mb-2 block">
+                          <label className="text-sm font-medium mb-2 block text-foreground">
                             Number of Results
                           </label>
                           <Select
@@ -457,7 +459,7 @@ export default function RecommendationPage() {
                               })
                             }
                           >
-                            <SelectTrigger>
+                            <SelectTrigger className="bg-background border-border">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -472,12 +474,12 @@ export default function RecommendationPage() {
                     </TabsContent>
                   </Tabs>
 
-                  <Separator className="my-4" />
+                  <Separator className="my-4 bg-border" />
 
                   <Button
                     onClick={generateRecommendations}
                     disabled={loading || userInterests.length === 0}
-                    className="w-full bg-[#49BBBD] hover:bg-[#3aa8a9]"
+                    className="w-full bg-[#49BBBD] hover:bg-[#3aa8a9] text-white"
                     size="lg"
                   >
                     {loading ? (
@@ -497,27 +499,31 @@ export default function RecommendationPage() {
 
               {/* Stats Card */}
               {recommendations.length > 0 && (
-                <Card className="bg-white/80 backdrop-blur-sm border-gray-200/50">
+                <Card className="bg-card/50 backdrop-blur-sm border-border/50">
                   <CardHeader>
-                    <CardTitle className="text-lg">
+                    <CardTitle className="text-lg text-foreground">
                       Recommendation Stats
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm text-muted-foreground">
                         Total Results
                       </span>
                       <Badge variant="outline">{recommendations.length}</Badge>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Year Range</span>
+                      <span className="text-sm text-muted-foreground">
+                        Year Range
+                      </span>
                       <Badge variant="outline">
                         {filters.yearsRange[0]} - {filters.yearsRange[1]}
                       </Badge>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">In Range</span>
+                      <span className="text-sm text-muted-foreground">
+                        In Range
+                      </span>
                       <Badge variant="outline">
                         {
                           recommendations.filter(
@@ -550,7 +556,7 @@ export default function RecommendationPage() {
                   className="space-y-4"
                 >
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-2xl flex items-center gap-2">
+                    <CardTitle className="text-2xl flex items-center gap-2 text-foreground">
                       <Lightbulb className="text-yellow-500" size={24} />
                       Personalized Recommendations
                     </CardTitle>
@@ -574,9 +580,9 @@ export default function RecommendationPage() {
                           transition={{ delay: 0.1 * index }}
                         >
                           <Card
-                            className={`cursor-pointer transition-all duration-300 hover:shadow-lg ${
+                            className={`cursor-pointer transition-all duration-300 hover:shadow-lg bg-card/50 backdrop-blur-sm border-border/50 ${
                               !isInYearRange
-                                ? "border-orange-200 bg-orange-50"
+                                ? "border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/20"
                                 : ""
                             }`}
                             onClick={() =>
@@ -586,14 +592,14 @@ export default function RecommendationPage() {
                             <CardContent className="p-6">
                               {/* Header with Badges */}
                               <div className="flex flex-wrap gap-2 mb-3">
-                                <Badge className="bg-gradient-to-r from-purple-500 to-pink-500">
+                                <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
                                   <Sparkles className="w-3 h-3 mr-1" />
                                   AI Recommended
                                 </Badge>
                                 {!isInYearRange && (
                                   <Badge
                                     variant="outline"
-                                    className="text-orange-600 border-orange-300"
+                                    className="text-orange-600 dark:text-orange-400 border-orange-300 dark:border-orange-700"
                                   >
                                     Outside Year Range
                                   </Badge>
@@ -601,7 +607,7 @@ export default function RecommendationPage() {
                                 {item.relevance_score && (
                                   <Badge
                                     variant="secondary"
-                                    className="ml-auto"
+                                    className="ml-auto bg-secondary text-secondary-foreground"
                                   >
                                     <TrendingUp className="w-3 h-3 mr-1" />
                                     {(item.relevance_score * 100).toFixed(1)}%
@@ -611,14 +617,14 @@ export default function RecommendationPage() {
                               </div>
 
                               {/* Paper Title */}
-                              <h3 className="text-xl font-semibold mb-3 line-clamp-2 group-hover:text-[#49BBBD] transition-colors">
+                              <h3 className="text-xl font-semibold mb-3 line-clamp-2 text-foreground group-hover:text-[#49BBBD] transition-colors">
                                 {item.display_name}
                               </h3>
 
                               {/* Metadata */}
                               <div className="space-y-2 mb-4">
                                 {item.authorships?.length > 0 && (
-                                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                     <User size={14} />
                                     <span className="line-clamp-1">
                                       {item.authorships
@@ -628,7 +634,7 @@ export default function RecommendationPage() {
                                   </div>
                                 )}
 
-                                <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                                   {item.host_venue?.display_name && (
                                     <div className="flex items-center gap-1">
                                       <Building size={14} />
@@ -641,8 +647,8 @@ export default function RecommendationPage() {
                                     <div
                                       className={`flex items-center gap-1 ${
                                         isInYearRange
-                                          ? "text-green-600"
-                                          : "text-orange-600"
+                                          ? "text-green-600 dark:text-green-400"
+                                          : "text-orange-600 dark:text-orange-400"
                                       }`}
                                     >
                                       <Calendar size={14} />
@@ -656,13 +662,13 @@ export default function RecommendationPage() {
 
                               {/* Abstract Preview */}
                               {item.abstract && (
-                                <p className="text-gray-600 text-sm leading-relaxed line-clamp-3 mb-4">
+                                <p className="text-muted-foreground text-sm leading-relaxed line-clamp-3 mb-4">
                                   {item.abstract}
                                 </p>
                               )}
 
                               {/* Action Buttons */}
-                              <div className="flex justify-between items-center pt-4 border-t">
+                              <div className="flex justify-between items-center pt-4 border-t border-border">
                                 <div className="flex gap-2">
                                   <TooltipProvider>
                                     <Tooltip>
@@ -674,6 +680,7 @@ export default function RecommendationPage() {
                                             e.stopPropagation();
                                             handleSave(item);
                                           }}
+                                          className="border-border"
                                         >
                                           <Save className="w-4 h-4 mr-1" />
                                           Save
@@ -695,6 +702,7 @@ export default function RecommendationPage() {
                                             e.stopPropagation();
                                             handleReadFullPaper(item);
                                           }}
+                                          className="border-border"
                                         >
                                           <BookOpen className="w-4 h-4 mr-1" />
                                           Read
@@ -710,7 +718,7 @@ export default function RecommendationPage() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="text-gray-500"
+                                  className="text-muted-foreground"
                                 >
                                   View Details
                                   <ArrowRight className="w-4 h-4 ml-1" />
@@ -731,20 +739,20 @@ export default function RecommendationPage() {
                     animate={{ opacity: 1 }}
                     className="text-center py-12"
                   >
-                    <Card className="bg-white/80 backdrop-blur-sm border-gray-200/50 max-w-md mx-auto">
+                    <Card className="bg-card/50 backdrop-blur-sm border-border/50 max-w-md mx-auto">
                       <CardContent className="p-8">
                         <Sparkles
-                          className="mx-auto text-gray-300 mb-4"
+                          className="mx-auto text-muted-foreground/30 mb-4"
                           size={48}
                         />
-                        <CardTitle className="text-lg mb-2">
+                        <CardTitle className="text-lg mb-2 text-foreground">
                           Get Personalized Recommendations
                         </CardTitle>
                         <CardDescription className="mb-4">
                           Add your research interests and let AI find the
                           perfect papers for you.
                         </CardDescription>
-                        <div className="text-sm text-gray-500 space-y-1 text-left">
+                        <div className="text-sm text-muted-foreground space-y-1 text-left">
                           <p>✨ Based on your saved papers</p>
                           <p>🎯 Tailored to your interests</p>
                           <p>📚 Updated as you read more</p>
@@ -761,17 +769,17 @@ export default function RecommendationPage() {
                   {Array.from({ length: 3 }).map((_, index) => (
                     <Card
                       key={index}
-                      className="bg-white/80 backdrop-blur-sm border-gray-200/50"
+                      className="bg-card/50 backdrop-blur-sm border-border/50"
                     >
                       <CardContent className="p-6">
                         <div className="space-y-3">
-                          <Skeleton className="h-6 w-3/4" />
-                          <Skeleton className="h-4 w-1/2" />
-                          <Skeleton className="h-4 w-full" />
-                          <Skeleton className="h-4 w-2/3" />
+                          <Skeleton className="h-6 w-3/4 bg-muted" />
+                          <Skeleton className="h-4 w-1/2 bg-muted" />
+                          <Skeleton className="h-4 w-full bg-muted" />
+                          <Skeleton className="h-4 w-2/3 bg-muted" />
                           <div className="flex gap-2 pt-4">
-                            <Skeleton className="h-8 w-20" />
-                            <Skeleton className="h-8 w-20" />
+                            <Skeleton className="h-8 w-20 bg-muted" />
+                            <Skeleton className="h-8 w-20 bg-muted" />
                           </div>
                         </div>
                       </CardContent>

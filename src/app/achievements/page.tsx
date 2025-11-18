@@ -133,10 +133,10 @@ export default function AchievementsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 text-gray-900">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Background Pattern */}
-      <div className="fixed inset-0 bg-white">
-        <div className="absolute inset-0 bg-[radial-gradient(#49BBBD_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,black_70%,transparent_100%)] opacity-5"></div>
+      <div className="fixed inset-0 bg-background">
+        <div className="absolute inset-0 bg-[radial-gradient(#49BBBD_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,black_70%,transparent_100%)] opacity-5 dark:opacity-10"></div>
       </div>
 
       <div className="relative z-10 min-h-screen">
@@ -153,10 +153,10 @@ export default function AchievementsPage() {
                 <Trophy className="text-white" size={32} />
               </div>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
               Your Achievements
             </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Track your research journey and unlock rewards as you explore
             </p>
             {user && (
@@ -180,14 +180,16 @@ export default function AchievementsPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.3 + index * 0.1 }}
                 whileHover={{ y: -5 }}
-                className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300"
+                className="bg-card/50 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-300"
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">
+                    <p className="text-2xl font-bold text-foreground">
                       {stat.value}
                     </p>
-                    <p className="text-gray-600 text-sm">{stat.label}</p>
+                    <p className="text-muted-foreground text-sm">
+                      {stat.label}
+                    </p>
                   </div>
                   <div className="bg-[#49BBBD]/10 p-3 rounded-xl">
                     {stat.icon}
@@ -202,7 +204,7 @@ export default function AchievementsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.6 }}
-            className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm mb-8"
+            className="bg-card/50 backdrop-blur-sm p-8 rounded-2xl border border-border/50 shadow-sm mb-8"
           >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
               {/* Level Card */}
@@ -214,14 +216,14 @@ export default function AchievementsPage() {
                   <Crown className="w-8 h-8" />
                   <h3 className="text-2xl font-bold">Level {level}</h3>
                 </div>
-                <p className="text-[#49BBBD]/90 mb-2">Research Explorer</p>
+                <p className="text-white/80 mb-2">Research Explorer</p>
                 <div className="text-3xl font-bold">{xp} XP</div>
               </motion.div>
 
               {/* XP Progress */}
               <div>
                 <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold text-foreground">
                     Progress to Level {level + 1}
                   </h3>
                   <span className="text-[#49BBBD] font-medium">
@@ -229,7 +231,7 @@ export default function AchievementsPage() {
                   </span>
                 </div>
                 <XPBar xp={xp} />
-                <p className="text-gray-600 text-sm mt-3">
+                <p className="text-muted-foreground text-sm mt-3">
                   {100 - (xp % 100)} XP needed for next level
                 </p>
               </div>
@@ -244,10 +246,10 @@ export default function AchievementsPage() {
             className="mb-8"
           >
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-3">
+              <h2 className="text-3xl font-bold text-foreground mb-3">
                 🏆 Your Badges
               </h2>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Unlock achievements by reading, saving, and exploring research
                 papers
               </p>
@@ -263,8 +265,8 @@ export default function AchievementsPage() {
                   whileHover={{ scale: 1.02, y: -5 }}
                   className={`p-6 rounded-2xl border-2 transition-all duration-300 ${
                     achievement.unlocked
-                      ? "bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 shadow-lg animate-pulse"
-                      : "bg-gray-50 border-gray-200 opacity-70"
+                      ? "bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-green-200 dark:border-green-800 shadow-lg"
+                      : "bg-muted/50 border-border/50 opacity-70"
                   }`}
                 >
                   <div className="flex items-start gap-4">
@@ -272,7 +274,7 @@ export default function AchievementsPage() {
                       className={`p-3 rounded-xl ${
                         achievement.unlocked
                           ? "bg-[#49BBBD] text-white"
-                          : "bg-gray-300 text-gray-500"
+                          : "bg-muted text-muted-foreground"
                       }`}
                     >
                       {achievementIcons[index % achievementIcons.length]}
@@ -281,8 +283,8 @@ export default function AchievementsPage() {
                       <h3
                         className={`font-semibold text-lg ${
                           achievement.unlocked
-                            ? "text-gray-900"
-                            : "text-gray-500"
+                            ? "text-foreground"
+                            : "text-muted-foreground"
                         }`}
                       >
                         {achievement.name}
@@ -290,8 +292,8 @@ export default function AchievementsPage() {
                       <p
                         className={`text-sm mt-1 ${
                           achievement.unlocked
-                            ? "text-gray-600"
-                            : "text-gray-400"
+                            ? "text-muted-foreground"
+                            : "text-muted-foreground/70"
                         }`}
                       >
                         {achievement.description}
@@ -316,20 +318,20 @@ export default function AchievementsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8, duration: 0.6 }}
-            className="text-center bg-white/80 backdrop-blur-sm p-8 rounded-2xl border border-gray-200"
+            className="text-center bg-card/50 backdrop-blur-sm p-8 rounded-2xl border border-border/50"
           >
             <div className="flex items-center justify-center gap-3 mb-3">
               <Zap className="text-[#49BBBD]" size={24} />
-              <h3 className="text-xl font-semibold text-gray-900">
+              <h3 className="text-xl font-semibold text-foreground">
                 Keep Going!
               </h3>
             </div>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-muted-foreground max-w-2xl mx-auto">
               Continue exploring research papers, saving your favorites, and
               reading to unlock more achievements and level up your research
               skills!
             </p>
-            <div className="flex justify-center gap-4 mt-4 text-sm text-gray-500">
+            <div className="flex justify-center gap-4 mt-4 text-sm text-muted-foreground flex-wrap">
               <span>🎯 Save papers to earn XP</span>
               <span>📚 Read daily to maintain streak</span>
               <span>🔍 Explore new topics</span>
