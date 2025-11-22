@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useSync } from "@/lib/hooks/useSync";
 import { motion } from "framer-motion";
 import {
   BarChart,
@@ -36,6 +37,9 @@ import {
   FileText,
   Library,
   Users,
+  RefreshCw,
+  Cloud,
+  CloudOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -55,6 +59,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface Paper {
   id: string;
@@ -94,7 +99,12 @@ export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState<"all" | "month" | "year">("all");
   const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(true);
+  const [syncStatus, setSyncStatus] = useState<
+    "idle" | "syncing" | "success" | "error"
+  >("idle");
   const { user } = useAuth();
+  const { syncToCloud, syncFromCloud, isSyncing, lastSynced, syncError } =
+    useSync();
 
   const userId = user?.uid;
 
@@ -109,11 +119,101 @@ export default function AnalyticsPage() {
     "#EF476F",
   ];
 
-  useEffect(() => {
-    loadAnalyticsData();
-  }, [user, timeRange]);
+  // Enhanced sync functions - FIXED: Better error handling
+  const enhancedSyncToCloud = async () => {
+    setSyncStatus("syncing");
+    try {
+      const success = await syncToCloud();
+      if (success) {
+        setSyncStatus("success");
+        // Reload data after successful sync
+        setTimeout(() => {
+          loadAnalyticsData();
+        }, 1000);
+      } else {
+        setSyncStatus("error");
+      }
+      setTimeout(() => setSyncStatus("idle"), 2000);
+    } catch (error) {
+      setSyncStatus("error");
+      setTimeout(() => setSyncStatus("idle"), 3000);
+    }
+  };
 
-  const loadAnalyticsData = () => {
+  const enhancedSyncFromCloud = async () => {
+    setSyncStatus("syncing");
+    try {
+      const success = await syncFromCloud();
+      if (success) {
+        setSyncStatus("success");
+        loadAnalyticsData(); // Reload data after sync
+      } else {
+        setSyncStatus("error");
+      }
+      setTimeout(() => setSyncStatus("idle"), 2000);
+    } catch (error) {
+      setSyncStatus("error");
+      setTimeout(() => setSyncStatus("idle"), 3000);
+    }
+  };
+
+  // Update sync status based on isSyncing - FIXED: Better status tracking
+  useEffect(() => {
+    if (isSyncing) {
+      setSyncStatus("syncing");
+    } else if (syncStatus === "syncing") {
+      if (syncError) {
+        setSyncStatus("error");
+      } else {
+        setSyncStatus("success");
+      }
+      setTimeout(() => setSyncStatus("idle"), 2000);
+    }
+  }, [isSyncing, syncStatus, syncError]);
+
+  const getSyncStatusText = () => {
+    switch (syncStatus) {
+      case "syncing":
+        return "Syncing...";
+      case "success":
+        return "Synced!";
+      case "error":
+        return syncError || "Sync failed";
+      default:
+        return lastSynced
+          ? `Synced ${new Date(lastSynced).toLocaleTimeString()}`
+          : "Ready to sync";
+    }
+  };
+
+  const getSyncStatusColor = () => {
+    switch (syncStatus) {
+      case "syncing":
+        return "text-yellow-600 bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800";
+      case "success":
+        return "text-green-600 bg-green-50 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800";
+      case "error":
+        return "text-red-600 bg-red-50 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800";
+      default:
+        return "text-blue-600 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800";
+    }
+  };
+
+  const getSyncIcon = () => {
+    switch (syncStatus) {
+      case "syncing":
+        return <RefreshCw className="w-3 h-3 mr-1 animate-spin" />;
+      case "success":
+        return <Cloud className="w-3 h-3 mr-1" />;
+      case "error":
+        return <CloudOff className="w-3 h-3 mr-1" />;
+      default:
+        return <Cloud className="w-3 h-3 mr-1" />;
+    }
+  };
+
+  // Memoized data loading function to prevent infinite loops - FIXED: Better sync integration
+  const loadAnalyticsData = useCallback(() => {
     setLoading(true);
 
     try {
@@ -146,6 +246,7 @@ export default function AnalyticsPage() {
 
       const data = generateAnalyticsData(savedPapers, readPapers);
       setAnalyticsData(data);
+      console.log("✅ Analytics data loaded successfully");
     } catch (error) {
       console.error("Error loading analytics:", error);
       setAnalyticsData({
@@ -161,7 +262,49 @@ export default function AnalyticsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, timeRange]);
+
+  // Fixed useEffect - no infinite loop with proper sync integration
+  useEffect(() => {
+    loadAnalyticsData();
+
+    // Listen for data changes and cloud sync events
+    const handleDataChange = () => {
+      console.log("🔄 Data changed, reloading analytics");
+      loadAnalyticsData();
+    };
+
+    const handleCloudDataApplied = () => {
+      console.log("🔄 Cloud data applied, reloading analytics");
+      loadAnalyticsData();
+    };
+
+    window.addEventListener("storage", handleDataChange);
+    window.addEventListener("cloudDataApplied", handleCloudDataApplied);
+    window.addEventListener("dataChanged", handleDataChange);
+
+    return () => {
+      window.removeEventListener("storage", handleDataChange);
+      window.removeEventListener("cloudDataApplied", handleCloudDataApplied);
+      window.removeEventListener("dataChanged", handleDataChange);
+    };
+  }, [user, timeRange, loadAnalyticsData]);
+
+  // Auto-sync when analytics data changes - FIXED: Better auto-sync logic
+  useEffect(() => {
+    if (analyticsData && !loading && user) {
+      const syncTimer = setTimeout(async () => {
+        try {
+          await syncToCloud();
+          console.log("✅ Analytics data auto-synced to cloud");
+        } catch (error) {
+          console.error("❌ Failed to auto-sync analytics:", error);
+        }
+      }, 5000); // Delay sync to avoid excessive API calls
+
+      return () => clearTimeout(syncTimer);
+    }
+  }, [analyticsData, loading, user, syncToCloud]);
 
   const generateMockReadingData = (readCount: number): ReadingRecord[] => {
     const mockRecords: ReadingRecord[] = [];
@@ -282,7 +425,9 @@ export default function AnalyticsPage() {
           const hour = readTime.getHours();
           const hourEntry = hourCounts.find((h) => parseInt(h.hour) === hour);
           if (hourEntry) hourEntry.count += 1;
-        } catch (error) {}
+        } catch (error) {
+          console.error("Error parsing read time:", error);
+        }
       }
     });
 
@@ -350,7 +495,9 @@ export default function AnalyticsPage() {
           const dayIndex = (readDate.getDay() + 6) % 7;
           const dayEntry = dayCounts[dayIndex];
           if (dayEntry) dayEntry.count += 1;
-        } catch (error) {}
+        } catch (error) {
+          console.error("Error parsing read date:", error);
+        }
       }
     });
 
@@ -413,6 +560,10 @@ export default function AnalyticsPage() {
           <p className="text-muted-foreground">
             Loading your research analytics...
           </p>
+          <Badge className="mt-2 bg-[#49BBBD]/10 text-[#49BBBD] border-[#49BBBD]/20">
+            <Cloud className="w-3 h-3 mr-1" />
+            Syncing data from cloud
+          </Badge>
         </div>
       </div>
     );
@@ -426,9 +577,16 @@ export default function AnalyticsPage() {
           <h2 className="text-xl font-semibold text-foreground mb-2">
             No Data Available
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground mb-4">
             Save and read some papers to see your research analytics.
           </p>
+          <Button
+            onClick={enhancedSyncFromCloud}
+            className="bg-[#49BBBD] hover:bg-[#3aa8a9]"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Sync from Cloud
+          </Button>
         </div>
       </div>
     );
@@ -461,6 +619,43 @@ export default function AnalyticsPage() {
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Gain insights into your reading patterns and research habits
             </p>
+            {user && (
+              <div className="flex items-center justify-center gap-2 mt-2">
+                <Badge className={getSyncStatusColor()}>
+                  {getSyncIcon()}
+                  {getSyncStatusText()}
+                </Badge>
+                <p className="text-sm text-[#49BBBD]">
+                  🔄 Data syncs across all your devices
+                </p>
+              </div>
+            )}
+
+            {/* Sync Controls */}
+            <div className="flex justify-center gap-2 mt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={enhancedSyncFromCloud}
+                disabled={isSyncing}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw
+                  className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`}
+                />
+                Pull Latest
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={enhancedSyncToCloud}
+                disabled={isSyncing}
+                className="flex items-center gap-2"
+              >
+                <Cloud className="w-4 h-4" />
+                Push Changes
+              </Button>
+            </div>
           </motion.header>
 
           {/* Time Range Filter */}
@@ -468,7 +663,7 @@ export default function AnalyticsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="flex justify-end mb-6"
+            className="flex justify-between items-center mb-6"
           >
             <Select
               value={timeRange}
@@ -483,6 +678,12 @@ export default function AnalyticsPage() {
                 <SelectItem value="month">This Month</SelectItem>
               </SelectContent>
             </Select>
+
+            {lastSynced && (
+              <div className="text-sm text-muted-foreground">
+                Last sync: {new Date(lastSynced).toLocaleTimeString()}
+              </div>
+            )}
           </motion.div>
 
           {/* Stats Grid */}
@@ -859,6 +1060,9 @@ export default function AnalyticsPage() {
                   <Download className="mr-2 h-4 w-4" />
                   Export Analytics Data
                 </Button>
+                <div className="mt-3 text-xs text-muted-foreground">
+                  Includes all your reading patterns and research insights
+                </div>
               </CardContent>
             </Card>
           </motion.section>

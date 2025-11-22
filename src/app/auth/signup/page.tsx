@@ -441,7 +441,7 @@ export default function SignUpPage() {
                   href="/auth/login"
                   className="text-[#49BBBD] hover:text-[#3aa8a9] font-semibold underline-offset-4 hover:underline transition-colors"
                 >
-                  Sign in here
+                  Log in here
                 </a>
               </p>
             </motion.div>

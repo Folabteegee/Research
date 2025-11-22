@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useSync } from "@/lib/hooks/useSync";
 import {
   getUserXP,
   getLevel,
@@ -24,10 +25,18 @@ import {
   Crown,
   Medal,
   Gem,
+  RefreshCw,
+  Cloud,
+  CloudOff,
 } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 export default function AchievementsPage() {
   const { user } = useAuth();
+  const { syncToCloud, syncFromCloud, isSyncing, lastSynced, syncError } =
+    useSync();
   const [xp, setXP] = useState(0);
   const [level, setLevel] = useState(1);
   const [achievements, setAchievements] = useState<any[]>([]);
@@ -37,58 +46,202 @@ export default function AchievementsPage() {
     papersSaved: 0,
     searches: 0,
   });
+  const [syncStatus, setSyncStatus] = useState<
+    "idle" | "syncing" | "success" | "error"
+  >("idle");
+  const [lastLoad, setLastLoad] = useState<number>(0);
 
   // Get user ID for gamification functions
   const userId = user?.uid;
 
-  // Load user data + listen for updates
+  // Enhanced sync functions - FIXED: Better error handling
+  const enhancedSyncToCloud = async () => {
+    setSyncStatus("syncing");
+    try {
+      const success = await syncToCloud();
+      if (success) {
+        setSyncStatus("success");
+        // Reload data after successful sync
+        setTimeout(() => {
+          loadData();
+        }, 1000);
+      } else {
+        setSyncStatus("error");
+      }
+      setTimeout(() => setSyncStatus("idle"), 2000);
+    } catch (error) {
+      setSyncStatus("error");
+      setTimeout(() => setSyncStatus("idle"), 3000);
+    }
+  };
+
+  const enhancedSyncFromCloud = async () => {
+    setSyncStatus("syncing");
+    try {
+      const success = await syncFromCloud();
+      if (success) {
+        setSyncStatus("success");
+        loadData(); // Reload data after sync
+      } else {
+        setSyncStatus("error");
+      }
+      setTimeout(() => setSyncStatus("idle"), 2000);
+    } catch (error) {
+      setSyncStatus("error");
+      setTimeout(() => setSyncStatus("idle"), 3000);
+    }
+  };
+
+  // Load user data + listen for updates - FIXED: Complete sync integration
+  const loadData = () => {
+    if (!userId) return;
+
+    // Load XP and level with user-specific data
+    const userXP = getUserXP(userId);
+    const userLevel = getLevel(userXP);
+
+    // Load streak with user-specific data
+    const userStreak = updateStreak(userId);
+
+    // Load user stats from saved papers
+    const savedPapersKey = `savedPapers_${userId}`;
+    const storedPapers = localStorage.getItem(savedPapersKey);
+    const papers = storedPapers ? JSON.parse(storedPapers) : [];
+
+    // Load searches count
+    const searchesKey = `searches_${userId}`;
+    const searchesCount = parseInt(localStorage.getItem(searchesKey) || "0");
+
+    // Load reads count properly - FIXED: Better reading data handling
+    const readPapersKey = `reads_${userId}`;
+    const readPapersData = localStorage.getItem(readPapersKey);
+    let papersRead = 0;
+
+    if (readPapersData) {
+      try {
+        const parsedReads = JSON.parse(readPapersData);
+        if (Array.isArray(parsedReads)) {
+          papersRead = parsedReads.length;
+        } else if (typeof parsedReads === "number") {
+          papersRead = parsedReads;
+        }
+      } catch (error) {
+        console.error("Error parsing read papers:", error);
+        papersRead = 0;
+      }
+    }
+
+    setXP(userXP);
+    setLevel(userLevel);
+    setStreak(userStreak);
+    setUserStats({
+      papersRead,
+      papersSaved: papers.length,
+      searches: searchesCount,
+    });
+    setAchievements(getAchievements(userId));
+
+    setLastLoad(Date.now());
+  };
+
   useEffect(() => {
-    const loadData = () => {
-      // Load XP and level with user-specific data
-      const userXP = getUserXP(userId);
-      const userLevel = getLevel(userXP);
-
-      // Load streak with user-specific data
-      const userStreak = updateStreak(userId);
-
-      // Load user stats from saved papers
-      const savedPapersKey = userId
-        ? `savedPapers_${userId}`
-        : "savedPapers_guest";
-      const storedPapers = localStorage.getItem(savedPapersKey);
-      const papers = storedPapers ? JSON.parse(storedPapers) : [];
-
-      // Load searches count (you might want to track this separately)
-      const searchesKey = userId ? `searches_${userId}` : "searches_guest";
-      const searchesCount = parseInt(localStorage.getItem(searchesKey) || "0");
-
-      // Estimate papers read from XP (10 XP per read)
-      const papersRead = Math.floor(userXP / 10);
-
-      setXP(userXP);
-      setLevel(userLevel);
-      setStreak(userStreak);
-      setUserStats({
-        papersRead,
-        papersSaved: papers.length,
-        searches: searchesCount,
-      });
-      setAchievements(getAchievements(userId));
-    };
-
     loadData();
 
     // Listen for localStorage updates (from other tabs/pages)
-    window.addEventListener("storage", loadData);
+    const handleStorageChange = () => {
+      console.log("🔄 Storage changed, reloading achievements data");
+      loadData();
+    };
 
-    // Poll for updates every 2 seconds (for real-time updates)
-    const interval = setInterval(loadData, 2000);
+    // Listen for cloud data updates
+    const handleCloudDataApplied = () => {
+      console.log("🔄 Cloud data applied, reloading achievements");
+      loadData();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("cloudDataApplied", handleCloudDataApplied);
+
+    // Poll for updates every 5 seconds (for real-time updates)
+    const interval = setInterval(loadData, 5000);
 
     return () => {
-      window.removeEventListener("storage", loadData);
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("cloudDataApplied", handleCloudDataApplied);
       clearInterval(interval);
     };
   }, [user, userId]);
+
+  // Sync data when achievements or stats change - FIXED: Better auto-sync logic
+  useEffect(() => {
+    if (!userId) return;
+
+    const syncTimer = setTimeout(async () => {
+      try {
+        await syncToCloud();
+        console.log("✅ Achievements data auto-synced to cloud");
+      } catch (error) {
+        console.error("❌ Failed to auto-sync achievements:", error);
+      }
+    }, 3000);
+
+    return () => clearTimeout(syncTimer);
+  }, [xp, streak, userStats, achievements, userId, syncToCloud]);
+
+  // Update sync status based on isSyncing - FIXED: Better status tracking
+  useEffect(() => {
+    if (isSyncing) {
+      setSyncStatus("syncing");
+    } else if (syncStatus === "syncing") {
+      if (syncError) {
+        setSyncStatus("error");
+      } else {
+        setSyncStatus("success");
+      }
+      setTimeout(() => setSyncStatus("idle"), 2000);
+    }
+  }, [isSyncing, syncStatus, syncError]);
+
+  const getSyncStatusText = () => {
+    switch (syncStatus) {
+      case "syncing":
+        return "Syncing...";
+      case "success":
+        return "Synced!";
+      case "error":
+        return syncError || "Sync failed";
+      default:
+        return lastSynced
+          ? `Synced ${new Date(lastSynced).toLocaleTimeString()}`
+          : "Ready to sync";
+    }
+  };
+
+  const getSyncStatusColor = () => {
+    switch (syncStatus) {
+      case "syncing":
+        return "text-yellow-600 bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800";
+      case "success":
+        return "text-green-600 bg-green-50 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800";
+      case "error":
+        return "text-red-600 bg-red-50 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800";
+      default:
+        return "text-blue-600 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800";
+    }
+  };
+
+  const getSyncIcon = () => {
+    switch (syncStatus) {
+      case "syncing":
+        return <RefreshCw className="w-3 h-3 mr-1 animate-spin" />;
+      case "success":
+        return <Cloud className="w-3 h-3 mr-1" />;
+      case "error":
+        return <CloudOff className="w-3 h-3 mr-1" />;
+      default:
+        return <Cloud className="w-3 h-3 mr-1" />;
+    }
+  };
 
   const achievementIcons = [
     <Trophy className="w-8 h-8" />,
@@ -160,10 +313,42 @@ export default function AchievementsPage() {
               Track your research journey and unlock rewards as you explore
             </p>
             {user && (
-              <p className="text-sm text-[#49BBBD] mt-2">
-                Personal achievements for {user.email}
-              </p>
+              <div className="flex items-center justify-center gap-2 mt-2">
+                <Badge className={getSyncStatusColor()}>
+                  {getSyncIcon()}
+                  {getSyncStatusText()}
+                </Badge>
+                <p className="text-sm text-[#49BBBD]">
+                  Personal achievements for {user.email} • 🔄 Auto-sync enabled
+                </p>
+              </div>
             )}
+
+            {/* Sync Controls */}
+            <div className="flex justify-center gap-2 mt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={enhancedSyncFromCloud}
+                disabled={isSyncing}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw
+                  className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`}
+                />
+                Pull Latest
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={enhancedSyncToCloud}
+                disabled={isSyncing}
+                className="flex items-center gap-2"
+              >
+                <Cloud className="w-4 h-4" />
+                Push Changes
+              </Button>
+            </div>
           </motion.header>
 
           {/* User Stats Grid */}
@@ -218,6 +403,9 @@ export default function AchievementsPage() {
                 </div>
                 <p className="text-white/80 mb-2">Research Explorer</p>
                 <div className="text-3xl font-bold">{xp} XP</div>
+                <div className="mt-4 text-sm text-white/80">
+                  Last updated: {new Date(lastLoad).toLocaleTimeString()}
+                </div>
               </motion.div>
 
               {/* XP Progress */}
@@ -234,6 +422,20 @@ export default function AchievementsPage() {
                 <p className="text-muted-foreground text-sm mt-3">
                   {100 - (xp % 100)} XP needed for next level
                 </p>
+                <div className="flex gap-2 mt-4">
+                  <Badge
+                    variant="outline"
+                    className="bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300"
+                  >
+                    📚 Read papers: +10 XP
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className="bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300"
+                  >
+                    💾 Save papers: +10 XP
+                  </Badge>
+                </div>
               </div>
             </div>
           </motion.section>
@@ -253,6 +455,11 @@ export default function AchievementsPage() {
                 Unlock achievements by reading, saving, and exploring research
                 papers
               </p>
+              {user && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  Achievements sync across all your devices automatically
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -306,6 +513,19 @@ export default function AchievementsPage() {
                           </span>
                         </div>
                       )}
+                      {!achievement.unlocked && achievement.progress && (
+                        <div className="mt-2">
+                          <div className="w-full bg-muted rounded-full h-2">
+                            <div
+                              className="bg-[#49BBBD] h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${achievement.progress}%` }}
+                            />
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {achievement.progress}% complete
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </motion.div>
@@ -335,7 +555,15 @@ export default function AchievementsPage() {
               <span>🎯 Save papers to earn XP</span>
               <span>📚 Read daily to maintain streak</span>
               <span>🔍 Explore new topics</span>
+              <span>☁️ Data syncs automatically</span>
             </div>
+
+            {/* Last Sync Info */}
+            {lastSynced && (
+              <div className="mt-4 text-xs text-muted-foreground">
+                Last cloud sync: {new Date(lastSynced).toLocaleString()}
+              </div>
+            )}
           </motion.section>
         </div>
       </div>

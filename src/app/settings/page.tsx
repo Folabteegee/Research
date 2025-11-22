@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { motion } from "framer-motion";
+import { useSync } from "@/lib/hooks/useSync";
+import { Cloud, RefreshCw } from "lucide-react";
 import {
   Moon,
   Sun,
@@ -261,6 +263,8 @@ export default function SettingsPage() {
       alert("❌ Error exporting data. Please try again.");
     }
   };
+
+  const { syncToCloud, syncFromCloud, isSyncing, lastSynced } = useSync();
 
   const clearData = () => {
     if (showConfirmation) {
@@ -558,6 +562,70 @@ export default function SettingsPage() {
                 </p>
                 <p className="text-sm text-blue-700 dark:text-blue-300">
                   {user.email}
+                </p>
+              </div>
+            )}
+          </div>
+        </SettingSection>
+
+        <SettingSection title="Cloud Sync" icon={Cloud}>
+          <div className="space-y-4">
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+              <p className="font-medium text-blue-900 dark:text-blue-100">
+                Cross-Device Sync
+              </p>
+              <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                Your research library, achievements, and progress sync across
+                all devices. Login with the same account anywhere to continue
+                your research.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between py-3">
+              <div className="flex-1">
+                <p className="font-medium text-foreground">Sync Status</p>
+                <p className="text-sm text-muted-foreground">
+                  {isSyncing
+                    ? "Syncing..."
+                    : lastSynced
+                    ? `Last synced: ${new Date(
+                        lastSynced
+                      ).toLocaleTimeString()}`
+                    : "Not synced yet"}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={syncFromCloud}
+                  disabled={isSyncing}
+                  variant="outline"
+                  size="sm"
+                  className="border-border"
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 mr-1 ${
+                      isSyncing ? "animate-spin" : ""
+                    }`}
+                  />
+                  Pull
+                </Button>
+                <Button
+                  onClick={syncToCloud}
+                  disabled={isSyncing}
+                  variant="default"
+                  size="sm"
+                  className="bg-[#49BBBD] hover:bg-[#3aa8a9]"
+                >
+                  <Cloud className="w-4 h-4 mr-1" />
+                  Push
+                </Button>
+              </div>
+            </div>
+
+            {user && (
+              <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                <p className="text-sm text-green-700 dark:text-green-300 text-center">
+                  ✅ Signed in as {user.email} - Data will sync automatically
                 </p>
               </div>
             )}

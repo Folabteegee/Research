@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useSync } from "@/lib/hooks/useSync";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -23,6 +24,9 @@ import {
   X,
   Move,
   Check,
+  RefreshCw,
+  Cloud,
+  CloudOff,
 } from "lucide-react";
 
 // Shadcn Components
@@ -98,6 +102,14 @@ export default function CollectionDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
+  const {
+    syncToCloud,
+    syncFromCloud,
+    isSyncing,
+    lastSynced,
+    syncError,
+    triggerDataChange,
+  } = useSync();
   const collectionId = params.id as string;
 
   const [collection, setCollection] = useState<Collection | null>(null);
@@ -108,11 +120,104 @@ export default function CollectionDetailPage() {
   const [activeTab, setActiveTab] = useState("papers");
   const [showAddPapers, setShowAddPapers] = useState(false);
   const [selectedPapers, setSelectedPapers] = useState<string[]>([]);
+  const [syncStatus, setSyncStatus] = useState<
+    "idle" | "syncing" | "success" | "error"
+  >("idle");
 
+  // Enhanced sync functions - FIXED: Better error handling
+  const enhancedSyncToCloud = async () => {
+    setSyncStatus("syncing");
+    try {
+      const success = await syncToCloud();
+      if (success) {
+        setSyncStatus("success");
+        // Reload data after successful sync
+        setTimeout(() => {
+          loadCollectionData();
+        }, 1000);
+      } else {
+        setSyncStatus("error");
+      }
+      setTimeout(() => setSyncStatus("idle"), 2000);
+    } catch (error) {
+      setSyncStatus("error");
+      setTimeout(() => setSyncStatus("idle"), 3000);
+    }
+  };
+
+  const enhancedSyncFromCloud = async () => {
+    setSyncStatus("syncing");
+    try {
+      const success = await syncFromCloud();
+      if (success) {
+        setSyncStatus("success");
+        loadCollectionData(); // Reload data after sync
+      } else {
+        setSyncStatus("error");
+      }
+      setTimeout(() => setSyncStatus("idle"), 2000);
+    } catch (error) {
+      setSyncStatus("error");
+      setTimeout(() => setSyncStatus("idle"), 3000);
+    }
+  };
+
+  // Update sync status based on isSyncing - FIXED: Better status tracking
   useEffect(() => {
-    loadCollectionData();
-  }, [collectionId, user]);
+    if (isSyncing) {
+      setSyncStatus("syncing");
+    } else if (syncStatus === "syncing") {
+      if (syncError) {
+        setSyncStatus("error");
+      } else {
+        setSyncStatus("success");
+      }
+      setTimeout(() => setSyncStatus("idle"), 2000);
+    }
+  }, [isSyncing, syncStatus, syncError]);
 
+  const getSyncStatusText = () => {
+    switch (syncStatus) {
+      case "syncing":
+        return "Syncing...";
+      case "success":
+        return "Synced!";
+      case "error":
+        return syncError || "Sync failed";
+      default:
+        return lastSynced
+          ? `Synced ${new Date(lastSynced).toLocaleTimeString()}`
+          : "Ready to sync";
+    }
+  };
+
+  const getSyncStatusColor = () => {
+    switch (syncStatus) {
+      case "syncing":
+        return "text-yellow-600 bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800";
+      case "success":
+        return "text-green-600 bg-green-50 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800";
+      case "error":
+        return "text-red-600 bg-red-50 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800";
+      default:
+        return "text-blue-600 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800";
+    }
+  };
+
+  const getSyncIcon = () => {
+    switch (syncStatus) {
+      case "syncing":
+        return <RefreshCw className="w-3 h-3 mr-1 animate-spin" />;
+      case "success":
+        return <Cloud className="w-3 h-3 mr-1" />;
+      case "error":
+        return <CloudOff className="w-3 h-3 mr-1" />;
+      default:
+        return <Cloud className="w-3 h-3 mr-1" />;
+    }
+  };
+
+  // Load collection data with sync integration - FIXED: Better data loading
   const loadCollectionData = () => {
     setLoading(true);
     try {
@@ -154,7 +259,48 @@ export default function CollectionDetailPage() {
     }
   };
 
-  const addPapersToCollection = (paperIds: string[]) => {
+  useEffect(() => {
+    loadCollectionData();
+
+    // Listen for data changes and cloud sync events
+    const handleDataChange = () => {
+      console.log("🔄 Data changed, reloading collection data");
+      loadCollectionData();
+    };
+
+    const handleCloudDataApplied = () => {
+      console.log("🔄 Cloud data applied, reloading collection");
+      loadCollectionData();
+    };
+
+    window.addEventListener("storage", handleDataChange);
+    window.addEventListener("cloudDataApplied", handleCloudDataApplied);
+    window.addEventListener("dataChanged", handleDataChange);
+
+    return () => {
+      window.removeEventListener("storage", handleDataChange);
+      window.removeEventListener("cloudDataApplied", handleCloudDataApplied);
+      window.removeEventListener("dataChanged", handleDataChange);
+    };
+  }, [collectionId, user, router]);
+
+  // Auto-sync when collection data changes - FIXED: Better auto-sync logic
+  useEffect(() => {
+    if (collection && !loading && user) {
+      const syncTimer = setTimeout(async () => {
+        try {
+          await syncToCloud();
+          console.log("✅ Collection data auto-synced to cloud");
+        } catch (error) {
+          console.error("❌ Failed to auto-sync collection:", error);
+        }
+      }, 3000); // Delay sync to avoid excessive API calls
+
+      return () => clearTimeout(syncTimer);
+    }
+  }, [collection, loading, user, syncToCloud]);
+
+  const addPapersToCollection = async (paperIds: string[]) => {
     if (!collection) return;
 
     const papersToAdd = allPapers.filter((paper) =>
@@ -191,9 +337,20 @@ export default function CollectionDetailPage() {
     setAvailablePapers(newAvailable);
     setSelectedPapers([]);
     setShowAddPapers(false);
+
+    // Sync to cloud after adding papers - FIXED: Better sync handling
+    setTimeout(async () => {
+      try {
+        await syncToCloud();
+        triggerDataChange();
+        console.log("✅ Papers added to collection and synced to cloud");
+      } catch (error) {
+        console.error("❌ Failed to sync collection update:", error);
+      }
+    }, 500);
   };
 
-  const removePaperFromCollection = (paperId: string) => {
+  const removePaperFromCollection = async (paperId: string) => {
     if (!collection) return;
 
     const updatedCollection: Collection = {
@@ -224,9 +381,20 @@ export default function CollectionDetailPage() {
     if (removedPaper) {
       setAvailablePapers([...availablePapers, removedPaper]);
     }
+
+    // Sync to cloud after removing paper - FIXED: Better sync handling
+    setTimeout(async () => {
+      try {
+        await syncToCloud();
+        triggerDataChange();
+        console.log("✅ Paper removed from collection and synced to cloud");
+      } catch (error) {
+        console.error("❌ Failed to sync collection update:", error);
+      }
+    }, 500);
   };
 
-  const deleteCollection = () => {
+  const deleteCollection = async () => {
     const collectionsKey = user
       ? `collections_${user.uid}`
       : "collections_guest";
@@ -239,6 +407,17 @@ export default function CollectionDetailPage() {
       (col) => col.id !== collectionId
     );
     localStorage.setItem(collectionsKey, JSON.stringify(updatedCollections));
+
+    // Sync to cloud after deleting collection - FIXED: Better sync handling
+    setTimeout(async () => {
+      try {
+        await syncToCloud();
+        triggerDataChange();
+        console.log("✅ Collection deleted and synced to cloud");
+      } catch (error) {
+        console.error("❌ Failed to sync collection deletion:", error);
+      }
+    }, 500);
 
     router.push("/collections");
   };
@@ -299,8 +478,21 @@ export default function CollectionDetailPage() {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <Alert className="max-w-md">
-          <AlertDescription>
+          <AlertDescription className="text-center">
             Collection not found. Redirecting...
+            <div className="mt-4 flex gap-2 justify-center">
+              <Button
+                onClick={enhancedSyncFromCloud}
+                variant="outline"
+                size="sm"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Sync from Cloud
+              </Button>
+              <Button onClick={() => router.push("/collections")} size="sm">
+                Back to Collections
+              </Button>
+            </div>
           </AlertDescription>
         </Alert>
       </div>
@@ -338,14 +530,39 @@ export default function CollectionDetailPage() {
                 <FileText size={28} />
               </div>
               <div className="flex-1">
-                <h1 className="text-3xl font-bold text-foreground">
-                  {collection.name}
-                </h1>
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-3xl font-bold text-foreground">
+                    {collection.name}
+                  </h1>
+                  {user && (
+                    <Badge className={getSyncStatusColor()}>
+                      {getSyncIcon()}
+                      {getSyncStatusText()}
+                    </Badge>
+                  )}
+                </div>
                 <p className="text-muted-foreground">
                   {collection.description}
                 </p>
+                {user && (
+                  <p className="text-sm text-[#49BBBD] mt-1">
+                    Changes sync automatically across devices
+                  </p>
+                )}
               </div>
               <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={enhancedSyncFromCloud}
+                  disabled={isSyncing}
+                  className="flex items-center gap-2 border-border"
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`}
+                  />
+                  Pull
+                </Button>
+
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="outline" className="border-border">
@@ -414,6 +631,11 @@ export default function CollectionDetailPage() {
                   <div className="text-sm font-medium text-foreground">
                     {new Date(collection.updatedAt).toLocaleDateString()}
                   </div>
+                  {lastSynced && (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Synced: {new Date(lastSynced).toLocaleTimeString()}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -444,6 +666,11 @@ export default function CollectionDetailPage() {
                 </DialogTitle>
                 <DialogDescription>
                   Select papers from your library to add to this collection.
+                  {user && (
+                    <span className="text-[#49BBBD] ml-2">
+                      Changes will sync automatically.
+                    </span>
+                  )}
                 </DialogDescription>
               </DialogHeader>
 
@@ -723,6 +950,11 @@ export default function CollectionDetailPage() {
                   </CardTitle>
                   <CardDescription>
                     Insights about the papers in this collection
+                    {user && (
+                      <span className="text-[#49BBBD] ml-2">
+                        • Data syncs automatically
+                      </span>
+                    )}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -746,6 +978,15 @@ export default function CollectionDetailPage() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Sync Info */}
+                  {lastSynced && (
+                    <div className="mt-6 pt-4 border-t border-border/50">
+                      <p className="text-xs text-muted-foreground text-center">
+                        Last cloud sync: {new Date(lastSynced).toLocaleString()}
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

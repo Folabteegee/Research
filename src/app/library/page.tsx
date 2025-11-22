@@ -15,9 +15,11 @@ import {
   Filter,
   Download,
   Sparkles,
+  RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { useSync } from "@/lib/hooks/useSync";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -40,26 +42,69 @@ import {
 
 export default function LibraryPage() {
   const { user } = useAuth();
+  const { syncToCloud, syncFromCloud, isSyncing, lastSynced } = useSync();
   const [savedPapers, setSavedPapers] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
+  const [syncStatus, setSyncStatus] = useState<
+    "idle" | "syncing" | "success" | "error"
+  >("idle");
 
   // Get user-specific storage key
   const getUserLibraryKey = () => {
     return user ? `savedPapers_${user.uid}` : "savedPapers_guest";
   };
 
+  // Load papers with sync awareness - FIXED: Added cloud sync integration
   useEffect(() => {
-    if (user) {
-      const userLibraryKey = getUserLibraryKey();
-      const stored = localStorage.getItem(userLibraryKey);
-      if (stored) {
-        setSavedPapers(JSON.parse(stored));
-      } else {
-        setSavedPapers([]);
+    const loadPapers = () => {
+      if (user) {
+        const userLibraryKey = getUserLibraryKey();
+        const stored = localStorage.getItem(userLibraryKey);
+        if (stored) {
+          try {
+            const papers = JSON.parse(stored);
+            setSavedPapers(Array.isArray(papers) ? papers : []);
+          } catch (error) {
+            console.error("Error parsing saved papers:", error);
+            setSavedPapers([]);
+          }
+        } else {
+          setSavedPapers([]);
+        }
       }
-    }
+    };
+
+    loadPapers();
+
+    // Listen for storage changes and cloud data updates
+    const handleStorageChange = () => {
+      loadPapers();
+    };
+
+    const handleCloudDataApplied = () => {
+      console.log("🔄 Cloud data applied, reloading library");
+      loadPapers();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("cloudDataApplied", handleCloudDataApplied);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("cloudDataApplied", handleCloudDataApplied);
+    };
   }, [user]);
+
+  // Update sync status - FIXED: Better sync status tracking
+  useEffect(() => {
+    if (isSyncing) {
+      setSyncStatus("syncing");
+    } else if (syncStatus === "syncing") {
+      setSyncStatus("success");
+      setTimeout(() => setSyncStatus("idle"), 2000);
+    }
+  }, [isSyncing, syncStatus]);
 
   const handleReadFullPaper = (paper: any) => {
     if (paper.link) {
@@ -69,20 +114,42 @@ export default function LibraryPage() {
     }
   };
 
-  const handleRemove = (id: string) => {
+  const handleRemove = async (id: string) => {
     const updated = savedPapers.filter((paper) => paper.id !== id);
     setSavedPapers(updated);
     const userLibraryKey = getUserLibraryKey();
     localStorage.setItem(userLibraryKey, JSON.stringify(updated));
+
+    // Sync after removal - FIXED: Better error handling
+    setTimeout(async () => {
+      try {
+        await syncToCloud();
+        window.dispatchEvent(new Event("dataChanged"));
+        console.log("✅ Paper removal synced to cloud");
+      } catch (error) {
+        console.error("❌ Failed to sync paper removal:", error);
+      }
+    }, 500);
   };
 
-  const handleRemoveAll = () => {
+  const handleRemoveAll = async () => {
     if (
       confirm("Are you sure you want to remove all papers from your library?")
     ) {
       setSavedPapers([]);
       const userLibraryKey = getUserLibraryKey();
       localStorage.removeItem(userLibraryKey);
+
+      // Sync after clearing - FIXED: Better error handling
+      setTimeout(async () => {
+        try {
+          await syncToCloud();
+          window.dispatchEvent(new Event("dataChanged"));
+          console.log("✅ Library clearance synced to cloud");
+        } catch (error) {
+          console.error("❌ Failed to sync library clearance:", error);
+        }
+      }, 500);
     }
   };
 
@@ -95,6 +162,32 @@ export default function LibraryPage() {
       new Date().toISOString().split("T")[0]
     }.json`;
     link.click();
+  };
+
+  // Enhanced sync functions - FIXED: Better sync handling
+  const enhancedSyncToCloud = async () => {
+    setSyncStatus("syncing");
+    try {
+      await syncToCloud();
+      setSyncStatus("success");
+      setTimeout(() => setSyncStatus("idle"), 2000);
+    } catch (error) {
+      setSyncStatus("error");
+      setTimeout(() => setSyncStatus("idle"), 3000);
+    }
+  };
+
+  const enhancedSyncFromCloud = async () => {
+    setSyncStatus("syncing");
+    try {
+      await syncFromCloud();
+      // Papers will be reloaded via the event listeners
+      setSyncStatus("success");
+      setTimeout(() => setSyncStatus("idle"), 2000);
+    } catch (error) {
+      setSyncStatus("error");
+      setTimeout(() => setSyncStatus("idle"), 3000);
+    }
   };
 
   // Filter and search papers
@@ -112,6 +205,34 @@ export default function LibraryPage() {
     }
     return matchesSearch;
   });
+
+  const getSyncStatusText = () => {
+    switch (syncStatus) {
+      case "syncing":
+        return "Syncing...";
+      case "success":
+        return "Synced!";
+      case "error":
+        return "Sync failed";
+      default:
+        return lastSynced
+          ? `Synced ${new Date(lastSynced).toLocaleTimeString()}`
+          : "Ready to sync";
+    }
+  };
+
+  const getSyncStatusColor = () => {
+    switch (syncStatus) {
+      case "syncing":
+        return "text-yellow-600 bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800";
+      case "success":
+        return "text-green-600 bg-green-50 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800";
+      case "error":
+        return "text-red-600 bg-red-50 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800";
+      default:
+        return "text-blue-600 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800";
+    }
+  };
 
   const userInitial = user?.email ? user.email.charAt(0).toUpperCase() : "U";
 
@@ -156,9 +277,17 @@ export default function LibraryPage() {
                     Your personal collection of saved research papers
                   </p>
                   {user && (
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Personal library for {user.email}
-                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge className={getSyncStatusColor()}>
+                        {syncStatus === "syncing" && (
+                          <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+                        )}
+                        {getSyncStatusText()}
+                      </Badge>
+                      <p className="text-sm text-[#49BBBD]">
+                        Auto-sync enabled across devices
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
@@ -182,6 +311,10 @@ export default function LibraryPage() {
                     <DropdownMenuItem onClick={handleExportLibrary}>
                       <Download className="mr-2 h-4 w-4" />
                       Export Library
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={enhancedSyncFromCloud}>
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Pull from Cloud
                     </DropdownMenuItem>
                     {savedPapers.length > 0 && (
                       <DropdownMenuItem

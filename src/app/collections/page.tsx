@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useSync } from "@/lib/hooks/useSync";
 import { motion } from "framer-motion";
 import {
   Folder,
@@ -25,6 +26,9 @@ import {
   Grid,
   List,
   Sparkles,
+  RefreshCw,
+  Cloud,
+  CloudOff,
 } from "lucide-react";
 
 // Shadcn Components
@@ -116,8 +120,13 @@ export default function CollectionsPage() {
   const [editingCollection, setEditingCollection] = useState<Collection | null>(
     null
   );
+  const [syncStatus, setSyncStatus] = useState<
+    "idle" | "syncing" | "success" | "error"
+  >("idle");
   const router = useRouter();
   const { user } = useAuth();
+  const { syncToCloud, syncFromCloud, isSyncing, lastSynced, syncError } =
+    useSync();
 
   const colors = [
     "#49BBBD",
@@ -132,9 +141,38 @@ export default function CollectionsPage() {
     "#F8961E",
   ];
 
+  // Load collections and papers - FIXED: Complete sync integration
   useEffect(() => {
     loadCollectionsAndPapers();
+
+    // Listen for cloud data updates
+    const handleCloudDataApplied = () => {
+      console.log("🔄 Cloud data applied, reloading collections");
+      loadCollectionsAndPapers();
+    };
+
+    window.addEventListener("cloudDataApplied", handleCloudDataApplied);
+    window.addEventListener("storage", loadCollectionsAndPapers);
+
+    return () => {
+      window.removeEventListener("cloudDataApplied", handleCloudDataApplied);
+      window.removeEventListener("storage", loadCollectionsAndPapers);
+    };
   }, [user]);
+
+  // Update sync status based on isSyncing - FIXED: Better sync status tracking
+  useEffect(() => {
+    if (isSyncing) {
+      setSyncStatus("syncing");
+    } else if (syncStatus === "syncing") {
+      if (syncError) {
+        setSyncStatus("error");
+      } else {
+        setSyncStatus("success");
+      }
+      setTimeout(() => setSyncStatus("idle"), 2000);
+    }
+  }, [isSyncing, syncStatus, syncError]);
 
   const loadCollectionsAndPapers = () => {
     setLoading(true);
@@ -162,7 +200,48 @@ export default function CollectionsPage() {
     }
   };
 
-  const createCollection = () => {
+  // Enhanced sync function with status tracking - FIXED: Better error handling
+  const enhancedSyncToCloud = async (): Promise<boolean> => {
+    setSyncStatus("syncing");
+    try {
+      const success = await syncToCloud();
+      if (success) {
+        setSyncStatus("success");
+        return true;
+      } else {
+        setSyncStatus("error");
+        return false;
+      }
+    } catch (error) {
+      setSyncStatus("error");
+      return false;
+    } finally {
+      setTimeout(() => setSyncStatus("idle"), 2000);
+    }
+  };
+
+  const enhancedSyncFromCloud = async (): Promise<boolean> => {
+    setSyncStatus("syncing");
+    try {
+      const success = await syncFromCloud();
+      if (success) {
+        loadCollectionsAndPapers(); // Reload data after sync
+        setSyncStatus("success");
+        return true;
+      } else {
+        setSyncStatus("error");
+        return false;
+      }
+    } catch (error) {
+      setSyncStatus("error");
+      return false;
+    } finally {
+      setTimeout(() => setSyncStatus("idle"), 2000);
+    }
+  };
+
+  // Create collection with cloud sync - FIXED: Complete sync integration
+  const createCollection = async () => {
     if (!newCollection.name.trim()) return;
 
     const collection: Collection = {
@@ -181,37 +260,52 @@ export default function CollectionsPage() {
     setCollections(updatedCollections);
     saveCollections(updatedCollections);
 
-    // Trigger storage event to update dashboard
-    window.dispatchEvent(new Event("storage"));
+    // Enhanced sync after creation
+    const syncSuccess = await enhancedSyncToCloud();
+    if (syncSuccess) {
+      console.log("✅ Collection created and synced to cloud");
+      window.dispatchEvent(new Event("dataChanged"));
+    }
 
     setNewCollection({ name: "", description: "", color: "#49BBBD", tags: [] });
     setShowCreateDialog(false);
   };
 
-  const updateCollection = (updatedCollection: Collection) => {
+  // Update collection with cloud sync - FIXED: Complete sync integration
+  const updateCollection = async (updatedCollection: Collection) => {
     const updatedCollections = collections.map((col) =>
       col.id === updatedCollection.id ? updatedCollection : col
     );
     setCollections(updatedCollections);
     saveCollections(updatedCollections);
 
-    // Trigger storage event to update dashboard
-    window.dispatchEvent(new Event("storage"));
+    // Enhanced sync after update
+    const syncSuccess = await enhancedSyncToCloud();
+    if (syncSuccess) {
+      console.log("✅ Collection updated and synced to cloud");
+      window.dispatchEvent(new Event("dataChanged"));
+    }
 
     setEditingCollection(null);
   };
 
-  const deleteCollection = (collectionId: string) => {
+  // Delete collection with cloud sync - FIXED: Complete sync integration
+  const deleteCollection = async (collectionId: string) => {
     const updatedCollections = collections.filter(
       (col) => col.id !== collectionId
     );
     setCollections(updatedCollections);
     saveCollections(updatedCollections);
 
-    // Trigger storage event to update dashboard
-    window.dispatchEvent(new Event("storage"));
+    // Enhanced sync after deletion
+    const syncSuccess = await enhancedSyncToCloud();
+    if (syncSuccess) {
+      console.log("✅ Collection deleted and synced to cloud");
+      window.dispatchEvent(new Event("dataChanged"));
+    }
   };
 
+  // Save collections to localStorage
   const saveCollections = (collectionsToSave: Collection[]) => {
     const collectionsKey = user
       ? `collections_${user.uid}`
@@ -219,7 +313,8 @@ export default function CollectionsPage() {
     localStorage.setItem(collectionsKey, JSON.stringify(collectionsToSave));
   };
 
-  const addPaperToCollection = (collectionId: string, paper: Paper) => {
+  // Add paper to collection with cloud sync - FIXED: Complete sync integration
+  const addPaperToCollection = async (collectionId: string, paper: Paper) => {
     const updatedCollections = collections.map((collection) => {
       if (collection.id === collectionId) {
         const paperExists = collection.papers.some((p) => p.id === paper.id);
@@ -236,9 +331,20 @@ export default function CollectionsPage() {
     });
     setCollections(updatedCollections);
     saveCollections(updatedCollections);
+
+    // Enhanced sync after adding paper
+    const syncSuccess = await enhancedSyncToCloud();
+    if (syncSuccess) {
+      console.log("✅ Paper added to collection and synced to cloud");
+      window.dispatchEvent(new Event("dataChanged"));
+    }
   };
 
-  const removePaperFromCollection = (collectionId: string, paperId: string) => {
+  // Remove paper from collection with cloud sync - FIXED: Complete sync integration
+  const removePaperFromCollection = async (
+    collectionId: string,
+    paperId: string
+  ) => {
     const updatedCollections = collections.map((collection) => {
       if (collection.id === collectionId) {
         return {
@@ -252,6 +358,13 @@ export default function CollectionsPage() {
     });
     setCollections(updatedCollections);
     saveCollections(updatedCollections);
+
+    // Enhanced sync after removing paper
+    const syncSuccess = await enhancedSyncToCloud();
+    if (syncSuccess) {
+      console.log("✅ Paper removed from collection and synced to cloud");
+      window.dispatchEvent(new Event("dataChanged"));
+    }
   };
 
   const getAllTags = () => {
@@ -288,6 +401,47 @@ export default function CollectionsPage() {
         );
     }
   });
+
+  const getSyncStatusText = () => {
+    switch (syncStatus) {
+      case "syncing":
+        return "Syncing...";
+      case "success":
+        return "Synced!";
+      case "error":
+        return syncError || "Sync failed";
+      default:
+        return lastSynced
+          ? `Synced ${new Date(lastSynced).toLocaleTimeString()}`
+          : "Ready to sync";
+    }
+  };
+
+  const getSyncStatusColor = () => {
+    switch (syncStatus) {
+      case "syncing":
+        return "text-yellow-600 bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800";
+      case "success":
+        return "text-green-600 bg-green-50 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800";
+      case "error":
+        return "text-red-600 bg-red-50 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800";
+      default:
+        return "text-blue-600 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800";
+    }
+  };
+
+  const getSyncIcon = () => {
+    switch (syncStatus) {
+      case "syncing":
+        return <RefreshCw className="w-3 h-3 mr-1 animate-spin" />;
+      case "success":
+        return <Cloud className="w-3 h-3 mr-1" />;
+      case "error":
+        return <CloudOff className="w-3 h-3 mr-1" />;
+      default:
+        return <Cloud className="w-3 h-3 mr-1" />;
+    }
+  };
 
   const CollectionCard = ({ collection }: { collection: Collection }) => (
     <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300 border-2 border-transparent hover:border-border group">
@@ -537,95 +691,121 @@ export default function CollectionsPage() {
                 <p className="text-xl text-muted-foreground">
                   Organize and manage your research papers
                 </p>
+                {user && (
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge className={getSyncStatusColor()}>
+                      {getSyncIcon()}
+                      {getSyncStatusText()}
+                    </Badge>
+                    <p className="text-sm text-[#49BBBD]">
+                      Auto-sync enabled across devices
+                    </p>
+                  </div>
+                )}
               </div>
 
-              <Dialog
-                open={showCreateDialog}
-                onOpenChange={setShowCreateDialog}
-              >
-                <DialogTrigger asChild>
-                  <Button className="bg-[#49BBBD] hover:bg-[#3aa8a9]">
-                    <Plus className="w-4 h-4 mr-2" />
-                    New Collection
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Create New Collection</DialogTitle>
-                    <DialogDescription>
-                      Organize your papers into themed collections for better
-                      research management.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block text-foreground">
-                        Collection Name
-                      </label>
-                      <Input
-                        value={newCollection.name}
-                        onChange={(e) =>
-                          setNewCollection({
-                            ...newCollection,
-                            name: e.target.value,
-                          })
-                        }
-                        placeholder="e.g., Machine Learning Papers"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block text-foreground">
-                        Description
-                      </label>
-                      <Input
-                        value={newCollection.description}
-                        onChange={(e) =>
-                          setNewCollection({
-                            ...newCollection,
-                            description: e.target.value,
-                          })
-                        }
-                        placeholder="Brief description of this collection"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block text-foreground">
-                        Color
-                      </label>
-                      <div className="flex gap-2 flex-wrap">
-                        {colors.map((color) => (
-                          <button
-                            key={color}
-                            className={`w-8 h-8 rounded-full border-2 ${
-                              newCollection.color === color
-                                ? "border-foreground"
-                                : "border-transparent"
-                            }`}
-                            style={{ backgroundColor: color }}
-                            onClick={() =>
-                              setNewCollection({ ...newCollection, color })
-                            }
-                          />
-                        ))}
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={enhancedSyncFromCloud}
+                  disabled={isSyncing}
+                  className="flex items-center gap-2"
+                  title="Pull latest data from cloud"
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`}
+                  />
+                  Pull
+                </Button>
+
+                <Dialog
+                  open={showCreateDialog}
+                  onOpenChange={setShowCreateDialog}
+                >
+                  <DialogTrigger asChild>
+                    <Button className="bg-[#49BBBD] hover:bg-[#3aa8a9]">
+                      <Plus className="w-4 h-4 mr-2" />
+                      New Collection
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Create New Collection</DialogTitle>
+                      <DialogDescription>
+                        Organize your papers into themed collections for better
+                        research management.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium mb-2 block text-foreground">
+                          Collection Name
+                        </label>
+                        <Input
+                          value={newCollection.name}
+                          onChange={(e) =>
+                            setNewCollection({
+                              ...newCollection,
+                              name: e.target.value,
+                            })
+                          }
+                          placeholder="e.g., Machine Learning Papers"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block text-foreground">
+                          Description
+                        </label>
+                        <Input
+                          value={newCollection.description}
+                          onChange={(e) =>
+                            setNewCollection({
+                              ...newCollection,
+                              description: e.target.value,
+                            })
+                          }
+                          placeholder="Brief description of this collection"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block text-foreground">
+                          Color
+                        </label>
+                        <div className="flex gap-2 flex-wrap">
+                          {colors.map((color) => (
+                            <button
+                              key={color}
+                              className={`w-8 h-8 rounded-full border-2 ${
+                                newCollection.color === color
+                                  ? "border-foreground"
+                                  : "border-transparent"
+                              }`}
+                              style={{ backgroundColor: color }}
+                              onClick={() =>
+                                setNewCollection({ ...newCollection, color })
+                              }
+                            />
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <DialogFooter>
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowCreateDialog(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={createCollection}
-                      disabled={!newCollection.name.trim()}
-                    >
-                      Create Collection
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowCreateDialog(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={createCollection}
+                        disabled={!newCollection.name.trim()}
+                      >
+                        Create Collection
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
           </motion.header>
 
@@ -874,7 +1054,7 @@ export default function CollectionsPage() {
                       <CardDescription className="mb-4">
                         Save some papers to your library to see them here.
                       </CardDescription>
-                      <Button onClick={() => router.push("/recommendations")}>
+                      <Button onClick={() => router.push("/search")}>
                         <Sparkles className="w-4 h-4 mr-2" />
                         Find Papers
                       </Button>

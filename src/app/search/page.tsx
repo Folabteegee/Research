@@ -5,6 +5,7 @@ import { searchPapers } from "@/lib/api/openAlex";
 import { useRouter } from "next/navigation";
 import { useZotero } from "@/context/ZoteroContext";
 import { useAuth } from "@/context/AuthContext";
+import { useSync } from "@/lib/hooks/useSync";
 import {
   addXP,
   unlockAchievement,
@@ -47,6 +48,7 @@ export default function SearchPage() {
   const router = useRouter();
   const { library } = useZotero();
   const { user } = useAuth();
+  const { syncToCloud, triggerDataChange } = useSync(); // FIXED: Added triggerDataChange
 
   // Get user ID for gamification
   const userId = user?.uid;
@@ -77,6 +79,17 @@ export default function SearchPage() {
       const newXP = addXP(5, userId);
       console.log(`+5 XP for searching. Total XP: ${newXP}`);
 
+      // Sync to cloud after searching - FIXED: Better sync handling
+      setTimeout(async () => {
+        try {
+          await syncToCloud();
+          triggerDataChange(); // FIXED: Trigger data change event
+          console.log("✅ Search activity synced to cloud");
+        } catch (syncError) {
+          console.error("❌ Failed to sync search activity:", syncError);
+        }
+      }, 500);
+
       // Trigger storage update for real-time sync
       window.dispatchEvent(new Event("storage"));
     } catch (err: any) {
@@ -92,7 +105,7 @@ export default function SearchPage() {
     router.push(`/paper/${id}`);
   };
 
-  const handleSave = (paper: any) => {
+  const handleSave = async (paper: any) => {
     const userLibraryKey = getUserLibraryKey();
     const stored = localStorage.getItem(userLibraryKey);
     const existing = stored ? JSON.parse(stored) : [];
@@ -114,6 +127,9 @@ export default function SearchPage() {
         paper.primary_location?.source?.url ||
         paper.primary_location?.landing_page_url ||
         "",
+      abstract: paper.abstract || "",
+      tags: paper.tags || [],
+      savedAt: new Date().toISOString(), // FIXED: Added savedAt timestamp
     };
 
     const updated = [...existing, newItem];
@@ -127,11 +143,23 @@ export default function SearchPage() {
     // Check saved papers achievements
     checkSavedAchievements(userId);
 
+    // Sync to cloud after saving - FIXED: Better sync handling
+    setTimeout(async () => {
+      try {
+        await syncToCloud();
+        triggerDataChange(); // FIXED: Trigger data change event
+        console.log("✅ Saved paper synced to cloud");
+      } catch (syncError) {
+        console.error("❌ Failed to sync saved paper:", syncError);
+      }
+    }, 500);
+
     // Force update achievements page
     window.dispatchEvent(new Event("storage"));
+    window.dispatchEvent(new Event("dataChanged")); // FIXED: Trigger custom event
   };
 
-  const handleReadFullPaper = (paper: any) => {
+  const handleReadFullPaper = async (paper: any) => {
     const url =
       paper.primary_location?.landing_page_url ||
       paper.primary_location?.source?.url ||
@@ -153,14 +181,26 @@ export default function SearchPage() {
       // Track detailed reading data for analytics
       trackReading(paper);
 
+      // Sync to cloud after reading - FIXED: Better sync handling
+      setTimeout(async () => {
+        try {
+          await syncToCloud();
+          triggerDataChange(); // FIXED: Trigger data change event
+          console.log("✅ Reading activity synced to cloud");
+        } catch (syncError) {
+          console.error("❌ Failed to sync reading activity:", syncError);
+        }
+      }, 500);
+
       // Force update achievements page
       window.dispatchEvent(new Event("storage"));
+      window.dispatchEvent(new Event("dataChanged")); // FIXED: Trigger custom event
     } else {
       alert("Full paper link not available for this item.");
     }
   };
 
-  // Track detailed reading data for analytics
+  // Track detailed reading data for analytics - FIXED: Better data structure
   const trackReading = (paper: any) => {
     const readKey = userId ? `reads_${userId}` : "reads_guest";
 
@@ -196,6 +236,7 @@ export default function SearchPage() {
           paper.primary_location?.landing_page_url ||
           paper.primary_location?.source?.url ||
           "",
+        abstract: paper.abstract || "",
       };
 
       // Keep only the last 100 reads to prevent storage from growing too large
@@ -251,6 +292,10 @@ export default function SearchPage() {
                 <Sparkles className="w-4 h-4" />
                 Papers will be saved to your personal library • Earn XP for
                 searching, saving, and reading!
+                <br />
+                <span className="text-xs">
+                  🔗 Data syncs across all your devices
+                </span>
               </p>
             )}
           </motion.header>
@@ -294,6 +339,7 @@ export default function SearchPage() {
               <Badge variant="outline" className="bg-card/50 backdrop-blur-sm">
                 🔍 +5 XP for searching • 💾 +10 XP for saving • 📖 +10 XP for
                 reading
+                {user && " • ☁️ Auto-sync enabled"}
               </Badge>
             </div>
           </motion.form>
@@ -396,12 +442,20 @@ export default function SearchPage() {
                         Found {results.length} papers for "{query}"
                       </CardDescription>
                       {user && (
-                        <Badge
-                          variant="outline"
-                          className="mt-1 bg-[#49BBBD]/10 text-[#49BBBD] border-[#49BBBD]/20"
-                        >
-                          Saving to {user.email}'s library
-                        </Badge>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          <Badge
+                            variant="outline"
+                            className="bg-[#49BBBD]/10 text-[#49BBBD] border-[#49BBBD]/20"
+                          >
+                            Saving to {user.email}'s library
+                          </Badge>
+                          <Badge
+                            variant="outline"
+                            className="bg-green-100 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800"
+                          >
+                            ☁️ Auto-sync enabled
+                          </Badge>
+                        </div>
                       )}
                     </div>
 

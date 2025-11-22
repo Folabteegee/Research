@@ -4,9 +4,10 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import { ZoteroProvider } from "@/context/ZoteroContext";
 import { LibraryProvider } from "@/context/LibraryContext";
 import { ApiProvider } from "@/context/ApiContext";
+import { SyncInitializer } from "@/components/SyncInitializer";
 
 export const metadata = {
-  title: "Zotero x OpenAlex App",
+  title: "Research Guru",
   description:
     "A modern academic research companion powered by Zotero and OpenAlex.",
 };
@@ -23,9 +24,12 @@ export default function RootLayout({
           <ThemeProvider>
             <ZoteroProvider>
               <LibraryProvider>
-                <main className="">
-                  <ApiProvider>{children}</ApiProvider>
-                </main>
+                <ApiProvider>
+                  {/* Move SyncInitializer INSIDE all providers but AFTER AuthProvider */}
+                  <SyncInitializer>
+                    <main className="">{children}</main>
+                  </SyncInitializer>
+                </ApiProvider>
               </LibraryProvider>
             </ZoteroProvider>
           </ThemeProvider>

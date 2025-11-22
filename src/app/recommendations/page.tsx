@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useSync } from "@/lib/hooks/useSync";
 import { getRecommendations } from "@/lib/api/openAlex";
 import { addXP } from "@/lib/gamification";
 import { motion } from "framer-motion";
@@ -23,6 +23,8 @@ import {
   Lightbulb,
   Plus,
   X,
+  Cloud,
+  CloudOff,
 } from "lucide-react";
 
 // Shadcn Components
@@ -73,14 +75,125 @@ export default function RecommendationPage() {
   });
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("interests");
-  const router = useRouter();
+  const [syncStatus, setSyncStatus] = useState<
+    "idle" | "syncing" | "success" | "error"
+  >("idle");
   const { user } = useAuth();
+  const {
+    syncToCloud,
+    syncFromCloud,
+    isSyncing,
+    lastSynced,
+    syncError,
+    triggerDataChange,
+  } = useSync();
 
   const userId = user?.uid;
 
-  // Get user's saved papers for personalization
+  // Enhanced sync functions - FIXED: Better error handling
+  const enhancedSyncToCloud = async () => {
+    setSyncStatus("syncing");
+    try {
+      const success = await syncToCloud();
+      if (success) {
+        setSyncStatus("success");
+      } else {
+        setSyncStatus("error");
+      }
+      setTimeout(() => setSyncStatus("idle"), 2000);
+    } catch (error) {
+      setSyncStatus("error");
+      setTimeout(() => setSyncStatus("idle"), 3000);
+    }
+  };
+
+  const enhancedSyncFromCloud = async () => {
+    setSyncStatus("syncing");
+    try {
+      const success = await syncFromCloud();
+      if (success) {
+        setSyncStatus("success");
+        loadUserPreferences(); // Reload preferences after sync
+      } else {
+        setSyncStatus("error");
+      }
+      setTimeout(() => setSyncStatus("idle"), 2000);
+    } catch (error) {
+      setSyncStatus("error");
+      setTimeout(() => setSyncStatus("idle"), 3000);
+    }
+  };
+
+  // Update sync status based on isSyncing - FIXED: Better status tracking
+  useEffect(() => {
+    if (isSyncing) {
+      setSyncStatus("syncing");
+    } else if (syncStatus === "syncing") {
+      if (syncError) {
+        setSyncStatus("error");
+      } else {
+        setSyncStatus("success");
+      }
+      setTimeout(() => setSyncStatus("idle"), 2000);
+    }
+  }, [isSyncing, syncStatus, syncError]);
+
+  const getSyncStatusText = () => {
+    switch (syncStatus) {
+      case "syncing":
+        return "Syncing...";
+      case "success":
+        return "Synced!";
+      case "error":
+        return syncError || "Sync failed";
+      default:
+        return lastSynced
+          ? `Synced ${new Date(lastSynced).toLocaleTimeString()}`
+          : "Ready to sync";
+    }
+  };
+
+  const getSyncStatusColor = () => {
+    switch (syncStatus) {
+      case "syncing":
+        return "text-yellow-600 bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800";
+      case "success":
+        return "text-green-600 bg-green-50 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800";
+      case "error":
+        return "text-red-600 bg-red-50 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800";
+      default:
+        return "text-blue-600 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800";
+    }
+  };
+
+  const getSyncIcon = () => {
+    switch (syncStatus) {
+      case "syncing":
+        return <RefreshCw className="w-3 h-3 mr-1 animate-spin" />;
+      case "success":
+        return <Cloud className="w-3 h-3 mr-1" />;
+      case "error":
+        return <CloudOff className="w-3 h-3 mr-1" />;
+      default:
+        return <Cloud className="w-3 h-3 mr-1" />;
+    }
+  };
+
+  // Get user's saved papers for personalization - FIXED: Added sync awareness
   useEffect(() => {
     loadUserPreferences();
+
+    // Listen for cloud data updates
+    const handleCloudDataApplied = () => {
+      console.log("🔄 Cloud data applied, reloading user preferences");
+      loadUserPreferences();
+    };
+
+    window.addEventListener("cloudDataApplied", handleCloudDataApplied);
+
+    return () => {
+      window.removeEventListener("cloudDataApplied", handleCloudDataApplied);
+    };
   }, [user]);
 
   const loadUserPreferences = () => {
@@ -161,13 +274,37 @@ export default function RecommendationPage() {
       currentInterest.trim() &&
       !userInterests.includes(currentInterest.trim())
     ) {
-      setUserInterests([...userInterests, currentInterest.trim()]);
+      const updatedInterests = [...userInterests, currentInterest.trim()];
+      setUserInterests(updatedInterests);
       setCurrentInterest("");
+
+      // Sync interests to cloud - FIXED: Added sync for preferences
+      setTimeout(async () => {
+        try {
+          await syncToCloud();
+          triggerDataChange();
+          console.log("✅ User interests synced to cloud");
+        } catch (syncError) {
+          console.error("❌ Failed to sync user interests:", syncError);
+        }
+      }, 1000);
     }
   };
 
   const removeInterest = (interest: string) => {
-    setUserInterests(userInterests.filter((i) => i !== interest));
+    const updatedInterests = userInterests.filter((i) => i !== interest);
+    setUserInterests(updatedInterests);
+
+    // Sync interests removal to cloud
+    setTimeout(async () => {
+      try {
+        await syncToCloud();
+        triggerDataChange();
+        console.log("✅ User interests update synced to cloud");
+      } catch (syncError) {
+        console.error("❌ Failed to sync user interests removal:", syncError);
+      }
+    }, 1000);
   };
 
   const generateRecommendations = async () => {
@@ -206,6 +343,20 @@ export default function RecommendationPage() {
         setRecommendations(recommendations);
         const newXP = addXP(15, userId);
         console.log(`+15 XP for AI recommendations. Total XP: ${newXP}`);
+
+        // Sync XP and recommendations activity to cloud
+        setTimeout(async () => {
+          try {
+            await syncToCloud();
+            triggerDataChange();
+            console.log("✅ Recommendations activity synced to cloud");
+          } catch (syncError) {
+            console.error(
+              "❌ Failed to sync recommendations activity:",
+              syncError
+            );
+          }
+        }, 1000);
       }
     } catch (err: any) {
       console.error("Recommendation error:", err);
@@ -218,7 +369,7 @@ export default function RecommendationPage() {
     }
   };
 
-  const handleSave = (paper: any) => {
+  const handleSave = async (paper: any) => {
     const userLibraryKey = user
       ? `savedPapers_${user.uid}`
       : "savedPapers_guest";
@@ -242,6 +393,9 @@ export default function RecommendationPage() {
         paper.primary_location?.source?.url ||
         paper.primary_location?.landing_page_url ||
         "",
+      abstract: paper.abstract || "",
+      tags: paper.tags || [],
+      savedAt: new Date().toISOString(),
     };
 
     const updated = [...existing, newItem];
@@ -251,13 +405,20 @@ export default function RecommendationPage() {
     // Add XP for saving
     const newXP = addXP(10, userId);
     console.log(`+10 XP for saving. Total XP: ${newXP}`);
+
+    // Sync saved paper to cloud - FIXED: Better sync handling
+    setTimeout(async () => {
+      try {
+        await syncToCloud();
+        triggerDataChange();
+        console.log("✅ Saved paper synced to cloud");
+      } catch (syncError) {
+        console.error("❌ Failed to sync saved paper:", syncError);
+      }
+    }, 500);
   };
 
-  const handleNavigate = (id: string) => {
-    router.push(`/paper/${id}`);
-  };
-
-  const handleReadFullPaper = (paper: any) => {
+  const handleReadFullPaper = async (paper: any) => {
     const url =
       paper.primary_location?.landing_page_url ||
       paper.primary_location?.source?.url ||
@@ -268,48 +429,19 @@ export default function RecommendationPage() {
       window.open(url, "_blank");
       const newXP = addXP(10, userId);
       console.log(`+10 XP for reading. Total XP: ${newXP}`);
-      trackReading(paper);
-      window.dispatchEvent(new Event("storage"));
+
+      // Sync reading activity to cloud
+      setTimeout(async () => {
+        try {
+          await syncToCloud();
+          triggerDataChange();
+          console.log("✅ Reading activity synced to cloud");
+        } catch (syncError) {
+          console.error("❌ Failed to sync reading activity:", syncError);
+        }
+      }, 500);
     } else {
       alert("Full paper link not available for this item.");
-    }
-  };
-
-  const trackReading = (paper: any) => {
-    const readKey = userId ? `reads_${userId}` : "reads_guest";
-    try {
-      const existingData = localStorage.getItem(readKey);
-      let readPapers: any[] = [];
-      if (existingData) {
-        try {
-          const parsed = JSON.parse(existingData);
-          if (Array.isArray(parsed)) readPapers = parsed;
-        } catch (error) {
-          console.log("Starting fresh reading tracking array");
-        }
-      }
-
-      const readingRecord = {
-        paperId: paper.id,
-        title: paper.display_name,
-        readAt: new Date().toISOString(),
-        authors:
-          paper.authorships
-            ?.map((a: any) => a.author.display_name)
-            .join(", ") || "Unknown author",
-        journal: paper.host_venue?.display_name || "N/A",
-        year: paper.publication_year || "N/A",
-        url:
-          paper.primary_location?.landing_page_url ||
-          paper.primary_location?.source?.url ||
-          "",
-      };
-
-      const updatedReads = [readingRecord, ...readPapers.slice(0, 99)];
-      localStorage.setItem(readKey, JSON.stringify(updatedReads));
-      console.log(`📖 Reading tracked: ${paper.display_name}`);
-    } catch (error) {
-      console.error("Error tracking reading:", error);
     }
   };
 
@@ -342,10 +474,42 @@ export default function RecommendationPage() {
               reading history
             </p>
             {user && (
-              <p className="text-sm text-[#49BBBD] mt-2">
-                Powered by AI • Earn 15 XP for generating recommendations
-              </p>
+              <div className="flex items-center justify-center gap-2 mt-2">
+                <Badge className={getSyncStatusColor()}>
+                  {getSyncIcon()}
+                  {getSyncStatusText()}
+                </Badge>
+                <p className="text-sm text-[#49BBBD]">
+                  Powered by AI • Earn 15 XP for generating recommendations
+                </p>
+              </div>
             )}
+
+            {/* Sync Controls */}
+            <div className="flex justify-center gap-2 mt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={enhancedSyncFromCloud}
+                disabled={isSyncing}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw
+                  className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`}
+                />
+                Pull Latest
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={enhancedSyncToCloud}
+                disabled={isSyncing}
+                className="flex items-center gap-2"
+              >
+                <Cloud className="w-4 h-4" />
+                Push Changes
+              </Button>
+            </div>
           </motion.header>
 
           {/* Main Content */}
@@ -534,6 +698,12 @@ export default function RecommendationPage() {
                         }
                       </Badge>
                     </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">
+                        User Interests
+                      </span>
+                      <Badge variant="outline">{userInterests.length}</Badge>
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -585,9 +755,6 @@ export default function RecommendationPage() {
                                 ? "border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/20"
                                 : ""
                             }`}
-                            onClick={() =>
-                              handleNavigate(item.id?.split("/").pop())
-                            }
                           >
                             <CardContent className="p-6">
                               {/* Header with Badges */}
@@ -756,6 +923,7 @@ export default function RecommendationPage() {
                           <p>✨ Based on your saved papers</p>
                           <p>🎯 Tailored to your interests</p>
                           <p>📚 Updated as you read more</p>
+                          <p>☁️ Syncs across devices</p>
                         </div>
                       </CardContent>
                     </Card>

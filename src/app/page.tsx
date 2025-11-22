@@ -186,11 +186,12 @@ export default function Homepage() {
               className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-white max-w-4xl mx-auto leading-tight md:leading-normal"
               variants={itemVariants}
             >
-              Transform your academic workflow with intelligent research
-              management. Powered by{" "}
-              <span className="text-blue-300 font-semibold">Zotero</span> and{" "}
-              <span className="text-cyan-300 font-semibold">OpenAlex</span>
-              APIs.
+              Transform your{" "}
+              <span className="text-blue-300 font-semibold">Academic</span>{" "}
+              workflow with intelligent{" "}
+              <span className="text-cyan-300 font-semibold">
+                Research Management.
+              </span>
             </motion.p>
           </motion.div>
 
@@ -267,9 +268,9 @@ export default function Homepage() {
                 </motion.div>
               </h3>
               <p className="text-sm sm:text-base font-normal text-gray-700 leading-relaxed">
-                Search across OpenAlex and other scholarly indexes to surface
-                relevant papers, authors, and datasets. Advanced filters and
-                relevance scoring help you pinpoint high-impact work quickly.
+                Search across scholarly indexes to surface relevant papers,
+                authors, and datasets. Advanced filters and relevance scoring
+                help you pinpoint high-impact work quickly.
               </p>
             </motion.div>
 
@@ -289,9 +290,9 @@ export default function Homepage() {
                 </motion.div>
               </h3>
               <p className="text-sm sm:text-base font-normal text-gray-700 leading-relaxed">
-                Maintain a personal Zotero-backed library with collections,
-                tags, and notes. Seamless import/export and smart suggestions
-                keep your library structured for efficient retrieval.
+                Maintain a personal library with collections, tags, and notes.
+                Seamless import/export and smart suggestions keep your library
+                structured for efficient retrieval.
               </p>
             </motion.div>
 
@@ -333,8 +334,8 @@ export default function Homepage() {
                 </motion.div>
               </h3>
               <p className="text-sm sm:text-base font-normal text-gray-700 leading-relaxed">
-                Smart reading tools provide highlights, AI-generated summaries,
-                and inline annotations so you can consume literature faster and
+                Smart reading tools provide highlights, AI-generated papers, and
+                inline annotations so you can consume literature faster and
                 capture insights directly in your notes.
               </p>
             </motion.div>

@@ -159,7 +159,7 @@ export default function LoginPage() {
               className="text-center mb-8"
             >
               <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
-              <p className="text-gray-600 mt-2">Sign in to your account</p>
+              <p className="text-gray-600 mt-2">Log in to your account</p>
             </motion.div>
 
             {/* Messages */}
@@ -209,7 +209,7 @@ export default function LoginPage() {
                   />
                 )}
                 <span className="text-gray-700 font-medium">
-                  {googleLoading ? "Connecting..." : "Sign in with Google"}
+                  {googleLoading ? "Connecting..." : "Log in with Google"}
                 </span>
               </button>
             </motion.div>
@@ -299,7 +299,7 @@ export default function LoginPage() {
                   </div>
                 ) : (
                   <>
-                    <span>Sign In</span>
+                    <span>Log In</span>
                     <ArrowRight
                       className="group-hover:translate-x-1 transition-transform duration-300"
                       size={20}
