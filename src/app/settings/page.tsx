@@ -1,12 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext"; // IMPORT THE THEME CONTEXT
 import { motion } from "framer-motion";
 import { useSync } from "@/lib/hooks/useSync";
 import { Cloud, RefreshCw } from "lucide-react";
 import {
-  Moon,
-  Sun,
   User,
   Bell,
   Shield,
@@ -15,13 +14,8 @@ import {
   Trash2,
   Zap,
   Settings,
-  BookOpen,
   Palette,
-  Languages,
   Volume2,
-  VolumeX,
-  Eye,
-  EyeOff,
   Check,
   X,
 } from "lucide-react";
@@ -46,10 +40,9 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 
-import { Separator } from "@/components/ui/separator";
-
 export default function SettingsPage() {
-  const [darkMode, setDarkMode] = useState(false);
+  // USE THE THEME CONTEXT INSTEAD OF LOCAL STATE
+  const { theme, setTheme } = useTheme();
   const [notifications, setNotifications] = useState(true);
   const [autoSave, setAutoSave] = useState(true);
   const [readingMode, setReadingMode] = useState(false);
@@ -57,7 +50,6 @@ export default function SettingsPage() {
   const [fontSize, setFontSize] = useState("medium");
   const [soundEffects, setSoundEffects] = useState(true);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [fontSizeClass, setFontSizeClass] = useState("");
   const { user } = useAuth();
 
   // Initialize settings from localStorage
@@ -66,8 +58,7 @@ export default function SettingsPage() {
   }, []);
 
   const loadSettings = () => {
-    // Load all settings from localStorage with defaults
-    const savedDarkMode = localStorage.getItem("darkMode") === "true";
+    // Load other settings from localStorage with defaults
     const savedNotifications =
       localStorage.getItem("notifications") !== "false";
     const savedAutoSave = localStorage.getItem("autoSave") !== "false";
@@ -76,7 +67,6 @@ export default function SettingsPage() {
     const savedFontSize = localStorage.getItem("fontSize") || "medium";
     const savedSoundEffects = localStorage.getItem("soundEffects") !== "false";
 
-    setDarkMode(savedDarkMode);
     setNotifications(savedNotifications);
     setAutoSave(savedAutoSave);
     setReadingMode(savedReadingMode);
@@ -84,26 +74,17 @@ export default function SettingsPage() {
     setFontSize(savedFontSize);
     setSoundEffects(savedSoundEffects);
 
-    // Apply settings immediately
+    // Apply settings immediately (except dark mode - handled by ThemeContext)
     applySettings({
-      darkMode: savedDarkMode,
       fontSize: savedFontSize,
       readingMode: savedReadingMode,
     });
   };
 
   const applySettings = (settings: {
-    darkMode: boolean;
     fontSize: string;
     readingMode: boolean;
   }) => {
-    // Apply dark mode
-    if (settings.darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-
     // Apply font size
     document.documentElement.classList.remove(
       "text-sm",
@@ -137,16 +118,6 @@ export default function SettingsPage() {
   const handleSettingChange = (setting: string, value: any) => {
     // Save to localStorage
     localStorage.setItem(setting, value.toString());
-
-    // Apply changes immediately
-    if (setting === "darkMode") {
-      setDarkMode(value);
-      if (value) {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
-    }
 
     if (setting === "fontSize") {
       setFontSize(value);
@@ -321,7 +292,6 @@ export default function SettingsPage() {
   const resetSettings = () => {
     if (confirm("Are you sure you want to reset all settings to default?")) {
       const defaultSettings = {
-        darkMode: false,
         notifications: true,
         autoSave: true,
         readingMode: false,
@@ -333,6 +303,9 @@ export default function SettingsPage() {
       Object.entries(defaultSettings).forEach(([key, value]) => {
         localStorage.setItem(key, value.toString());
       });
+
+      // Reset theme to light
+      setTheme("light");
 
       loadSettings();
 
@@ -460,13 +433,22 @@ export default function SettingsPage() {
         {/* Appearance Settings */}
         <SettingSection title="Appearance" icon={Palette}>
           <div className="space-y-2">
-            <SettingToggle
-              label="Dark Mode"
-              description="Switch between light and dark themes"
-              enabled={darkMode}
-              onEnabledChange={setDarkMode}
-              settingKey="darkMode"
-            />
+            {/* USE THEME CONTEXT FOR DARK MODE */}
+            <div className="flex justify-between items-center py-3">
+              <div className="flex-1">
+                <p className="font-medium text-foreground">Dark Mode</p>
+                <p className="text-sm text-muted-foreground">
+                  Switch between light and dark themes
+                </p>
+              </div>
+              <Switch
+                checked={theme === "dark"}
+                onCheckedChange={(checked) => {
+                  setTheme(checked ? "dark" : "light");
+                }}
+                className="data-[state=checked]:bg-[#49BBBD]"
+              />
+            </div>
 
             <SettingToggle
               label="Reading Mode"
@@ -501,6 +483,7 @@ export default function SettingsPage() {
           </div>
         </SettingSection>
 
+        {/* Rest of your settings sections remain the same... */}
         {/* Notifications & Sounds */}
         <SettingSection title="Notifications & Sounds" icon={Bell}>
           <div className="space-y-2">
