@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { useSync } from "@/lib/hooks/useSync";
+import { useUserDisplayName } from "@/lib/hooks/useUserDisplayName";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -21,6 +22,7 @@ import {
   Trophy,
   Crown,
   Zap,
+  User,
   Camera,
   Trash2,
   RefreshCw,
@@ -646,9 +648,7 @@ export default function DashboardPage() {
     },
   ];
 
-  const displayName =
-    (user as any)?.displayName ||
-    (user?.email ? user.email.split("@")[0] : "Researcher");
+  const displayName = useUserDisplayName();
 
   const levelBadge = getLevelBadge(userLevel);
 
@@ -738,6 +738,18 @@ export default function DashboardPage() {
                     <Award className="h-4 w-4" />
                   </Link>
                 </Button>
+
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="rounded-xl shrink-0 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-all duration-200"
+                  asChild
+                >
+                  <Link href="/profile">
+                    <User className="h-4 w-4" />
+                  </Link>
+                </Button>
+
                 <Button
                   className="bg-gradient-to-r from-[#49BBBD] to-[#3aa8a9] hover:from-[#3aa8a9] hover:to-[#2b9597] text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl shrink-0"
                   asChild

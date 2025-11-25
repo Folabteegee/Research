@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 export default function LoginPage() {
-  const { login, googleLogin, user } = useAuth();
+  const { login, googleLogin, user } = useAuth(); // Use googleLogin for existing users
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -64,29 +64,12 @@ export default function LoginPage() {
     try {
       setGoogleLoading(true);
       setError("");
-      const googleUser = await googleLogin();
+      await googleLogin(); // This now just signs in existing users
 
-      if (googleUser) {
-        // Pre-fill the email field with Google user data
-        setEmail(googleUser.email);
-        setSuccess(
-          "Google account connected! Please enter your password to sign in."
-        );
-      }
+      setSuccess("Google login successful! Redirecting...");
+      setTimeout(() => router.push("/dashboard"), 1000);
     } catch (err: any) {
-      if (err.code === "auth/popup-closed-by-user") {
-        setError("Google sign-in was cancelled.");
-      } else if (err.code === "auth/popup-blocked") {
-        setError("Popup was blocked. Please allow popups for this site.");
-      } else if (err.code === "auth/network-request-failed") {
-        setError("Network error. Please check your connection and try again.");
-      } else if (err.code === "auth/user-not-found") {
-        setError(
-          "No account found with this Google email. Please sign up first."
-        );
-      } else {
-        setError(err.message || "Google sign-in failed. Please try again.");
-      }
+      setError(err.message || "Google sign-in failed. Please try again.");
     } finally {
       setGoogleLoading(false);
     }

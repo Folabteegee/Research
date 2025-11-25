@@ -13,10 +13,12 @@ import {
   ArrowRight,
   Brain,
   CheckCircle,
+  X,
+  Key,
 } from "lucide-react";
 
 export default function SignUpPage() {
-  const { signup, googleLogin, user } = useAuth();
+  const { signup, googleSignUp, setUserPassword, user } = useAuth();
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -31,6 +33,13 @@ export default function SignUpPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  // New states for password modal
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [modalPassword, setModalPassword] = useState("");
+  const [modalConfirmPassword, setModalConfirmPassword] = useState("");
+  const [modalShowPassword, setModalShowPassword] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
@@ -86,31 +95,67 @@ export default function SignUpPage() {
     try {
       setGoogleLoading(true);
       setError("");
-      const googleUser = await googleLogin();
 
-      if (googleUser) {
-        // Pre-fill the form with Google user data
-        setFormData((prev) => ({
-          ...prev,
-          name: googleUser.name,
-          email: googleUser.email,
-        }));
-        setSuccess(
-          "Google account connected! Please create a password to complete your registration."
+      const result = await googleSignUp();
+      const { user, isNewUser } = result;
+
+      if (isNewUser) {
+        // New user - show password modal
+        setShowPasswordModal(true);
+        setSuccess("Google account created! Please set a password.");
+      } else {
+        // Existing user - check if they have a password
+        const hasPassword = user.providerData.some(
+          (provider) => provider.providerId === "password"
         );
+
+        if (hasPassword) {
+          // User already has password - redirect to dashboard
+          setSuccess("Login successful! Redirecting...");
+          setTimeout(() => router.push("/dashboard"), 1500);
+        } else {
+          // Existing Google user without password - show modal
+          setShowPasswordModal(true);
+          setSuccess("Please set a password for your account.");
+        }
       }
     } catch (err: any) {
-      if (err.code === "auth/popup-closed-by-user") {
-        setError("Google sign-up was cancelled.");
-      } else if (err.code === "auth/popup-blocked") {
-        setError("Popup was blocked. Please allow popups for this site.");
-      } else if (err.code === "auth/network-request-failed") {
-        setError("Network error. Please check your connection and try again.");
-      } else {
-        setError(err.message || "Google sign-up failed. Please try again.");
-      }
+      setError(err.message || "Google sign-up failed. Please try again.");
     } finally {
       setGoogleLoading(false);
+    }
+  };
+
+  const handleSetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (!modalPassword || !modalConfirmPassword) {
+      setError("Please fill in both password fields.");
+      return;
+    }
+
+    if (modalPassword !== modalConfirmPassword) {
+      setError("Passwords do not match!");
+      return;
+    }
+
+    if (modalPassword.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
+
+    setModalLoading(true);
+
+    try {
+      await setUserPassword(modalPassword);
+      setSuccess("Password set successfully! Redirecting...");
+      setShowPasswordModal(false);
+      setTimeout(() => router.push("/dashboard"), 1500);
+    } catch (err: any) {
+      setError(err.message || "Failed to set password. Please try again.");
+    } finally {
+      setModalLoading(false);
     }
   };
 
@@ -224,21 +269,28 @@ export default function SignUpPage() {
               <button
                 type="button"
                 onClick={handleGoogleSignUp}
-                disabled={googleLoading}
-                className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-2xl py-4 hover:bg-gray-50 transition-all duration-300 disabled:opacity-50"
+                disabled={googleLoading || loading}
+                className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-2xl py-4 hover:bg-gray-50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {googleLoading ? (
-                  <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                  <div className="flex items-center gap-3">
+                    <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-gray-700 font-medium">
+                      Connecting...
+                    </span>
+                  </div>
                 ) : (
-                  <img
-                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                    alt="Google"
-                    className="w-5 h-5"
-                  />
+                  <>
+                    <img
+                      src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                      alt="Google"
+                      className="w-5 h-5"
+                    />
+                    <span className="text-gray-700 font-medium">
+                      Sign up with Google
+                    </span>
+                  </>
                 )}
-                <span className="text-gray-700 font-medium">
-                  {googleLoading ? "Connecting..." : "Sign up with Google"}
-                </span>
               </button>
             </motion.div>
 
@@ -408,7 +460,7 @@ export default function SignUpPage() {
             >
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || googleLoading}
                 className="w-full group bg-[#49BBBD] hover:bg-[#3aa8a9] text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg hover:shadow-xl"
               >
                 {loading ? (
@@ -448,6 +500,91 @@ export default function SignUpPage() {
           </form>
         </motion.div>
       </div>
+
+      {/* Password Setup Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl p-6 w-full max-w-md"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <Key className="text-[#49BBBD]" size={24} />
+                <h3 className="text-xl font-bold text-gray-900">
+                  Set Your Password
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <p className="text-gray-600 mb-6">
+              Create a password for your account. You'll use this password along
+              with your email to log in next time.
+            </p>
+
+            <form onSubmit={handleSetPassword} className="space-y-4">
+              <div className="relative">
+                <Lock
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  size={20}
+                />
+                <input
+                  type={modalShowPassword ? "text" : "password"}
+                  placeholder="Password"
+                  className="w-full pl-12 pr-12 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#49BBBD] focus:border-[#49BBBD] transition-all duration-300"
+                  value={modalPassword}
+                  onChange={(e) => setModalPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setModalShowPassword(!modalShowPassword)}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {modalShowPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+
+              <div className="relative">
+                <Lock
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  size={20}
+                />
+                <input
+                  type={modalShowPassword ? "text" : "password"}
+                  placeholder="Confirm Password"
+                  className="w-full pl-12 pr-12 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#49BBBD] focus:border-[#49BBBD] transition-all duration-300"
+                  value={modalConfirmPassword}
+                  onChange={(e) => setModalConfirmPassword(e.target.value)}
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={modalLoading}
+                className="w-full bg-[#49BBBD] hover:bg-[#3aa8a9] text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {modalLoading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Setting Password...</span>
+                  </div>
+                ) : (
+                  "Set Password & Continue"
+                )}
+              </button>
+            </form>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

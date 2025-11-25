@@ -11,6 +11,11 @@ import {
   GraduationCap,
   Menu,
   X,
+  Github,
+  Twitter,
+  Linkedin,
+  Mail,
+  MapPin,
 } from "lucide-react";
 
 export default function Homepage() {
@@ -25,7 +30,7 @@ export default function Homepage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Animation variants
+  // Fixed animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -457,7 +462,7 @@ export default function Homepage() {
         </div>
       </motion.section>
 
-      {/* Footer */}
+      {/* Footer - Updated for Taiwo Afolabi */}
       <motion.footer
         initial="hidden"
         whileInView="visible"
@@ -481,31 +486,48 @@ export default function Homepage() {
                     RESEARCHH
                   </div>
                   <div className="text-sm text-slate-300">
-                    Smarter research workflows, Zotero + OpenAlex powered
+                    Built by Taiwo Afolabi
                   </div>
                 </div>
               </div>
 
               <p className="text-sm text-slate-300 leading-relaxed mb-6">
-                RESEARCHH helps researchers discover, organize, and summarize
-                scholarly literature. Privacy-focused, open-data friendly, and
-                tailored for academic workflows.
+                A research companion app designed to help students and
+                researchers discover, organize, and summarize scholarly
+                literature efficiently.
               </p>
 
               <div className="flex items-center gap-4">
-                {["GitHub", "Twitter", "LinkedIn"].map((platform) => (
-                  <motion.a
-                    key={platform}
-                    href={`https://${platform.toLowerCase()}.com`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-slate-300 hover:text-white text-sm transition-colors duration-300"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    {platform}
-                  </motion.a>
-                ))}
+                <motion.a
+                  href="https://github.com/taiwoafolabi"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-slate-300 hover:text-white transition-colors duration-300 p-2 hover:bg-slate-800 rounded-lg"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Github size={20} />
+                </motion.a>
+                <motion.a
+                  href="https://twitter.com/taiwoafolabi"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-slate-300 hover:text-white transition-colors duration-300 p-2 hover:bg-slate-800 rounded-lg"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Twitter size={20} />
+                </motion.a>
+                <motion.a
+                  href="https://linkedin.com/in/taiwoafolabi"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-slate-300 hover:text-white transition-colors duration-300 p-2 hover:bg-slate-800 rounded-lg"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Linkedin size={20} />
+                </motion.a>
               </div>
             </motion.div>
 
@@ -517,7 +539,7 @@ export default function Homepage() {
                   (link) => (
                     <motion.li key={link} whileHover={{ x: 5 }}>
                       <a
-                        href={`/${link.toLowerCase().replace(" & ", "-")}`}
+                        href={`#${link.toLowerCase().replace(" & ", "-")}`}
                         className="hover:text-white transition-colors duration-300"
                       >
                         {link}
@@ -534,65 +556,62 @@ export default function Homepage() {
                 Resources
               </h4>
               <ul className="space-y-3 text-sm text-slate-300">
-                {["Documentation", "Pricing", "Support", "Blog"].map((link) => (
-                  <motion.li key={link} whileHover={{ x: 5 }}>
-                    <a
-                      href={`/${link.toLowerCase()}`}
-                      className="hover:text-white transition-colors duration-300"
-                    >
-                      {link}
-                    </a>
-                  </motion.li>
-                ))}
+                {["Documentation", "Tutorials", "Support", "Blog"].map(
+                  (link) => (
+                    <motion.li key={link} whileHover={{ x: 5 }}>
+                      <a
+                        href={`#${link.toLowerCase()}`}
+                        className="hover:text-white transition-colors duration-300"
+                      >
+                        {link}
+                      </a>
+                    </motion.li>
+                  )
+                )}
               </ul>
             </motion.div>
 
             {/* Contact & Newsletter */}
             <motion.div variants={itemVariants}>
               <h4 className="text-white font-semibold mb-4 text-lg">
-                Stay in the loop
+                Get in Touch
               </h4>
               <p className="text-sm text-slate-300 mb-6 leading-relaxed">
-                Join our newsletter for product updates, research tips, and
-                release notes.
+                Have questions or feedback? I'd love to hear from you about your
+                research needs.
               </p>
 
-              <form
-                className="flex flex-col gap-3 mb-6"
-                onSubmit={(e) => e.preventDefault()}
-              >
-                <input
-                  type="email"
-                  placeholder="you@university.edu"
-                  required
-                  className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all duration-300"
-                />
-                <motion.button
-                  type="submit"
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-cyan-500 text-white font-semibold hover:bg-cyan-600 transition-all duration-300"
+              <div className="space-y-4 mb-6">
+                <motion.div
+                  className="flex items-center gap-3 text-slate-300"
+                  whileHover={{ x: 5 }}
                 >
-                  Subscribe
-                  <ArrowRight size={16} />
-                </motion.button>
-              </form>
-
-              <div className="text-sm text-slate-400 space-y-2">
-                <div>
-                  Contact:{" "}
+                  <Mail size={16} className="text-cyan-400" />
                   <a
-                    href="mailto:hello@researchh.example"
-                    className="text-slate-200 hover:underline transition-colors duration-300"
+                    href="mailto:taiwoafolabi@example.com"
+                    className="hover:text-white transition-colors duration-300"
                   >
-                    hello@researchh.example
+                    taiwoafolabi@example.com
                   </a>
-                </div>
-                <div>
-                  Office:{" "}
-                  <span className="text-slate-300">123 Academic Way, City</span>
-                </div>
+                </motion.div>
+                <motion.div
+                  className="flex items-center gap-3 text-slate-300"
+                  whileHover={{ x: 5 }}
+                >
+                  <MapPin size={16} className="text-cyan-400" />
+                  <span>Lagos, Nigeria</span>
+                </motion.div>
               </div>
+
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-cyan-500 text-white font-semibold hover:bg-cyan-600 transition-all duration-300 w-full"
+                onClick={() => window.open("mailto:taiwoafolabi@example.com")}
+              >
+                Contact Me
+                <Mail size={16} />
+              </motion.button>
             </motion.div>
           </motion.div>
 
@@ -600,15 +619,16 @@ export default function Homepage() {
             variants={itemVariants}
             className="border-t border-slate-800 mt-8 pt-8 flex flex-col md:flex-row items-center justify-between text-sm text-slate-400"
           >
-            <div className="mb-4 md:mb-0">
-              © {new Date().getFullYear()} RESEARCHH. All rights reserved.
+            <div className="mb-4 md:mb-0 flex items-center gap-2">
+              <span>© {new Date().getFullYear()} RESEARCHH.</span>
+              <span>Built with ❤️ by Taiwo Afolabi</span>
             </div>
 
             <div className="flex items-center gap-6">
               {["Terms", "Privacy", "Contact"].map((link) => (
                 <motion.a
                   key={link}
-                  href={`/${link.toLowerCase()}`}
+                  href={`#${link.toLowerCase()}`}
                   className="hover:text-white transition-colors duration-300"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
