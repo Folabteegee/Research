@@ -97,11 +97,11 @@ export default function Homepage() {
   const floatingAnimation = {
     animate: {
       y: [0, -10, 0],
-      transition: {
-        duration: 3,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
+    },
+    transition: {
+      duration: 3,
+      repeat: Infinity,
+      ease: "easeInOut" as const, // Add 'as const' to fix the type
     },
   };
 
@@ -109,11 +109,11 @@ export default function Homepage() {
   const pulseAnimation = {
     animate: {
       scale: [1, 1.05, 1],
-      transition: {
-        duration: 2,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
+    },
+    transition: {
+      duration: 2,
+      repeat: Infinity,
+      ease: "easeInOut" as const,
     },
   };
 
@@ -121,11 +121,11 @@ export default function Homepage() {
   const bounceAnimation = {
     animate: {
       y: [0, -5, 0],
-      transition: {
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
+    },
+    transition: {
+      duration: 1.5,
+      repeat: Infinity,
+      ease: "easeInOut" as const,
     },
   };
 
@@ -133,11 +133,11 @@ export default function Homepage() {
   const waveAnimation = {
     animate: {
       x: [0, 10, 0],
-      transition: {
-        duration: 4,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
+    },
+    transition: {
+      duration: 4,
+      repeat: Infinity,
+      ease: "easeInOut" as const,
     },
   };
 
