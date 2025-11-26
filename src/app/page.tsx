@@ -391,7 +391,7 @@ export default function Homepage() {
                 >
                   {stat.icon}
                 </motion.div>
-                <div className="text-2xl md:text-3xl font-bold text-blue-300">
+                <div className="text-2xl md:text-3xl font-bold text-blue-700">
                   {stat.number}
                 </div>
                 <div className="text-sm text-gray-200 mt-1">{stat.label}</div>

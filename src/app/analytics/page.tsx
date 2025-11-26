@@ -622,43 +622,6 @@ export default function AnalyticsPage() {
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Gain insights into your reading patterns and research habits
             </p>
-            {user && (
-              <div className="flex items-center justify-center gap-2 mt-2">
-                <Badge className={getSyncStatusColor()}>
-                  {getSyncIcon()}
-                  {getSyncStatusText()}
-                </Badge>
-                <p className="text-sm text-[#49BBBD]">
-                  🔄 Data syncs across all your devices
-                </p>
-              </div>
-            )}
-
-            {/* Sync Controls */}
-            <div className="flex justify-center gap-2 mt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={enhancedSyncFromCloud}
-                disabled={isSyncing}
-                className="flex items-center gap-2"
-              >
-                <RefreshCw
-                  className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`}
-                />
-                Pull Latest
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={enhancedSyncToCloud}
-                disabled={isSyncing}
-                className="flex items-center gap-2"
-              >
-                <Cloud className="w-4 h-4" />
-                Push Changes
-              </Button>
-            </div>
           </motion.header>
 
           {/* Time Range Filter */}
@@ -681,12 +644,6 @@ export default function AnalyticsPage() {
                 <SelectItem value="month">This Month</SelectItem>
               </SelectContent>
             </Select>
-
-            {lastSynced && (
-              <div className="text-sm text-muted-foreground">
-                Last sync: {new Date(lastSynced).toLocaleTimeString()}
-              </div>
-            )}
           </motion.div>
 
           {/* Stats Grid */}
@@ -819,7 +776,7 @@ export default function AnalyticsPage() {
                             outerRadius={80}
                             fill="#8884d8"
                             dataKey="count"
-                            label={({ name, percent }) =>
+                            label={({ name, percent }: any) =>
                               `${name} ${(percent * 100).toFixed(0)}%`
                             }
                           >
