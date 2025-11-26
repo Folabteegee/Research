@@ -170,7 +170,7 @@ export default function Homepage() {
           >
             <Rocket className="text-[#49BBBD]" size={28} />
           </motion.div>
-          RESEARCHH
+          GURUSEARCH
         </motion.div>
 
         {/* Desktop Navigation */}
@@ -289,7 +289,7 @@ export default function Homepage() {
               whileHover={{ scale: 1.02 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              RESEARCHH
+              GURUSEARCH
             </motion.div>
 
             <motion.p
@@ -618,7 +618,7 @@ export default function Homepage() {
             className="text-xl text-blue-100 mb-8 md:mb-12 max-w-2xl mx-auto"
           >
             Join researchers from top institutions worldwide who are already
-            accelerating their discoveries with RESEARCHH
+            accelerating their discoveries with GURUSEARCH
           </motion.p>
 
           <motion.div
@@ -762,7 +762,7 @@ export default function Homepage() {
                 </motion.div>
                 <div>
                   <div className="text-2xl font-extrabold text-white">
-                    RESEARCHH
+                    GURUSEARCH
                   </div>
                   <div className="text-sm text-slate-300">
                     Built by Taiwo Afolabi
@@ -896,7 +896,7 @@ export default function Homepage() {
             className="border-t border-slate-800 mt-8 pt-8 flex flex-col md:flex-row items-center justify-between text-sm text-slate-400"
           >
             <div className="mb-4 md:mb-0 flex items-center gap-2">
-              <span>© {new Date().getFullYear()} RESEARCHH.</span>
+              <span>© {new Date().getFullYear()} GURUSEARCH.</span>
               <span>Built with ❤️ by Taiwo Afolabi</span>
             </div>
 
