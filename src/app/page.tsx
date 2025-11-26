@@ -343,12 +343,12 @@ export default function Homepage() {
               },
               {
                 number: "5K+",
-                label: "Active Users",
+                label: "Library",
                 icon: <Users className="text-white" size={20} />,
               },
               {
                 number: "50+",
-                label: "Universities",
+                label: "Collections",
                 icon: <GraduationCap className="text-white" size={20} />,
               },
               {
@@ -369,7 +369,7 @@ export default function Homepage() {
                 >
                   {stat.icon}
                 </motion.div>
-                <div className="text-2xl md:text-3xl font-bold text-blue-300">
+                <div className="text-2xl md:text-3xl font-bold text-white">
                   {stat.number}
                 </div>
                 <div className="text-sm text-gray-200 mt-1">{stat.label}</div>

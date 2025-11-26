@@ -590,14 +590,6 @@ export default function CollectionDetailPage() {
             className="mb-8"
           >
             <div className="flex items-center gap-4 mb-6">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => router.push("/collections")}
-                className="border-border"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
               <div
                 className="w-16 h-16 rounded-2xl flex items-center justify-center text-white"
                 style={{ backgroundColor: collection.color }}
@@ -613,13 +605,8 @@ export default function CollectionDetailPage() {
                 <p className="text-muted-foreground">
                   {collection.description}
                 </p>
-                {user && (
-                  <p className="text-sm text-[#49BBBD] mt-1">
-                    Changes sync automatically across devices
-                  </p>
-                )}
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2">
                 {/* Edit Collection Dialog */}
                 <Dialog>
                   <DialogTrigger asChild>

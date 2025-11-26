@@ -481,14 +481,6 @@ export default function CollectionsPage() {
                 <Edit3 className="w-4 h-4 mr-2" />
                 Edit
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Share2 className="w-4 h-4 mr-2" />
-                Share
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Download className="w-4 h-4 mr-2" />
-                Export
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => deleteCollection(collection.id)}
@@ -694,13 +686,6 @@ export default function CollectionsPage() {
                 <p className="text-xl text-muted-foreground">
                   Organize and manage your research papers
                 </p>
-                {user && (
-                  <div className="flex items-center gap-2 mt-1">
-                    <p className="text-sm text-[#49BBBD]">
-                      Auto-sync enabled across devices
-                    </p>
-                  </div>
-                )}
               </div>
 
               <div className="flex gap-2">
