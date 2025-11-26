@@ -26,33 +26,8 @@ import {
   TrendingUp,
 } from "lucide-react";
 
-// Define proper TypeScript interfaces for variants
-interface Variants {
-  hidden: { opacity: number; y?: number; scale?: number };
-  visible: {
-    opacity: number;
-    y?: number;
-    scale?: number;
-    transition: {
-      duration?: number;
-      ease?: string;
-      staggerChildren?: number;
-      type?: string;
-      stiffness?: number;
-    };
-  };
-}
-
-interface ContainerVariants {
-  hidden: { opacity: number };
-  visible: {
-    opacity: number;
-    transition: {
-      staggerChildren: number;
-      duration: number;
-    };
-  };
-}
+// Use Framer Motion's built-in Variants type instead of custom interfaces
+import type { Variants } from "framer-motion";
 
 export default function Homepage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -63,13 +38,17 @@ export default function Homepage() {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
-    window.addEventListener("scroll", handleScroll);
-    setIsVisible(true);
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    // Check if window is defined (client-side)
+    if (typeof window !== "undefined") {
+      window.addEventListener("scroll", handleScroll);
+      setIsVisible(true);
+      return () => window.removeEventListener("scroll", handleScroll);
+    }
   }, []);
 
-  // Fixed animation variants with proper typing
-  const containerVariants: ContainerVariants = {
+  // Fixed animation variants using proper Variants type
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -162,6 +141,13 @@ export default function Homepage() {
     },
   };
 
+  // Background gradient data for animated gradient
+  const gradientBackgrounds = [
+    "linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(73,187,189,0.3) 50%, rgba(0,0,0,0.4) 100%)",
+    "linear-gradient(135deg, rgba(0,0,0,0.5) 0%, rgba(73,187,189,0.4) 50%, rgba(0,0,0,0.5) 100%)",
+    "linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(73,187,189,0.3) 50%, rgba(0,0,0,0.4) 100%)",
+  ];
+
   return (
     <main className="overflow-x-hidden">
       {/* Enhanced Navigation with floating effect */}
@@ -220,11 +206,7 @@ export default function Homepage() {
           whileTap={{ scale: 0.9 }}
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >
-          {isMobileMenuOpen ? (
-            <X size={24} className="text-black" />
-          ) : (
-            <Menu className="text-black" size={24} />
-          )}
+          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </motion.button>
 
         {/* Mobile Menu */}
@@ -279,11 +261,7 @@ export default function Homepage() {
         <motion.div
           className="absolute inset-0 bg-gradient-to-br from-black/60 via-blue-900/30 to-cyan-800/40"
           animate={{
-            background: [
-              "linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(73,187,189,0.3) 50%, rgba(0,0,0,0.4) 100%)",
-              "linear-gradient(135deg, rgba(0,0,0,0.5) 0%, rgba(73,187,189,0.4) 50%, rgba(0,0,0,0.5) 100%)",
-              "linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(73,187,189,0.3) 50%, rgba(0,0,0,0.4) 100%)",
-            ],
+            background: gradientBackgrounds,
           }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -391,7 +369,7 @@ export default function Homepage() {
                 >
                   {stat.icon}
                 </motion.div>
-                <div className="text-2xl md:text-3xl font-bold text-blue-700">
+                <div className="text-2xl md:text-3xl font-bold text-blue-300">
                   {stat.number}
                 </div>
                 <div className="text-sm text-gray-200 mt-1">{stat.label}</div>
