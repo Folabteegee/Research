@@ -21,6 +21,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useSync } from "@/lib/hooks/useSync";
 import { Button } from "@/components/ui/button";
+import { BottomNav } from "@/components/navbar";
 import {
   Card,
   CardContent,
@@ -272,19 +273,6 @@ export default function LibraryPage() {
                   <p className="text-muted-foreground mt-1">
                     Your personal collection of saved research papers
                   </p>
-                  {user && (
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge className={getSyncStatusColor()}>
-                        {syncStatus === "syncing" && (
-                          <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
-                        )}
-                        {getSyncStatusText()}
-                      </Badge>
-                      <p className="text-sm text-[#49BBBD]">
-                        Auto-sync enabled across devices
-                      </p>
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -308,10 +296,7 @@ export default function LibraryPage() {
                       <Download className="mr-2 h-4 w-4" />
                       Export Library
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={enhancedSyncFromCloud}>
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                      Pull from Cloud
-                    </DropdownMenuItem>
+
                     {savedPapers.length > 0 && (
                       <DropdownMenuItem
                         onClick={handleRemoveAll}
@@ -532,6 +517,7 @@ export default function LibraryPage() {
           )}
         </div>
       </div>
+      <BottomNav />
     </div>
   );
 }

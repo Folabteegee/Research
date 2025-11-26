@@ -208,7 +208,7 @@ export default function Homepage() {
                 size={16}
                 className="group-hover:scale-110 transition-transform"
               />
-              Get Started
+              Get Started Free
             </motion.button>
           </Link>
         </div>
@@ -220,7 +220,11 @@ export default function Homepage() {
           whileTap={{ scale: 0.9 }}
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >
-          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          {isMobileMenuOpen ? (
+            <X size={24} className="text-black" />
+          ) : (
+            <Menu className="text-black" size={24} />
+          )}
         </motion.button>
 
         {/* Mobile Menu */}
@@ -344,7 +348,7 @@ export default function Homepage() {
                 accelerating their discoveries
               </span>{" "}
               with our intelligent research platform. From literature review to
-              publication-ready insights - we've got you covered.
+              publication-ready insights - we&apos;ve got you covered.
             </motion.p>
           </motion.div>
 
@@ -357,22 +361,22 @@ export default function Homepage() {
               {
                 number: "10K+",
                 label: "Research Papers",
-                icon: <BookOpen size={20} />,
+                icon: <BookOpen className="text-white" size={20} />,
               },
               {
                 number: "5K+",
                 label: "Active Users",
-                icon: <Users size={20} />,
+                icon: <Users className="text-white" size={20} />,
               },
               {
                 number: "50+",
                 label: "Universities",
-                icon: <GraduationCap size={20} />,
+                icon: <GraduationCap className="text-white" size={20} />,
               },
               {
                 number: "99.9%",
                 label: "Uptime",
-                icon: <TrendingUp size={20} />,
+                icon: <TrendingUp className="text-white" size={20} />,
               },
             ].map((stat, index) => (
               <motion.div
@@ -387,7 +391,7 @@ export default function Homepage() {
                 >
                   {stat.icon}
                 </motion.div>
-                <div className="text-2xl md:text-3xl font-bold text-cyan-300">
+                <div className="text-2xl md:text-3xl font-bold text-blue-300">
                   {stat.number}
                 </div>
                 <div className="text-sm text-gray-200 mt-1">{stat.label}</div>
@@ -591,8 +595,8 @@ export default function Homepage() {
                 </motion.div>
               </h3>
               <p className="text-sm sm:text-base font-normal text-gray-700 leading-relaxed">
-                Smart reading tools provide highlights, AI-generated papers, and
-                inline annotations so you can consume literature faster and
+                Smart reading tools provide highlights, AI-generated summaries,
+                and inline annotations so you can consume literature faster and
                 capture insights directly in your notes.
               </p>
             </motion.div>
@@ -641,7 +645,7 @@ export default function Homepage() {
 
           <motion.div
             variants={itemVariants}
-            className="flex flex-col sm:flex-row gap-4 justify-center"
+            className="flex flex-col sm:flex-row gap-4 items-center justify-center"
           >
             <Link href="/auth/signup">
               <motion.button
@@ -654,7 +658,7 @@ export default function Homepage() {
                   size={24}
                   className="group-hover:scale-110 transition-transform"
                 />
-                Start Free Trial
+                Start Free Today
                 <ArrowRight
                   className="group-hover:translate-x-2 transition-transform duration-300"
                   size={20}
@@ -677,79 +681,81 @@ export default function Homepage() {
             variants={itemVariants}
             className="text-blue-100 mt-6 text-sm"
           >
-            No credit card required • 14-day free trial • Cancel anytime
+            No credit card required • Free trial
           </motion.p>
         </div>
       </motion.section>
 
-      {/* Mission Section */}
+      {/* Mission Section with updated background */}
       <motion.section
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true }}
         variants={containerVariants}
-        className="max-w-7xl mx-auto py-16 md:py-24 lg:py-32 px-4 sm:px-6 lg:px-8"
+        className="bg-gradient-to-b from-white to-gray-50 py-16 md:py-24 lg:py-32 px-4 sm:px-6 lg:px-8"
       >
-        <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
-          <motion.div variants={itemVariants} className="w-full lg:w-1/2">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-gray-900 to-[#49BBBD] bg-clip-text text-transparent mb-6">
-              Our Mission: Empowering Researchers Worldwide
-            </h2>
-            <p className="text-lg text-gray-700 mb-6 leading-relaxed">
-              We exist to democratize research and make academic excellence
-              accessible to everyone. By combining cutting-edge AI with
-              intuitive design, we're breaking down barriers to knowledge
-              discovery and accelerating scientific progress.
-            </p>
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+            <motion.div variants={itemVariants} className="w-full lg:w-1/2">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-gray-900 to-[#49BBBD] bg-clip-text text-transparent mb-6">
+                Our Mission: Empowering Researchers Worldwide
+              </h2>
+              <p className="text-lg text-gray-700 mb-6 leading-relaxed">
+                We exist to democratize research and make academic excellence
+                accessible to everyone. By combining cutting-edge AI with
+                intuitive design, we&apos;re breaking down barriers to knowledge
+                discovery and accelerating scientific progress.
+              </p>
 
-            <motion.ul className="space-y-4 text-gray-700 mb-8">
-              {[
-                "Surface high-impact literature across all disciplines with AI-powered recommendations",
-                "Streamline your workflow with intelligent organization and collaboration tools",
-                "Accelerate discoveries with AI-powered insights and visualization tools",
-              ].map((item, index) => (
-                <motion.li
-                  key={index}
-                  className="flex items-start gap-3"
-                  variants={itemVariants}
-                  whileHover={{ x: 5 }}
-                >
-                  <motion.div
-                    whileHover={{ scale: 1.2, rotate: 180 }}
-                    transition={{ duration: 0.3 }}
+              <motion.ul className="space-y-4 text-gray-700 mb-8">
+                {[
+                  "Surface high-impact literature across all disciplines with AI-powered recommendations",
+                  "Streamline your workflow with intelligent organization and collaboration tools",
+                  "Accelerate discoveries with AI-powered insights and visualization tools",
+                ].map((item, index) => (
+                  <motion.li
+                    key={index}
+                    className="flex items-start gap-3"
+                    variants={itemVariants}
+                    whileHover={{ x: 5 }}
                   >
-                    <Target className="text-[#49BBBD] mt-1" size={16} />
-                  </motion.div>
-                  <span className="text-lg">{item}</span>
-                </motion.li>
-              ))}
-            </motion.ul>
+                    <motion.div
+                      whileHover={{ scale: 1.2, rotate: 180 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Target className="text-[#49BBBD] mt-1" size={16} />
+                    </motion.div>
+                    <span className="text-lg">{item}</span>
+                  </motion.li>
+                ))}
+              </motion.ul>
 
-            <Link href="/auth/signup">
-              <motion.button
-                className="bg-gradient-to-r from-[#49BBBD] to-blue-600 text-white font-bold px-8 py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 text-lg hover:from-[#3aa8a9] hover:to-blue-700"
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-                {...pulseAnimation}
-              >
-                Join the Research Revolution
-              </motion.button>
-            </Link>
-          </motion.div>
-
-          <motion.div variants={itemVariants} className="w-full lg:w-1/2">
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              transition={{ type: "spring", stiffness: 200 }}
-              className="rounded-2xl overflow-hidden shadow-2xl"
-            >
-              <img
-                src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1400&q=80"
-                alt="Research illustration"
-                className="w-full h-auto object-cover"
-              />
+              <Link href="/auth/signup">
+                <motion.button
+                  className="bg-gradient-to-r from-[#49BBBD] to-blue-600 text-white font-bold px-8 py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 text-lg hover:from-[#3aa8a9] hover:to-blue-700"
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  {...pulseAnimation}
+                >
+                  Join the Research Revolution
+                </motion.button>
+              </Link>
             </motion.div>
-          </motion.div>
+
+            <motion.div variants={itemVariants} className="w-full lg:w-1/2">
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 200 }}
+                className="rounded-2xl overflow-hidden shadow-2xl"
+              >
+                <img
+                  src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1400&q=80"
+                  alt="Research illustration"
+                  className="w-full h-auto object-cover"
+                />
+              </motion.div>
+            </motion.div>
+          </div>
         </div>
       </motion.section>
 
@@ -869,8 +875,8 @@ export default function Homepage() {
                 Get in Touch
               </h4>
               <p className="text-sm text-slate-300 mb-6 leading-relaxed">
-                Have questions or feedback? I'd love to hear from you about your
-                research needs.
+                Have questions or feedback? I&apos;d love to hear from you about
+                your research needs.
               </p>
 
               <div className="space-y-4 mb-6">

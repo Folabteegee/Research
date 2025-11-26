@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { searchPapers } from "@/lib/api/openAlex";
 import { useRouter } from "next/navigation";
 import { useZotero } from "@/context/ZoteroContext";
 import { useAuth } from "@/context/AuthContext";
 import { useSync } from "@/lib/hooks/useSync";
+import { BottomNav } from "@/components/navbar";
 import {
   addXP,
   unlockAchievement,
@@ -24,6 +25,9 @@ import {
   Download,
   Filter,
   Sparkles,
+  Clock,
+  X,
+  History,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,10 +49,12 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [showRecentSearches, setShowRecentSearches] = useState(false);
   const router = useRouter();
   const { library } = useZotero();
   const { user } = useAuth();
-  const { syncToCloud, triggerDataChange } = useSync(); // FIXED: Added triggerDataChange
+  const { syncToCloud, triggerDataChange } = useSync();
 
   // Get user ID for gamification
   const userId = user?.uid;
@@ -58,15 +64,106 @@ export default function SearchPage() {
     return userId ? `savedPapers_${userId}` : "savedPapers_guest";
   };
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim()) return;
+  // Load recent searches and previous results on component mount
+  useEffect(() => {
+    loadRecentSearches();
+    loadPreviousResults();
+  }, []);
+
+  const loadRecentSearches = () => {
+    const searchesKey = userId
+      ? `recentSearches_${userId}`
+      : "recentSearches_guest";
+    const stored = localStorage.getItem(searchesKey);
+    if (stored) {
+      try {
+        const searches = JSON.parse(stored);
+        setRecentSearches(Array.isArray(searches) ? searches : []);
+      } catch (error) {
+        console.error("Error loading recent searches:", error);
+        setRecentSearches([]);
+      }
+    }
+  };
+
+  const loadPreviousResults = () => {
+    const resultsKey = userId
+      ? `previousResults_${userId}`
+      : "previousResults_guest";
+    const stored = localStorage.getItem(resultsKey);
+    if (stored) {
+      try {
+        const previousData = JSON.parse(stored);
+        if (previousData.query && previousData.results) {
+          setQuery(previousData.query);
+          setResults(previousData.results);
+        }
+      } catch (error) {
+        console.error("Error loading previous results:", error);
+      }
+    }
+  };
+
+  const saveRecentSearch = (searchQuery: string) => {
+    if (!searchQuery.trim()) return;
+
+    const searchesKey = userId
+      ? `recentSearches_${userId}`
+      : "recentSearches_guest";
+    const updatedSearches = [
+      searchQuery.trim(),
+      ...recentSearches.filter((s) => s !== searchQuery.trim()),
+    ].slice(0, 10); // Keep only last 10 searches
+
+    setRecentSearches(updatedSearches);
+    localStorage.setItem(searchesKey, JSON.stringify(updatedSearches));
+  };
+
+  const removeRecentSearch = (searchToRemove: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const searchesKey = userId
+      ? `recentSearches_${userId}`
+      : "recentSearches_guest";
+    const updatedSearches = recentSearches.filter((s) => s !== searchToRemove);
+
+    setRecentSearches(updatedSearches);
+    localStorage.setItem(searchesKey, JSON.stringify(updatedSearches));
+  };
+
+  const clearRecentSearches = () => {
+    const searchesKey = userId
+      ? `recentSearches_${userId}`
+      : "recentSearches_guest";
+    setRecentSearches([]);
+    localStorage.removeItem(searchesKey);
+  };
+
+  const handleSearch = async (e: React.FormEvent, searchQuery?: string) => {
+    e?.preventDefault();
+    const finalQuery = searchQuery || query;
+    if (!finalQuery.trim()) return;
 
     setLoading(true);
     setError("");
     try {
-      const data = await searchPapers(query);
+      const data = await searchPapers(finalQuery);
       setResults(data.results || []);
+      setQuery(finalQuery);
+
+      // Save to recent searches
+      saveRecentSearch(finalQuery);
+
+      // Save current results for persistence
+      const resultsKey = userId
+        ? `previousResults_${userId}`
+        : "previousResults_guest";
+      localStorage.setItem(
+        resultsKey,
+        JSON.stringify({
+          query: finalQuery,
+          results: data.results || [],
+        })
+      );
 
       // Track search for gamification
       const searchesKey = userId ? `searches_${userId}` : "searches_guest";
@@ -79,11 +176,11 @@ export default function SearchPage() {
       const newXP = addXP(5, userId);
       console.log(`+5 XP for searching. Total XP: ${newXP}`);
 
-      // Sync to cloud after searching - FIXED: Better sync handling
+      // Sync to cloud after searching
       setTimeout(async () => {
         try {
           await syncToCloud();
-          triggerDataChange(); // FIXED: Trigger data change event
+          triggerDataChange();
           console.log("✅ Search activity synced to cloud");
         } catch (syncError) {
           console.error("❌ Failed to sync search activity:", syncError);
@@ -98,10 +195,23 @@ export default function SearchPage() {
       );
     } finally {
       setLoading(false);
+      setShowRecentSearches(false);
     }
   };
 
   const handleNavigate = (id: string) => {
+    // Save current state before navigating
+    const resultsKey = userId
+      ? `previousResults_${userId}`
+      : "previousResults_guest";
+    localStorage.setItem(
+      resultsKey,
+      JSON.stringify({
+        query: query,
+        results: results,
+      })
+    );
+
     router.push(`/paper/${id}`);
   };
 
@@ -129,7 +239,7 @@ export default function SearchPage() {
         "",
       abstract: paper.abstract || "",
       tags: paper.tags || [],
-      savedAt: new Date().toISOString(), // FIXED: Added savedAt timestamp
+      savedAt: new Date().toISOString(),
     };
 
     const updated = [...existing, newItem];
@@ -143,11 +253,11 @@ export default function SearchPage() {
     // Check saved papers achievements
     checkSavedAchievements(userId);
 
-    // Sync to cloud after saving - FIXED: Better sync handling
+    // Sync to cloud after saving
     setTimeout(async () => {
       try {
         await syncToCloud();
-        triggerDataChange(); // FIXED: Trigger data change event
+        triggerDataChange();
         console.log("✅ Saved paper synced to cloud");
       } catch (syncError) {
         console.error("❌ Failed to sync saved paper:", syncError);
@@ -156,7 +266,7 @@ export default function SearchPage() {
 
     // Force update achievements page
     window.dispatchEvent(new Event("storage"));
-    window.dispatchEvent(new Event("dataChanged")); // FIXED: Trigger custom event
+    window.dispatchEvent(new Event("dataChanged"));
   };
 
   const handleReadFullPaper = async (paper: any) => {
@@ -181,11 +291,11 @@ export default function SearchPage() {
       // Track detailed reading data for analytics
       trackReading(paper);
 
-      // Sync to cloud after reading - FIXED: Better sync handling
+      // Sync to cloud after reading
       setTimeout(async () => {
         try {
           await syncToCloud();
-          triggerDataChange(); // FIXED: Trigger data change event
+          triggerDataChange();
           console.log("✅ Reading activity synced to cloud");
         } catch (syncError) {
           console.error("❌ Failed to sync reading activity:", syncError);
@@ -194,13 +304,13 @@ export default function SearchPage() {
 
       // Force update achievements page
       window.dispatchEvent(new Event("storage"));
-      window.dispatchEvent(new Event("dataChanged")); // FIXED: Trigger custom event
+      window.dispatchEvent(new Event("dataChanged"));
     } else {
       alert("Full paper link not available for this item.");
     }
   };
 
-  // Track detailed reading data for analytics - FIXED: Better data structure
+  // Track detailed reading data for analytics
   const trackReading = (paper: any) => {
     const readKey = userId ? `reads_${userId}` : "reads_guest";
 
@@ -286,18 +396,13 @@ export default function SearchPage() {
               Research Paper Search
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Discover academic papers using OpenAlex database. Search by topic,
-              author, or keywords.
+              Discover academic papers. Search by topic, author, or keywords.
             </p>
             {user && (
               <p className="text-sm text-[#49BBBD] mt-2 flex items-center justify-center gap-2">
                 <Sparkles className="w-4 h-4" />
                 Papers will be saved to your personal library • Earn XP for
                 searching, saving, and reading!
-                <br />
-                <span className="text-xs">
-                  🔗 Data syncs across all your devices
-                </span>
               </p>
             )}
           </motion.header>
@@ -319,6 +424,7 @@ export default function SearchPage() {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onFocus={() => setShowRecentSearches(true)}
                 placeholder="Search for research papers, authors, topics, or keywords..."
                 className="w-full pl-12 pr-32 py-6 bg-card border-2 border-border rounded-2xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#49BBBD] focus:border-[#49BBBD] transition-all duration-300 shadow-sm text-lg"
               />
@@ -337,6 +443,59 @@ export default function SearchPage() {
                 )}
               </Button>
             </div>
+
+            {/* Recent Searches Dropdown */}
+            {showRecentSearches && recentSearches.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="absolute left-1/2 transform -translate-x-1/2 mt-2 w-full max-w-3xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl z-50"
+              >
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <History size={16} />
+                      Recent Searches
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearRecentSearches}
+                      className="text-xs text-muted-foreground hover:text-red-600"
+                    >
+                      Clear all
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {recentSearches.map((search, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl cursor-pointer group transition-all duration-200"
+                        onClick={() =>
+                          handleSearch(new Event("submit") as any, search)
+                        }
+                      >
+                        <div className="flex items-center gap-3 flex-1">
+                          <Clock size={16} className="text-muted-foreground" />
+                          <span className="text-foreground group-hover:text-[#49BBBD] transition-colors">
+                            {search}
+                          </span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => removeRecentSearch(search, e)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-6 w-6"
+                        >
+                          <X size={14} />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             <div className="text-center mt-4">
               <Badge variant="outline" className="bg-card/50 backdrop-blur-sm">
                 🔍 +5 XP for searching • 💾 +10 XP for saving • 📖 +10 XP for
@@ -450,12 +609,6 @@ export default function SearchPage() {
                             className="bg-[#49BBBD]/10 text-[#49BBBD] border-[#49BBBD]/20"
                           >
                             Saving to {user.email}'s library
-                          </Badge>
-                          <Badge
-                            variant="outline"
-                            className="bg-green-100 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800"
-                          >
-                            ☁️ Auto-sync enabled
                           </Badge>
                         </div>
                       )}
@@ -616,6 +769,7 @@ export default function SearchPage() {
           )}
         </div>
       </div>
+      <BottomNav />
     </div>
   );
 }

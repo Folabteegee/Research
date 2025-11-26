@@ -4,7 +4,9 @@ import { useAuth } from "@/context/AuthContext";
 import { useSync } from "@/lib/hooks/useSync";
 import { useUserDisplayName } from "@/lib/hooks/useUserDisplayName";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { usePathname } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { BottomNav } from "@/components/navbar";
 import {
   Settings,
   Award,
@@ -25,10 +27,9 @@ import {
   User,
   Camera,
   Trash2,
-  RefreshCw,
-  Cloud,
-  CloudOff,
-  Users,
+  Home,
+  Menu,
+  X,
   TrendingUp,
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
@@ -146,7 +147,7 @@ function ProfilePictureUpload({
   return (
     <div className="relative" ref={menuRef}>
       <div className="relative group cursor-pointer" onClick={toggleMenu}>
-        <Avatar className="h-14 w-14 border-2 border-[#49BBBD]/20 group-hover:border-[#49BBBD] transition-all duration-300">
+        <Avatar className="h-10 w-10 border-2 border-[#49BBBD]/20 group-hover:border-[#49BBBD] transition-all duration-300">
           {hasValidProfilePic ? (
             <AvatarImage
               src={currentProfilePic || user?.photoURL || undefined}
@@ -158,8 +159,8 @@ function ProfilePictureUpload({
             {userInitial}
           </AvatarFallback>
         </Avatar>
-        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#49BBBD] rounded-full border-2 border-background flex items-center justify-center">
-          <Camera className="w-3 h-3 text-white" />
+        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#49BBBD] rounded-full border-2 border-background flex items-center justify-center">
+          <Camera className="w-2 h-2 text-white" />
         </div>
       </div>
 
@@ -175,7 +176,7 @@ function ProfilePictureUpload({
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: -10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          className="absolute top-16 left-0 w-48 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg border border-gray-200/50 dark:border-gray-700/50 rounded-xl shadow-xl z-50 p-2"
+          className="absolute top-12 left-0 w-48 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg border border-gray-200/50 dark:border-gray-700/50 rounded-xl shadow-xl z-50 p-2"
         >
           <div className="space-y-1">
             <button
@@ -223,8 +224,7 @@ const safeJsonParse = (value: string | null, defaultValue: any = null) => {
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { syncToCloud, syncFromCloud, isSyncing, lastSynced, syncError } =
-    useSync();
+  const { syncToCloud } = useSync();
   const [userStats, setUserStats] = useState({
     papersSaved: 0,
     collections: 0,
@@ -237,9 +237,8 @@ export default function DashboardPage() {
   const [levelProgress, setLevelProgress] = useState(0);
   const [streak, setStreak] = useState(0);
   const [profilePictureVersion, setProfilePictureVersion] = useState(0);
-  const [syncStatus, setSyncStatus] = useState<
-    "idle" | "syncing" | "success" | "error"
-  >("idle");
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const getUserLibraryKey = () => {
     return user ? `savedPapers_${user.uid}` : "savedPapers_guest";
@@ -272,55 +271,6 @@ export default function DashboardPage() {
         console.error(`Error cleaning up key ${key}:`, error);
       }
     });
-  };
-
-  useEffect(() => {
-    if (isSyncing) {
-      setSyncStatus("syncing");
-    } else if (syncStatus === "syncing") {
-      if (syncError) {
-        setSyncStatus("error");
-      } else {
-        setSyncStatus("success");
-      }
-      setTimeout(() => setSyncStatus("idle"), 2000);
-    }
-  }, [isSyncing, syncStatus, syncError]);
-
-  const enhancedSyncToCloud = async () => {
-    setSyncStatus("syncing");
-    try {
-      const success = await syncToCloud();
-      if (success) {
-        setSyncStatus("success");
-        setTimeout(() => {
-          loadUserStats();
-        }, 1000);
-      } else {
-        setSyncStatus("error");
-      }
-      setTimeout(() => setSyncStatus("idle"), 2000);
-    } catch (error) {
-      setSyncStatus("error");
-      setTimeout(() => setSyncStatus("idle"), 3000);
-    }
-  };
-
-  const enhancedSyncFromCloud = async () => {
-    setSyncStatus("syncing");
-    try {
-      const success = await syncFromCloud();
-      if (success) {
-        setSyncStatus("success");
-        loadUserStats();
-      } else {
-        setSyncStatus("error");
-      }
-      setTimeout(() => setSyncStatus("idle"), 2000);
-    } catch (error) {
-      setSyncStatus("error");
-      setTimeout(() => setSyncStatus("idle"), 3000);
-    }
   };
 
   const loadUserStats = () => {
@@ -509,109 +459,22 @@ export default function DashboardPage() {
     };
   };
 
-  const getSyncStatusText = () => {
-    switch (syncStatus) {
-      case "syncing":
-        return "Syncing...";
-      case "success":
-        return "Synced!";
-      case "error":
-        return syncError || "Sync failed";
-      default:
-        return lastSynced
-          ? `Synced ${new Date(lastSynced).toLocaleTimeString()}`
-          : "Ready to sync";
-    }
-  };
+  const displayName = useUserDisplayName();
+  const levelBadge = getLevelBadge(userLevel);
 
-  const getSyncStatusColor = () => {
-    switch (syncStatus) {
-      case "syncing":
-        return "bg-yellow-500/10 text-yellow-600 border-yellow-200";
-      case "success":
-        return "bg-green-500/10 text-green-600 border-green-200";
-      case "error":
-        return "bg-red-500/10 text-red-600 border-red-200";
-      default:
-        return "bg-blue-500/10 text-blue-600 border-blue-200";
-    }
-  };
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
 
-  const getSyncIcon = () => {
-    switch (syncStatus) {
-      case "syncing":
-        return <RefreshCw className="w-3 h-3 animate-spin" />;
-      case "success":
-        return <Cloud className="w-3 h-3" />;
-      case "error":
-        return <CloudOff className="w-3 h-3" />;
-      default:
-        return <Cloud className="w-3 h-3" />;
-    }
-  };
-
-  const dashboardCards = [
-    {
-      title: "Search Papers",
-      description: "Find works by keyword, author, or topic using OpenAlex",
-      href: "/search",
-      icon: Search,
-      color: "bg-gradient-to-br from-[#49BBBD] to-[#3aa8a9]",
-      stats: "25K+ Papers",
-      badge: "Popular",
-      xpReward: "+5 XP per search",
-    },
-    {
-      title: "My Library",
-      description: "View and manage your saved research papers",
-      href: "/library",
-      icon: BookOpen,
-      color: "bg-gradient-to-br from-[#49BBBD] to-[#3aa8a9]",
-      stats: `${userStats.papersSaved} Items`,
-      badge: userStats.papersSaved > 0 ? "Updated" : "Empty",
-      xpReward: "+10 XP per save",
-    },
-    {
-      title: "AI Recommendations",
-      description: "Get personalized paper recommendations",
-      href: "/recommendations",
-      icon: Brain,
-      color: "bg-gradient-to-br from-[#49BBBD] to-[#3aa8a9]",
-      stats: "AI Powered",
-      badge: "Smart",
-      xpReward: "+15 XP per generation",
-    },
-    {
-      title: "Collections",
-      description: "Organize your research into smart collections",
-      href: "/collections",
-      icon: Library,
-      color: "bg-gradient-to-br from-[#49BBBD] to-[#3aa8a9]",
-      stats: `${userStats.collections} Collections`,
-      badge: "Organize",
-      xpReward: "+20 XP per collection",
-    },
-    {
-      title: "Research Analytics",
-      description: "Analyze your reading patterns and interests",
-      href: "/analytics",
-      icon: BarChart3,
-      color: "bg-gradient-to-br from-[#49BBBD] to-[#3aa8a9]",
-      stats: "4+ Charts",
-      badge: "Insights",
-      xpReward: "+25 XP weekly",
-    },
-    {
-      title: "Explore",
-      description: "Explore diverse range of papers",
-      href: "/explore",
-      icon: Brain,
-      color: "bg-gradient-to-br from-[#49BBBD] to-[#3aa8a9]",
-      stats: "Popular and emerging research areas",
-      badge: "Diverse",
-      xpReward: "Keep exploring",
-    },
-  ];
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const stats = [
     {
@@ -648,12 +511,8 @@ export default function DashboardPage() {
     },
   ];
 
-  const displayName = useUserDisplayName();
-
-  const levelBadge = getLevelBadge(userLevel);
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-hidden pb-24">
       {/* Enhanced Background */}
       <div className="fixed inset-0">
         <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(73,187,189,0.03)_50%,transparent_75%)] bg-[length:20px_20px]"></div>
@@ -662,14 +521,14 @@ export default function DashboardPage() {
       </div>
 
       <div className="relative z-10 min-h-screen">
-        {/* Enhanced Header */}
+        {/* Simplified Header */}
         <motion.header
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="sticky top-0 z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50"
         >
           <div className="p-4 lg:p-6 max-w-7xl mx-auto">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <ProfilePictureUpload
                   onProfilePictureChange={handleProfilePictureChange}
@@ -686,80 +545,77 @@ export default function DashboardPage() {
                       Level {userLevel}
                     </Badge>
                   </div>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-1">
-                    <p className="text-gray-600 dark:text-gray-400 flex items-center gap-2 text-sm">
-                      <Target className="w-4 h-4" />
-                      {getLevelTitle(userLevel)} • {userXP} Total XP
-                    </p>
-                    {user && (
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          className={`${getSyncStatusColor()} border backdrop-blur-sm text-xs`}
-                        >
-                          {getSyncIcon()}
-                          {getSyncStatusText()}
-                        </Badge>
-                      </div>
-                    )}
-                  </div>
+                  <p className="text-gray-600 dark:text-gray-400 flex items-center gap-2 text-sm mt-1">
+                    <Target className="w-4 h-4" />
+                    {getLevelTitle(userLevel)} • {userXP} Total XP
+                  </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 flex-wrap">
+              {/* 3-dot Menu */}
+              <div className="relative" ref={menuRef}>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="icon"
-                  onClick={enhancedSyncFromCloud}
-                  disabled={isSyncing}
-                  className="rounded-xl shrink-0 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-all duration-200"
-                  title="Pull latest data from cloud"
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
                 >
-                  <RefreshCw
-                    className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`}
-                  />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="rounded-xl shrink-0 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-all duration-200"
-                  asChild
-                >
-                  <Link href="/settings">
-                    <Settings className="h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="rounded-xl shrink-0 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-all duration-200"
-                  asChild
-                >
-                  <Link href="/achievements">
-                    <Award className="h-4 w-4" />
-                  </Link>
+                  {isMenuOpen ? (
+                    <X className="h-5 w-5" />
+                  ) : (
+                    <Menu className="h-5 w-5" />
+                  )}
                 </Button>
 
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="rounded-xl shrink-0 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-all duration-200"
-                  asChild
-                >
-                  <Link href="/profile">
-                    <User className="h-4 w-4" />
-                  </Link>
-                </Button>
-
-                <Button
-                  className="bg-gradient-to-r from-[#49BBBD] to-[#3aa8a9] hover:from-[#3aa8a9] hover:to-[#2b9597] text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl shrink-0"
-                  asChild
-                >
-                  <Link href="/search">
-                    <Plus className="h-4 w-4 mr-2" />
-                    <span className="hidden sm:inline">New Search</span>
-                    <Search className="h-4 w-4 sm:hidden" />
-                  </Link>
-                </Button>
+                <AnimatePresence>
+                  {isMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                      className="absolute top-12 right-0 w-48 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg border border-gray-200/50 dark:border-gray-700/50 rounded-xl shadow-xl z-50 p-2"
+                    >
+                      <div className="space-y-1">
+                        <Link href="/profile">
+                          <button
+                            onClick={() => setIsMenuOpen(false)}
+                            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-[#49BBBD]/10 rounded-lg transition-all duration-200"
+                          >
+                            <User className="h-4 w-4" />
+                            Profile
+                          </button>
+                        </Link>
+                        <Link href="/settings">
+                          <button
+                            onClick={() => setIsMenuOpen(false)}
+                            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-[#49BBBD]/10 rounded-lg transition-all duration-200"
+                          >
+                            <Settings className="h-4 w-4" />
+                            Settings
+                          </button>
+                        </Link>
+                        <Link href="/achievements">
+                          <button
+                            onClick={() => setIsMenuOpen(false)}
+                            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-[#49BBBD]/10 rounded-lg transition-all duration-200"
+                          >
+                            <Award className="h-4 w-4" />
+                            Achievements
+                          </button>
+                        </Link>
+                        <Link href="/analytics">
+                          <button
+                            onClick={() => setIsMenuOpen(false)}
+                            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-[#49BBBD]/10 rounded-lg transition-all duration-200"
+                          >
+                            <BarChart3 className="h-4 w-4" />
+                            Analytics
+                          </button>
+                        </Link>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           </div>
@@ -856,68 +712,6 @@ export default function DashboardPage() {
                       </div>
                     </CardContent>
                   </Card>
-                </motion.div>
-              ))}
-            </div>
-          </motion.section>
-
-          {/* Main Dashboard Cards */}
-          <motion.section
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="mb-6 lg:mb-8"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
-              {dashboardCards.map((card, index) => (
-                <motion.div
-                  key={card.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 + index * 0.1 }}
-                >
-                  <Link href={card.href}>
-                    <Card className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg rounded-2xl hover:shadow-xl transition-all duration-300 hover:translate-y-[-4px] group cursor-pointer h-full">
-                      <CardContent className="p-5 lg:p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-center gap-4">
-                            <div
-                              className={`p-3 rounded-xl ${card.color} shadow-lg group-hover:scale-110 transition-transform duration-300`}
-                            >
-                              <card.icon className="text-white w-6 h-6" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <CardTitle className="text-lg lg:text-xl flex items-center gap-2 text-gray-900 dark:text-white mb-1">
-                                {card.title}
-                                <Badge variant="secondary" className="text-xs">
-                                  {card.badge}
-                                </Badge>
-                              </CardTitle>
-                              <CardDescription className="text-sm">
-                                {card.description}
-                              </CardDescription>
-                            </div>
-                          </div>
-                          <ArrowRight
-                            className="text-gray-400 group-hover:text-[#49BBBD] group-hover:translate-x-1 transition-all duration-300 shrink-0"
-                            size={20}
-                          />
-                        </div>
-
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <span className="text-sm font-medium text-[#49BBBD]">
-                              {card.stats}
-                            </span>
-                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                              {card.xpReward}
-                            </p>
-                          </div>
-                          <div className="w-8 h-1 bg-gradient-to-r from-[#49BBBD] to-[#3aa8a9] rounded-full group-hover:w-12 transition-all duration-300" />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
                 </motion.div>
               ))}
             </div>
@@ -1070,6 +864,9 @@ export default function DashboardPage() {
           </motion.section>
         </div>
       </div>
+
+      {/* Bottom Navigation */}
+      <BottomNav />
     </div>
   );
 }

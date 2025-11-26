@@ -314,41 +314,11 @@ export default function AchievementsPage() {
             </p>
             {user && (
               <div className="flex items-center justify-center gap-2 mt-2">
-                <Badge className={getSyncStatusColor()}>
-                  {getSyncIcon()}
-                  {getSyncStatusText()}
-                </Badge>
                 <p className="text-sm text-[#49BBBD]">
-                  Personal achievements for {user.email} • 🔄 Auto-sync enabled
+                  Personal achievements for {user.email}
                 </p>
               </div>
             )}
-
-            {/* Sync Controls */}
-            <div className="flex justify-center gap-2 mt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={enhancedSyncFromCloud}
-                disabled={isSyncing}
-                className="flex items-center gap-2"
-              >
-                <RefreshCw
-                  className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`}
-                />
-                Pull Latest
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={enhancedSyncToCloud}
-                disabled={isSyncing}
-                className="flex items-center gap-2"
-              >
-                <Cloud className="w-4 h-4" />
-                Push Changes
-              </Button>
-            </div>
           </motion.header>
 
           {/* User Stats Grid */}
@@ -403,9 +373,6 @@ export default function AchievementsPage() {
                 </div>
                 <p className="text-white/80 mb-2">Research Explorer</p>
                 <div className="text-3xl font-bold">{xp} XP</div>
-                <div className="mt-4 text-sm text-white/80">
-                  Last updated: {new Date(lastLoad).toLocaleTimeString()}
-                </div>
               </motion.div>
 
               {/* XP Progress */}
@@ -557,13 +524,6 @@ export default function AchievementsPage() {
               <span>🔍 Explore new topics</span>
               <span>☁️ Data syncs automatically</span>
             </div>
-
-            {/* Last Sync Info */}
-            {lastSynced && (
-              <div className="mt-4 text-xs text-muted-foreground">
-                Last cloud sync: {new Date(lastSynced).toLocaleString()}
-              </div>
-            )}
           </motion.section>
         </div>
       </div>

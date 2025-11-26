@@ -123,15 +123,21 @@ export default function CollectionDetailPage() {
   const [syncStatus, setSyncStatus] = useState<
     "idle" | "syncing" | "success" | "error"
   >("idle");
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    description: "",
+    color: "",
+    tags: [] as string[],
+  });
+  const [newTag, setNewTag] = useState("");
 
-  // Enhanced sync functions - FIXED: Better error handling
+  // Enhanced sync functions
   const enhancedSyncToCloud = async () => {
     setSyncStatus("syncing");
     try {
       const success = await syncToCloud();
       if (success) {
         setSyncStatus("success");
-        // Reload data after successful sync
         setTimeout(() => {
           loadCollectionData();
         }, 1000);
@@ -151,7 +157,7 @@ export default function CollectionDetailPage() {
       const success = await syncFromCloud();
       if (success) {
         setSyncStatus("success");
-        loadCollectionData(); // Reload data after sync
+        loadCollectionData();
       } else {
         setSyncStatus("error");
       }
@@ -162,7 +168,7 @@ export default function CollectionDetailPage() {
     }
   };
 
-  // Update sync status based on isSyncing - FIXED: Better status tracking
+  // Update sync status based on isSyncing
   useEffect(() => {
     if (isSyncing) {
       setSyncStatus("syncing");
@@ -217,11 +223,10 @@ export default function CollectionDetailPage() {
     }
   };
 
-  // Load collection data with sync integration - FIXED: Better data loading
+  // Load collection data
   const loadCollectionData = () => {
     setLoading(true);
     try {
-      // Load collections
       const collectionsKey = user
         ? `collections_${user.uid}`
         : "collections_guest";
@@ -230,7 +235,6 @@ export default function CollectionDetailPage() {
         ? JSON.parse(storedCollections)
         : [];
 
-      // Load all papers
       const papersKey = user ? `savedPapers_${user.uid}` : "savedPapers_guest";
       const storedPapers = localStorage.getItem(papersKey);
       const allPapers: Paper[] = storedPapers ? JSON.parse(storedPapers) : [];
@@ -242,14 +246,18 @@ export default function CollectionDetailPage() {
       if (currentCollection) {
         setCollection(currentCollection);
         setAllPapers(allPapers);
+        setEditFormData({
+          name: currentCollection.name,
+          description: currentCollection.description,
+          color: currentCollection.color,
+          tags: [...currentCollection.tags],
+        });
 
-        // Papers not in this collection
         const available = allPapers.filter(
           (paper) => !currentCollection.papers.some((p) => p.id === paper.id)
         );
         setAvailablePapers(available);
       } else {
-        // Collection not found
         router.push("/collections");
       }
     } catch (error) {
@@ -262,14 +270,11 @@ export default function CollectionDetailPage() {
   useEffect(() => {
     loadCollectionData();
 
-    // Listen for data changes and cloud sync events
     const handleDataChange = () => {
-      console.log("🔄 Data changed, reloading collection data");
       loadCollectionData();
     };
 
     const handleCloudDataApplied = () => {
-      console.log("🔄 Cloud data applied, reloading collection");
       loadCollectionData();
     };
 
@@ -284,37 +289,31 @@ export default function CollectionDetailPage() {
     };
   }, [collectionId, user, router]);
 
-  // Auto-sync when collection data changes - FIXED: Better auto-sync logic
+  // Auto-sync when collection data changes
   useEffect(() => {
     if (collection && !loading && user) {
       const syncTimer = setTimeout(async () => {
         try {
           await syncToCloud();
-          console.log("✅ Collection data auto-synced to cloud");
         } catch (error) {
           console.error("❌ Failed to auto-sync collection:", error);
         }
-      }, 3000); // Delay sync to avoid excessive API calls
+      }, 3000);
 
       return () => clearTimeout(syncTimer);
     }
   }, [collection, loading, user, syncToCloud]);
 
-  const addPapersToCollection = async (paperIds: string[]) => {
+  // Update collection function
+  const updateCollection = async (updatedData: Partial<Collection>) => {
     if (!collection) return;
-
-    const papersToAdd = allPapers.filter((paper) =>
-      paperIds.includes(paper.id)
-    );
 
     const updatedCollection: Collection = {
       ...collection,
-      papers: [...collection.papers, ...papersToAdd],
-      paperCount: collection.paperCount + papersToAdd.length,
+      ...updatedData,
       updatedAt: new Date().toISOString(),
     };
 
-    // Update collections in localStorage
     const collectionsKey = user
       ? `collections_${user.uid}`
       : "collections_guest";
@@ -330,7 +329,89 @@ export default function CollectionDetailPage() {
     localStorage.setItem(collectionsKey, JSON.stringify(updatedCollections));
     setCollection(updatedCollection);
 
-    // Update available papers
+    setTimeout(async () => {
+      try {
+        await syncToCloud();
+        triggerDataChange();
+      } catch (error) {
+        console.error("❌ Failed to sync collection update:", error);
+      }
+    }, 500);
+  };
+
+  // Edit form handlers
+  const handleEditFormChange = (field: string, value: string) => {
+    setEditFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleSaveEdit = () => {
+    if (!collection) return;
+
+    updateCollection({
+      name: editFormData.name,
+      description: editFormData.description,
+      color: editFormData.color,
+      tags: editFormData.tags,
+    });
+  };
+
+  const handleAddTag = () => {
+    if (newTag.trim() && !editFormData.tags.includes(newTag.trim())) {
+      setEditFormData((prev) => ({
+        ...prev,
+        tags: [...prev.tags, newTag.trim()],
+      }));
+      setNewTag("");
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setEditFormData((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((tag) => tag !== tagToRemove),
+    }));
+  };
+
+  const handleColorChange = (color: string) => {
+    setEditFormData((prev) => ({
+      ...prev,
+      color,
+    }));
+  };
+
+  // Paper management functions
+  const addPapersToCollection = async (paperIds: string[]) => {
+    if (!collection) return;
+
+    const papersToAdd = allPapers.filter((paper) =>
+      paperIds.includes(paper.id)
+    );
+
+    const updatedCollection: Collection = {
+      ...collection,
+      papers: [...collection.papers, ...papersToAdd],
+      paperCount: collection.paperCount + papersToAdd.length,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const collectionsKey = user
+      ? `collections_${user.uid}`
+      : "collections_guest";
+    const storedCollections = localStorage.getItem(collectionsKey);
+    const collections: Collection[] = storedCollections
+      ? JSON.parse(storedCollections)
+      : [];
+
+    const updatedCollections = collections.map((col) =>
+      col.id === collectionId ? updatedCollection : col
+    );
+
+    localStorage.setItem(collectionsKey, JSON.stringify(updatedCollections));
+    setCollection(updatedCollection);
+
     const newAvailable = availablePapers.filter(
       (paper) => !paperIds.includes(paper.id)
     );
@@ -338,12 +419,10 @@ export default function CollectionDetailPage() {
     setSelectedPapers([]);
     setShowAddPapers(false);
 
-    // Sync to cloud after adding papers - FIXED: Better sync handling
     setTimeout(async () => {
       try {
         await syncToCloud();
         triggerDataChange();
-        console.log("✅ Papers added to collection and synced to cloud");
       } catch (error) {
         console.error("❌ Failed to sync collection update:", error);
       }
@@ -360,7 +439,6 @@ export default function CollectionDetailPage() {
       updatedAt: new Date().toISOString(),
     };
 
-    // Update collections in localStorage
     const collectionsKey = user
       ? `collections_${user.uid}`
       : "collections_guest";
@@ -376,18 +454,15 @@ export default function CollectionDetailPage() {
     localStorage.setItem(collectionsKey, JSON.stringify(updatedCollections));
     setCollection(updatedCollection);
 
-    // Add back to available papers
     const removedPaper = allPapers.find((paper) => paper.id === paperId);
     if (removedPaper) {
       setAvailablePapers([...availablePapers, removedPaper]);
     }
 
-    // Sync to cloud after removing paper - FIXED: Better sync handling
     setTimeout(async () => {
       try {
         await syncToCloud();
         triggerDataChange();
-        console.log("✅ Paper removed from collection and synced to cloud");
       } catch (error) {
         console.error("❌ Failed to sync collection update:", error);
       }
@@ -408,12 +483,10 @@ export default function CollectionDetailPage() {
     );
     localStorage.setItem(collectionsKey, JSON.stringify(updatedCollections));
 
-    // Sync to cloud after deleting collection - FIXED: Better sync handling
     setTimeout(async () => {
       try {
         await syncToCloud();
         triggerDataChange();
-        console.log("✅ Collection deleted and synced to cloud");
       } catch (error) {
         console.error("❌ Failed to sync collection deletion:", error);
       }
@@ -536,12 +609,6 @@ export default function CollectionDetailPage() {
                   <h1 className="text-3xl font-bold text-foreground">
                     {collection.name}
                   </h1>
-                  {user && (
-                    <Badge className={getSyncStatusColor()}>
-                      {getSyncIcon()}
-                      {getSyncStatusText()}
-                    </Badge>
-                  )}
                 </div>
                 <p className="text-muted-foreground">
                   {collection.description}
@@ -553,18 +620,7 @@ export default function CollectionDetailPage() {
                 )}
               </div>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={enhancedSyncFromCloud}
-                  disabled={isSyncing}
-                  className="flex items-center gap-2 border-border"
-                >
-                  <RefreshCw
-                    className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`}
-                  />
-                  Pull
-                </Button>
-
+                {/* Edit Collection Dialog */}
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="outline" className="border-border">
@@ -572,13 +628,165 @@ export default function CollectionDetailPage() {
                       Edit
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="bg-background border-border">
+                  <DialogContent className="bg-background border-border max-w-md">
                     <DialogHeader>
                       <DialogTitle className="text-foreground">
                         Edit Collection
                       </DialogTitle>
+                      <DialogDescription>
+                        Update your collection details. Changes will be saved
+                        automatically.
+                      </DialogDescription>
                     </DialogHeader>
-                    {/* Edit form would go here */}
+
+                    <div className="space-y-4 py-4">
+                      {/* Collection Name */}
+                      <div className="space-y-2">
+                        <label
+                          htmlFor="collection-name"
+                          className="text-sm font-medium text-foreground"
+                        >
+                          Collection Name
+                        </label>
+                        <Input
+                          id="collection-name"
+                          value={editFormData.name}
+                          onChange={(e) =>
+                            handleEditFormChange("name", e.target.value)
+                          }
+                          placeholder="Enter collection name"
+                          className="bg-background border-border"
+                        />
+                      </div>
+
+                      {/* Collection Description */}
+                      <div className="space-y-2">
+                        <label
+                          htmlFor="collection-description"
+                          className="text-sm font-medium text-foreground"
+                        >
+                          Description
+                        </label>
+                        <textarea
+                          id="collection-description"
+                          value={editFormData.description}
+                          onChange={(e) =>
+                            handleEditFormChange("description", e.target.value)
+                          }
+                          placeholder="Describe your collection..."
+                          rows={3}
+                          className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#49BBBD] focus:border-[#49BBBD] resize-none"
+                        />
+                      </div>
+
+                      {/* Collection Color */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-foreground">
+                          Color Theme
+                        </label>
+                        <div className="grid grid-cols-5 gap-2">
+                          {[
+                            "#49BBBD", // Teal
+                            "#3B82F6", // Blue
+                            "#8B5CF6", // Purple
+                            "#EC4899", // Pink
+                            "#F59E0B", // Amber
+                            "#EF4444", // Red
+                            "#10B981", // Emerald
+                            "#6366F1", // Indigo
+                            "#F97316", // Orange
+                            "#06B6D4", // Cyan
+                          ].map((color) => (
+                            <button
+                              key={color}
+                              type="button"
+                              className={`w-8 h-8 rounded-full border-2 transition-all ${
+                                editFormData.color === color
+                                  ? "border-foreground scale-110"
+                                  : "border-border hover:scale-105"
+                              }`}
+                              style={{ backgroundColor: color }}
+                              onClick={() => handleColorChange(color)}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Collection Tags */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-foreground">
+                          Tags
+                        </label>
+                        <div className="flex flex-wrap gap-2 p-3 min-h-12 bg-background border border-border rounded-md">
+                          {editFormData.tags.map((tag, index) => (
+                            <Badge
+                              key={index}
+                              variant="secondary"
+                              className="flex items-center gap-1 bg-secondary text-secondary-foreground"
+                            >
+                              {tag}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveTag(tag)}
+                                className="hover:text-destructive ml-1"
+                              >
+                                <X size={12} />
+                              </button>
+                            </Badge>
+                          ))}
+                          <div className="flex gap-2 flex-1 min-w-0">
+                            <Input
+                              value={newTag}
+                              onChange={(e) => setNewTag(e.target.value)}
+                              onKeyPress={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  handleAddTag();
+                                }
+                              }}
+                              placeholder="Add a tag..."
+                              className="flex-1 min-w-0 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-6"
+                            />
+                            <Button
+                              type="button"
+                              onClick={handleAddTag}
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 px-2"
+                              disabled={!newTag.trim()}
+                            >
+                              <Plus size={12} />
+                            </Button>
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Press Enter or click + to add a tag
+                        </p>
+                      </div>
+                    </div>
+
+                    <DialogFooter className="flex flex-col sm:flex-row gap-2">
+                      <div className="flex-1">
+                        {user && (
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Cloud className="w-3 h-3" />
+                            Changes will sync automatically
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" className="border-border">
+                          Cancel
+                        </Button>
+                        <Button
+                          className="bg-[#49BBBD] hover:bg-[#3aa8a9] text-white"
+                          onClick={handleSaveEdit}
+                        >
+                          <Check className="w-4 h-4 mr-2" />
+                          Save Changes
+                        </Button>
+                      </div>
+                    </DialogFooter>
                   </DialogContent>
                 </Dialog>
 
@@ -633,11 +841,6 @@ export default function CollectionDetailPage() {
                   <div className="text-sm font-medium text-foreground">
                     {new Date(collection.updatedAt).toLocaleDateString()}
                   </div>
-                  {lastSynced && (
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Synced: {new Date(lastSynced).toLocaleTimeString()}
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             </div>
@@ -965,7 +1168,6 @@ export default function CollectionDetailPage() {
                       <h4 className="font-semibold mb-3 text-foreground">
                         Journals Distribution
                       </h4>
-                      {/* Journal distribution chart would go here */}
                       <div className="text-muted-foreground text-sm">
                         Analytics visualization coming soon...
                       </div>
@@ -974,14 +1176,12 @@ export default function CollectionDetailPage() {
                       <h4 className="font-semibold mb-3 text-foreground">
                         Publication Years
                       </h4>
-                      {/* Year distribution chart would go here */}
                       <div className="text-muted-foreground text-sm">
                         Analytics visualization coming soon...
                       </div>
                     </div>
                   </div>
 
-                  {/* Sync Info */}
                   {lastSynced && (
                     <div className="mt-6 pt-4 border-t border-border/50">
                       <p className="text-xs text-muted-foreground text-center">

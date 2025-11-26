@@ -6,6 +6,7 @@ import { useSync } from "@/lib/hooks/useSync";
 import { getRecommendations } from "@/lib/api/openAlex";
 import { addXP } from "@/lib/gamification";
 import { motion } from "framer-motion";
+import { BottomNav } from "@/components/navbar";
 import {
   Brain,
   Sparkles,
@@ -456,7 +457,6 @@ export default function RecommendationPage() {
 
       <div className="relative z-10 min-h-screen">
         <div className="p-6 max-w-6xl mx-auto">
-          {/* Header */}
           <motion.header
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -476,56 +476,24 @@ export default function RecommendationPage() {
               reading history
             </p>
             {user && (
-              <div className="flex items-center justify-center gap-2 mt-2">
-                <Badge className={getSyncStatusColor()}>
-                  {getSyncIcon()}
-                  {getSyncStatusText()}
-                </Badge>
-                <p className="text-sm text-[#49BBBD]">
-                  Powered by AI • Earn 15 XP for generating recommendations
-                </p>
-              </div>
+              <p className="text-sm text-[#49BBBD] mt-2">
+                Powered by AI • Earn 15 XP for generating recommendations
+              </p>
             )}
-
-            {/* Sync Controls */}
-            <div className="flex justify-center gap-2 mt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={enhancedSyncFromCloud}
-                disabled={isSyncing}
-                className="flex items-center gap-2"
-              >
-                <RefreshCw
-                  className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`}
-                />
-                Pull Latest
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={enhancedSyncToCloud}
-                disabled={isSyncing}
-                className="flex items-center gap-2"
-              >
-                <Cloud className="w-4 h-4" />
-                Push Changes
-              </Button>
-            </div>
           </motion.header>
 
           {/* Main Content */}
-          <div className="grid lg:grid-cols-4 gap-6">
+          <div className="grid lg:grid-cols-5 gap-4">
             {/* Sidebar */}
-            <div className="lg:col-span-1 space-y-6">
-              <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+            <div className="lg:col-span-2 w-full space-y-6">
+              <Card className="bg-card/50 backdrop-blur-sm border-border/50 w-full">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <Target className="text-[#49BBBD]" size={20} />
                     Configuration
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="w-full">
                   <Tabs
                     value={activeTab}
                     onValueChange={setActiveTab}
@@ -536,9 +504,9 @@ export default function RecommendationPage() {
                       <TabsTrigger value="filters">Filters</TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="interests" className="space-y-4">
-                      <div className="space-y-3">
-                        <div className="flex gap-2">
+                    <TabsContent value="interests" className="space-y-4 w-full">
+                      <div className="space-y-3 w-full">
+                        <div className="flex gap-2 w-full">
                           <Input
                             type="text"
                             value={currentInterest}
@@ -547,14 +515,18 @@ export default function RecommendationPage() {
                               e.key === "Enter" && addInterest()
                             }
                             placeholder="e.g., deep learning"
-                            className="flex-1 bg-background border-border"
+                            className="flex-1 bg-background border-border min-w-0"
                           />
-                          <Button onClick={addInterest} size="icon">
+                          <Button
+                            onClick={addInterest}
+                            size="icon"
+                            className="shrink-0"
+                          >
                             <Plus size={16} />
                           </Button>
                         </div>
 
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2 w-full">
                           {userInterests.map((interest) => (
                             <Badge
                               key={interest}
@@ -574,13 +546,13 @@ export default function RecommendationPage() {
                       </div>
                     </TabsContent>
 
-                    <TabsContent value="filters" className="space-y-4">
-                      <div className="space-y-3">
-                        <div>
+                    <TabsContent value="filters" className="space-y-4 w-full">
+                      <div className="space-y-3 w-full">
+                        <div className="w-full">
                           <label className="text-sm font-medium mb-2 block text-foreground">
                             Publication Years
                           </label>
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 w-full">
                             <Input
                               type="number"
                               value={filters.yearsRange[0]}
@@ -593,7 +565,7 @@ export default function RecommendationPage() {
                                   ],
                                 })
                               }
-                              className="bg-background border-border"
+                              className="flex-1 bg-background border-border min-w-0"
                             />
                             <Input
                               type="number"
@@ -607,12 +579,12 @@ export default function RecommendationPage() {
                                   ],
                                 })
                               }
-                              className="bg-background border-border"
+                              className="flex-1 bg-background border-border min-w-0"
                             />
                           </div>
                         </div>
 
-                        <div>
+                        <div className="w-full">
                           <label className="text-sm font-medium mb-2 block text-foreground">
                             Number of Results
                           </label>
@@ -625,7 +597,7 @@ export default function RecommendationPage() {
                               })
                             }
                           >
-                            <SelectTrigger className="bg-background border-border">
+                            <SelectTrigger className="w-full bg-background border-border">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -640,12 +612,12 @@ export default function RecommendationPage() {
                     </TabsContent>
                   </Tabs>
 
-                  <Separator className="my-4 bg-border" />
+                  <Separator className="my-4 bg-border w-full" />
 
                   <Button
                     onClick={generateRecommendations}
                     disabled={loading || userInterests.length === 0}
-                    className="w-full bg-[#49BBBD] hover:bg-[#3aa8a9] text-white"
+                    className="w-full bg-[#49BBBD] hover:bg-[#3aa8a9] text-white px-4 py-2.5 text-base"
                     size="lg"
                   >
                     {loading ? (
@@ -665,20 +637,20 @@ export default function RecommendationPage() {
 
               {/* Stats Card */}
               {recommendations.length > 0 && (
-                <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+                <Card className="bg-card/50 backdrop-blur-sm border-border/50 w-full">
                   <CardHeader>
                     <CardTitle className="text-lg text-foreground">
                       Recommendation Stats
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="flex justify-between">
+                  <CardContent className="space-y-2 w-full">
+                    <div className="flex justify-between w-full">
                       <span className="text-sm text-muted-foreground">
                         Total Results
                       </span>
                       <Badge variant="outline">{recommendations.length}</Badge>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between w-full">
                       <span className="text-sm text-muted-foreground">
                         Year Range
                       </span>
@@ -686,7 +658,7 @@ export default function RecommendationPage() {
                         {filters.yearsRange[0]} - {filters.yearsRange[1]}
                       </Badge>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between w-full">
                       <span className="text-sm text-muted-foreground">
                         In Range
                       </span>
@@ -700,7 +672,7 @@ export default function RecommendationPage() {
                         }
                       </Badge>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between w-full">
                       <span className="text-sm text-muted-foreground">
                         User Interests
                       </span>
@@ -921,11 +893,12 @@ export default function RecommendationPage() {
                           Add your research interests and let AI find the
                           perfect papers for you.
                         </CardDescription>
-                        <div className="text-sm text-muted-foreground space-y-1 text-left">
-                          <p>✨ Based on your saved papers</p>
-                          <p>🎯 Tailored to your interests</p>
-                          <p>📚 Updated as you read more</p>
-                          <p>☁️ Syncs across devices</p>
+                        <div className="text-sm text-muted-foreground space-y-1 text-center">
+                          <p>
+                            {" "}
+                            Based on your saved papers • Tailored to your
+                            interests
+                          </p>
                         </div>
                       </CardContent>
                     </Card>
@@ -961,6 +934,7 @@ export default function RecommendationPage() {
           </div>
         </div>
       </div>
+      <BottomNav />
     </div>
   );
 }

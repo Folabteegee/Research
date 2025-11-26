@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useSync } from "@/lib/hooks/useSync";
 import { motion } from "framer-motion";
+import { BottomNav } from "@/components/navbar";
 import {
   Folder,
   Plus,
@@ -695,10 +696,6 @@ export default function CollectionsPage() {
                 </p>
                 {user && (
                   <div className="flex items-center gap-2 mt-1">
-                    <Badge className={getSyncStatusColor()}>
-                      {getSyncIcon()}
-                      {getSyncStatusText()}
-                    </Badge>
                     <p className="text-sm text-[#49BBBD]">
                       Auto-sync enabled across devices
                     </p>
@@ -707,19 +704,6 @@ export default function CollectionsPage() {
               </div>
 
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={enhancedSyncFromCloud}
-                  disabled={isSyncing}
-                  className="flex items-center gap-2"
-                  title="Pull latest data from cloud"
-                >
-                  <RefreshCw
-                    className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`}
-                  />
-                  Pull
-                </Button>
-
                 <Dialog
                   open={showCreateDialog}
                   onOpenChange={setShowCreateDialog}
@@ -1085,6 +1069,7 @@ export default function CollectionsPage() {
           </Tabs>
         </div>
       </div>
+      <BottomNav />
     </div>
   );
 }

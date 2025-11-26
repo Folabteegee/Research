@@ -2,12 +2,14 @@
 import { useEffect, useState } from "react";
 import { useApi } from "@/context/ApiContext";
 import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 import {
   addXP,
   unlockAchievement,
   checkSavedAchievements,
 } from "@/lib/gamification";
 import { motion } from "framer-motion";
+import { BottomNav } from "@/components/navbar";
 import {
   Search,
   BookOpen,
@@ -39,6 +41,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function ExplorePage() {
   const { papers, fetchPapers } = useApi();
   const { user } = useAuth();
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeTopic, setActiveTopic] = useState("");
@@ -172,7 +175,18 @@ export default function ExplorePage() {
     }
   };
 
-  const handleReadFull = (paper: any) => {
+  const handleNavigate = (paper: any) => {
+    // Extract paper ID from the OpenAlex ID format (usually a URL)
+    const paperId = paper.id?.split("/").pop();
+    if (paperId) {
+      router.push(`/paper/${paperId}`);
+    } else {
+      console.error("Could not extract paper ID from:", paper.id);
+    }
+  };
+
+  const handleReadFull = (paper: any, e: React.MouseEvent) => {
+    e.stopPropagation();
     const openAccessUrl = paper.open_access?.url;
     const doiUrl = paper.doi ? `https://doi.org/${paper.doi}` : null;
 
@@ -211,7 +225,8 @@ export default function ExplorePage() {
     }
   };
 
-  const handleSave = (paper: any) => {
+  const handleSave = (paper: any, e: React.MouseEvent) => {
+    e.stopPropagation();
     const userLibraryKey = getUserLibraryKey();
     const stored = localStorage.getItem(userLibraryKey);
     const current = stored ? JSON.parse(stored) : [];
@@ -567,7 +582,10 @@ export default function ExplorePage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 * index }}
                   >
-                    <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300 cursor-pointer group hover:border-[#49BBBD]/30">
+                    <Card
+                      className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300 cursor-pointer group hover:border-[#49BBBD]/30"
+                      onClick={() => handleNavigate(paper)}
+                    >
                       <CardContent className="p-6">
                         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                           {/* Paper Info */}
@@ -639,10 +657,7 @@ export default function ExplorePage() {
                           {/* Action Buttons */}
                           <div className="flex lg:flex-col gap-2 lg:gap-3">
                             <Button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleReadFull(paper);
-                              }}
+                              onClick={(e) => handleReadFull(paper, e)}
                               className="bg-[#49BBBD] hover:bg-[#3aa8a9] text-white shadow-sm hover:shadow-md"
                               size="sm"
                             >
@@ -650,10 +665,7 @@ export default function ExplorePage() {
                               Read +10 XP
                             </Button>
                             <Button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleSave(paper);
-                              }}
+                              onClick={(e) => handleSave(paper, e)}
                               variant="outline"
                               size="sm"
                               className="border-border hover:border-[#49BBBD] hover:bg-[#49BBBD]/5"
@@ -715,6 +727,7 @@ export default function ExplorePage() {
           )}
         </div>
       </div>
+      <BottomNav />
     </div>
   );
 }

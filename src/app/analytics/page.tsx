@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useSync } from "@/lib/hooks/useSync";
 import { motion } from "framer-motion";
+import { BottomNav } from "@/components/navbar";
 import {
   BarChart,
   Bar,
@@ -1070,6 +1071,7 @@ export default function AnalyticsPage() {
           </motion.section>
         </div>
       </div>
+      <BottomNav />
     </div>
   );
 }
