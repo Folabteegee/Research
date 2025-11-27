@@ -22,7 +22,6 @@ export function BottomNav() {
     { icon: BookOpen, label: "Library", href: "/library" },
     { icon: Library, label: "Collections", href: "/collections" },
     { icon: Brain, label: "AI", href: "/recommendations" },
-    { icon: TrendingUp, label: "Explore", href: "/explore" },
   ];
 
   return (

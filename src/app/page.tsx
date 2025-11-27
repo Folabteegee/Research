@@ -2,14 +2,17 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import {
   BookOpen,
   Search,
   Library,
   Brain,
   ArrowRight,
-  GraduationCap,
+  Share2,
+  Sparkles,
   Menu,
+  Trophy,
   X,
   Github,
   Twitter,
@@ -24,6 +27,7 @@ import {
   Rocket,
   Target,
   TrendingUp,
+  Instagram,
 } from "lucide-react";
 
 // Use Framer Motion's built-in Variants type instead of custom interfaces
@@ -155,22 +159,24 @@ export default function Homepage() {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className={`fixed top-0 left-0 w-full rounded-b-2xl bg-white/95 backdrop-blur-md p-4 md:p-8 flex justify-between items-center shadow-2xl z-50 transition-all duration-300 ${
-          isScrolled ? "py-3 md:py-6" : "py-4 md:py-8"
+        className={`fixed top-0 left-0 w-full rounded-b-2xl bg-white backdrop-blur-md px-6 md:px-8 py-4 flex justify-between items-center shadow-xl z-50 transition-all duration-300 ${
+          isScrolled ? "py-3" : "py-4"
         }`}
       >
         <motion.div
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="text-2xl md:text-3xl font-extrabold text-black flex items-center gap-2"
+          className="flex items-center gap-3"
         >
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          >
-            <Rocket className="text-[#49BBBD]" size={28} />
-          </motion.div>
-          GURUSEARCH
+          <div className="relative flex-shrink-0">
+            <Image
+              src="/images/gurulogo5.jpg"
+              alt="guru Logo"
+              width={100}
+              height={100}
+              className="w-20 h-20 md:w-24 md:h-24 object-contain"
+            />
+          </div>
         </motion.div>
 
         {/* Desktop Navigation */}
@@ -214,7 +220,7 @@ export default function Homepage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="absolute top-full left-0 w-full bg-white/95 backdrop-blur-md shadow-2xl rounded-b-2xl p-6 md:hidden"
+            className="absolute top-full left-0 w-full bg-white/95 backdrop-blur-md shadow-xl rounded-b-2xl p-6 md:hidden"
           >
             <div className="flex flex-col gap-4">
               <Link
@@ -251,7 +257,7 @@ export default function Homepage() {
         initial="hidden"
         animate="visible"
         variants={containerVariants}
-        className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-20 md:pt-32 bg-cover bg-center"
+        className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-20 md:pt-32 mt-12 bg-cover bg-center"
         style={{
           backgroundImage:
             "url('https://images.unsplash.com/photo-1516979187457-637abb4f9353?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')",
@@ -289,7 +295,7 @@ export default function Homepage() {
               whileHover={{ scale: 1.02 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              GURUSEARCH
+              GURU<span className="text-blue-600">SEARCH</span>
             </motion.div>
 
             <motion.p
@@ -298,7 +304,7 @@ export default function Homepage() {
             >
               Revolutionize Your{" "}
               <motion.span
-                className="text-blue-300 font-extrabold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent"
+                className="text-blue-500 font-extrabold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent"
                 animate={{
                   backgroundPosition: ["0%", "100%", "0%"],
                 }}
@@ -320,8 +326,8 @@ export default function Homepage() {
               variants={itemVariants}
               className="text-lg sm:text-xl text-gray-200 max-w-3xl mx-auto leading-relaxed mb-8"
             >
-              Join thousands of researchers, students, and academics who are
-              <span className="font-semibold text-cyan-300">
+              Join researchers, students, and academics who are
+              <span className="font-semibold text-cyan-700">
                 {" "}
                 accelerating their discoveries
               </span>{" "}
@@ -342,14 +348,14 @@ export default function Homepage() {
                 icon: <BookOpen className="text-white" size={20} />,
               },
               {
-                number: "5K+",
-                label: "Library",
-                icon: <Users className="text-white" size={20} />,
+                number: "1M+",
+                label: "Citations Mapped",
+                icon: <Share2 className="text-white" size={20} />,
               },
               {
-                number: "50+",
-                label: "Collections",
-                icon: <GraduationCap className="text-white" size={20} />,
+                number: "500+",
+                label: "Explore Papers",
+                icon: <Sparkles className="text-white" size={20} />,
               },
               {
                 number: "99.9%",
@@ -431,7 +437,7 @@ export default function Homepage() {
           {/* Trust badges with pulse animation */}
           <motion.div
             variants={itemVariants}
-            className="mt-12 flex flex-wrap justify-center items-center gap-8 opacity-80"
+            className="mt-12 mb-8 flex flex-wrap justify-center items-center gap-8 opacity-80"
           >
             {[
               { icon: <Shield size={20} />, text: "Secure & Private" },
@@ -529,31 +535,31 @@ export default function Homepage() {
                 </motion.div>
               </h3>
               <p className="text-sm sm:text-base font-normal text-gray-700 leading-relaxed">
-                Maintain a personal library with collections, tags, and notes.
-                Seamless import/export and smart suggestions keep your library
-                structured for efficient retrieval.
+                Maintain a personal library with collections and tags. Seamless
+                import/export and smart suggestions keep your library structured
+                for efficient retrieval.
               </p>
             </motion.div>
 
-            {/* Analyze Feature */}
+            {/* Gamification Feature */}
             <motion.div
               variants={featureVariants}
               whileHover={{ y: -5, scale: 1.02 }}
               className="p-6 bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 group cursor-pointer"
             >
               <h3 className="text-2xl sm:text-3xl text-[#49BBBD] font-bold mb-4 flex items-center gap-3">
-                Analyze
+                Gamification
                 <motion.div
                   whileHover={{ scale: 1.2 }}
                   transition={{ type: "spring", stiffness: 300 }}
                 >
-                  <Search size={28} />
+                  <Trophy size={28} />
                 </motion.div>
               </h3>
               <p className="text-sm sm:text-base font-normal text-gray-700 leading-relaxed">
-                Extract key metrics, citation trends, and co‑authorship
-                networks. Built‑in visualizations and summaries help you spot
-                gaps and emerging topics.
+                Earn badges, level up your research skills, and track progress
+                with fun challenges. Stay motivated with achievements and
+                milestones.
               </p>
             </motion.div>
 
@@ -573,8 +579,8 @@ export default function Homepage() {
                 </motion.div>
               </h3>
               <p className="text-sm sm:text-base font-normal text-gray-700 leading-relaxed">
-                Smart reading tools provide highlights, AI-generated summaries,
-                and inline annotations so you can consume literature faster and
+                Smart reading tools provide highlights, AI-generated papers and
+                inline annotations so you can consume literature faster and
                 capture insights directly in your notes.
               </p>
             </motion.div>
@@ -617,8 +623,8 @@ export default function Homepage() {
             variants={itemVariants}
             className="text-xl text-blue-100 mb-8 md:mb-12 max-w-2xl mx-auto"
           >
-            Join researchers from top institutions worldwide who are already
-            accelerating their discoveries with GURUSEARCH
+            Join researchers worldwide who are already accelerating their
+            discoveries with GURUSEARCH
           </motion.p>
 
           <motion.div
@@ -644,7 +650,7 @@ export default function Homepage() {
               </motion.button>
             </Link>
 
-            <Link href="#features">
+            <Link href="/features">
               <motion.button
                 className="group bg-transparent border-2 border-white text-white font-semibold px-8 md:px-12 py-4 md:py-5 rounded-full hover:bg-white/10 transition-all duration-300 flex items-center gap-3"
                 whileHover={{ scale: 1.05, y: -2 }}
@@ -688,7 +694,7 @@ export default function Homepage() {
               <motion.ul className="space-y-4 text-gray-700 mb-8">
                 {[
                   "Surface high-impact literature across all disciplines with AI-powered recommendations",
-                  "Streamline your workflow with intelligent organization and collaboration tools",
+                  "Streamline your workflow with intelligent organization and tools",
                   "Accelerate discoveries with AI-powered insights and visualization tools",
                 ].map((item, index) => (
                   <motion.li
@@ -748,7 +754,7 @@ export default function Homepage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
           <motion.div
             variants={staggerVariants}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 md:gap-12"
           >
             {/* Brand / About */}
             <motion.div variants={itemVariants}>
@@ -758,7 +764,15 @@ export default function Homepage() {
                   transition={{ duration: 0.6 }}
                   className="bg-white/10 p-2 rounded-md"
                 >
-                  <GraduationCap className="text-cyan-300" size={24} />
+                  <div className="relative flex-shrink-0">
+                    <Image
+                      src="/images/gurulogo5.jpg"
+                      alt="guru Logo"
+                      width={100}
+                      height={100}
+                      className="w-20 h-20 md:w-24 md:h-24 object-contain"
+                    />
+                  </div>
                 </motion.div>
                 <div>
                   <div className="text-2xl font-extrabold text-white">
@@ -772,23 +786,27 @@ export default function Homepage() {
 
               <p className="text-sm text-slate-300 leading-relaxed mb-6">
                 A research companion app designed to help students and
-                researchers discover, organize, and summarize scholarly
-                literature efficiently.
+                researchers discover, organize, and store scholarly literature
+                efficiently.
               </p>
 
               <div className="flex items-center gap-4">
                 {[
                   {
                     icon: <Github size={20} />,
-                    href: "https://github.com/taiwoafolabi",
+                    href: "https://github.com/folabteegee",
                   },
                   {
                     icon: <Twitter size={20} />,
-                    href: "https://twitter.com/taiwoafolabi",
+                    href: "https://x.com/afolabi_ta578?t=9Wp2w1ISKya5NA8vsnPkmA&s=09",
                   },
                   {
                     icon: <Linkedin size={20} />,
-                    href: "https://linkedin.com/in/taiwoafolabi",
+                    href: "https://www.linkedin.com/in/taiwo-afolabi-b5b827227",
+                  },
+                  {
+                    icon: <Instagram size={20} />,
+                    href: "https://www.instagram.com/__taiwoafolabi?igsh=MWJ5OHQ3eTVud3d6Zw==",
                   },
                 ].map((social, index) => (
                   <motion.a
@@ -805,46 +823,6 @@ export default function Homepage() {
                   </motion.a>
                 ))}
               </div>
-            </motion.div>
-
-            {/* Quick Links */}
-            <motion.div variants={itemVariants}>
-              <h4 className="text-white font-semibold mb-4 text-lg">Product</h4>
-              <ul className="space-y-3 text-sm text-slate-300">
-                {["Discover", "Organize", "Analyze", "Read & Summarize"].map(
-                  (link) => (
-                    <motion.li key={link} whileHover={{ x: 5 }}>
-                      <a
-                        href={`#${link.toLowerCase().replace(" & ", "-")}`}
-                        className="hover:text-white transition-colors duration-300"
-                      >
-                        {link}
-                      </a>
-                    </motion.li>
-                  )
-                )}
-              </ul>
-            </motion.div>
-
-            {/* Resources */}
-            <motion.div variants={itemVariants}>
-              <h4 className="text-white font-semibold mb-4 text-lg">
-                Resources
-              </h4>
-              <ul className="space-y-3 text-sm text-slate-300">
-                {["Documentation", "Tutorials", "Support", "Blog"].map(
-                  (link) => (
-                    <motion.li key={link} whileHover={{ x: 5 }}>
-                      <a
-                        href={`#${link.toLowerCase()}`}
-                        className="hover:text-white transition-colors duration-300"
-                      >
-                        {link}
-                      </a>
-                    </motion.li>
-                  )
-                )}
-              </ul>
             </motion.div>
 
             {/* Contact & Newsletter */}
@@ -901,10 +879,26 @@ export default function Homepage() {
             </div>
 
             <div className="flex items-center gap-6">
-              {["Terms", "Privacy", "Contact"].map((link) => (
+              {["Portfolio", "LinkedIn", "GitHub"].map((link) => (
                 <motion.a
                   key={link}
-                  href={`#${link.toLowerCase()}`}
+                  href={
+                    link === "GitHub"
+                      ? "https://github.com/folabteegee"
+                      : link === "Portfolio"
+                      ? "https://taiwoafolabi.netlify.app"
+                      : "https://www.linkedin.com/in/taiwo-afolabi-b5b827227"
+                  }
+                  target={
+                    link === "GitHub" || link === "Portfolio"
+                      ? "_blank"
+                      : "_self"
+                  }
+                  rel={
+                    link === "GitHub" || link === "Portfolio"
+                      ? "noopener noreferrer"
+                      : ""
+                  }
                   className="hover:text-white transition-colors duration-300"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}

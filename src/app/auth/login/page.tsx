@@ -101,7 +101,7 @@ export default function LoginPage() {
                 <Brain className="text-white" size={32} />
               </div>
             </div>
-            <h1 className="text-4xl font-bold mb-4">Research Companion</h1>
+            <h1 className="text-4xl font-bold mb-4">Gurusearch</h1>
             <p className="text-white/90 text-lg leading-relaxed">
               Welcome back! Continue your research journey with intelligent
               tools and seamless organization.
@@ -125,9 +125,7 @@ export default function LoginPage() {
                 <Brain className="text-white" size={32} />
               </div>
             </div>
-            <h2 className="text-3xl font-bold text-gray-900">
-              Research Companion
-            </h2>
+            <h2 className="text-3xl font-bold text-gray-900">Gurusearch</h2>
             <p className="text-gray-600 mt-2">Welcome back to your research</p>
           </div>
 
