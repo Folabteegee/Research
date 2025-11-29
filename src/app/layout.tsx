@@ -7,9 +7,9 @@ import { ApiProvider } from "@/context/ApiContext";
 import { SyncInitializer } from "@/components/SyncInitializer";
 
 export const metadata = {
-  title: "Research Guru",
+  title: "Gurusearch",
   description:
-    "A modern academic research companion powered by Zotero and OpenAlex.",
+    "Revolutionize Your Academic Journey with AI-Powered Research Excellence",
 };
 
 export default function RootLayout({

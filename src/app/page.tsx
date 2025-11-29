@@ -212,7 +212,11 @@ export default function Homepage() {
           whileTap={{ scale: 0.9 }}
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >
-          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          {isMobileMenuOpen ? (
+            <X size={24} className="text-black" />
+          ) : (
+            <Menu size={24} className="text-black" />
+          )}
         </motion.button>
 
         {/* Mobile Menu */}

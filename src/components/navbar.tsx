@@ -26,8 +26,8 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-transparent">
-      <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 rounded-2xl shadow-2xl mx-auto max-w-2xl">
-        <div className="flex items-center justify-between p-2">
+      <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 rounded-2xl shadow-2xl mx-auto w-full max-w-md">
+        <div className="flex items-center justify-between p-2 gap-1">
           {navItems.map((item, index) => {
             const isActive = pathname === item.href;
             return (
@@ -36,7 +36,7 @@ export function BottomNav() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="flex-1"
+                className="flex-1 min-w-0"
               >
                 <Link href={item.href} className="block">
                   <motion.div
@@ -51,14 +51,16 @@ export function BottomNav() {
                       }
                     `}
                   >
-                    <item.icon className="h-6 w-6 mb-1" />
-                    <span className="text-xs font-medium">{item.label}</span>
+                    <item.icon className="h-5 w-5 mb-1" />
+                    <span className="text-xs font-medium leading-tight whitespace-nowrap">
+                      {item.label}
+                    </span>
 
                     {/* Active indicator */}
                     {isActive && (
                       <motion.div
                         layoutId="activeNav"
-                        className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full shadow-sm"
+                        className="absolute -top-1 -right-1 w-2 h-2 bg-white rounded-full shadow-sm"
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{
