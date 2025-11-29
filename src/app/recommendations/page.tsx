@@ -7,6 +7,7 @@ import { getRecommendations } from "@/lib/api/openAlex";
 import { addXP } from "@/lib/gamification";
 import { motion } from "framer-motion";
 import { BottomNav } from "@/components/navbar";
+import { useToast } from "@/components/ui/toast";
 import {
   Brain,
   Sparkles,
@@ -88,6 +89,7 @@ export default function RecommendationPage() {
     syncError,
     triggerDataChange,
   } = useSync();
+  const { showToast, ToastContainer } = useToast();
 
   const userId = user?.uid;
 
@@ -98,12 +100,15 @@ export default function RecommendationPage() {
       const success = await syncToCloud();
       if (success) {
         setSyncStatus("success");
+        showToast("✅ Data synced to cloud successfully!", "success");
       } else {
         setSyncStatus("error");
+        showToast("❌ Failed to sync data to cloud", "error");
       }
       setTimeout(() => setSyncStatus("idle"), 2000);
     } catch (error) {
       setSyncStatus("error");
+      showToast("❌ Sync error occurred", "error");
       setTimeout(() => setSyncStatus("idle"), 3000);
     }
   };
@@ -115,12 +120,15 @@ export default function RecommendationPage() {
       if (success) {
         setSyncStatus("success");
         loadUserPreferences(); // Reload preferences after sync
+        showToast("✅ Data synced from cloud successfully!", "success");
       } else {
         setSyncStatus("error");
+        showToast("❌ Failed to sync data from cloud", "error");
       }
       setTimeout(() => setSyncStatus("idle"), 2000);
     } catch (error) {
       setSyncStatus("error");
+      showToast("❌ Sync error occurred", "error");
       setTimeout(() => setSyncStatus("idle"), 3000);
     }
   };
@@ -279,6 +287,9 @@ export default function RecommendationPage() {
       setUserInterests(updatedInterests);
       setCurrentInterest("");
 
+      // Show toast for added interest
+      showToast(`✅ Added "${currentInterest.trim()}" to interests`, "success");
+
       // Sync interests to cloud - FIXED: Added sync for preferences
       setTimeout(async () => {
         try {
@@ -287,6 +298,7 @@ export default function RecommendationPage() {
           console.log("✅ User interests synced to cloud");
         } catch (syncError) {
           console.error("❌ Failed to sync user interests:", syncError);
+          showToast("❌ Failed to sync interests to cloud", "error");
         }
       }, 1000);
     }
@@ -296,6 +308,9 @@ export default function RecommendationPage() {
     const updatedInterests = userInterests.filter((i) => i !== interest);
     setUserInterests(updatedInterests);
 
+    // Show toast for removed interest
+    showToast(`✅ Removed "${interest}" from interests`, "success");
+
     // Sync interests removal to cloud
     setTimeout(async () => {
       try {
@@ -304,6 +319,7 @@ export default function RecommendationPage() {
         console.log("✅ User interests update synced to cloud");
       } catch (syncError) {
         console.error("❌ Failed to sync user interests removal:", syncError);
+        showToast("❌ Failed to sync interests update", "error");
       }
     }, 1000);
   };
@@ -311,6 +327,7 @@ export default function RecommendationPage() {
   const generateRecommendations = async () => {
     if (userInterests.length === 0) {
       setError("Please add at least one research interest");
+      showToast("❌ Please add at least one research interest", "error");
       return;
     }
 
@@ -340,10 +357,19 @@ export default function RecommendationPage() {
           "No recommendations found right now. This might be due to API limits. Try again in a moment or try different interests."
         );
         setRecommendations([]);
+        showToast(
+          "❌ No recommendations found. Try different interests.",
+          "error"
+        );
       } else {
         setRecommendations(recommendations);
         const newXP = addXP(15, userId);
         console.log(`+15 XP for AI recommendations. Total XP: ${newXP}`);
+
+        showToast(
+          `✅ Found ${recommendations.length} recommendations! +15 XP`,
+          "success"
+        );
 
         // Sync XP and recommendations activity to cloud
         setTimeout(async () => {
@@ -356,6 +382,7 @@ export default function RecommendationPage() {
               "❌ Failed to sync recommendations activity:",
               syncError
             );
+            showToast("❌ Failed to sync recommendations activity", "error");
           }
         }, 1000);
       }
@@ -365,6 +392,10 @@ export default function RecommendationPage() {
         "Service temporarily unavailable. Please try again in a few moments."
       );
       setRecommendations([]);
+      showToast(
+        "❌ Service temporarily unavailable. Please try again.",
+        "error"
+      );
     } finally {
       setLoading(false);
     }
@@ -378,7 +409,7 @@ export default function RecommendationPage() {
     const existing = stored ? JSON.parse(stored) : [];
 
     if (existing.find((p: any) => p.id === paper.id)) {
-      alert("Already saved to your library!");
+      showToast("📚 Already saved to your library!", "info");
       return;
     }
 
@@ -401,7 +432,12 @@ export default function RecommendationPage() {
 
     const updated = [...existing, newItem];
     localStorage.setItem(userLibraryKey, JSON.stringify(updated));
-    alert(`✅ Paper saved to your ${user ? "personal" : "guest"} library!`);
+
+    // Show toast notification instead of alert
+    showToast(
+      `✅ Paper saved to your ${user ? "personal" : "guest"} library! +10 XP`,
+      "success"
+    );
 
     // Add XP for saving
     const newXP = addXP(10, userId);
@@ -415,6 +451,7 @@ export default function RecommendationPage() {
         console.log("✅ Saved paper synced to cloud");
       } catch (syncError) {
         console.error("❌ Failed to sync saved paper:", syncError);
+        showToast("❌ Failed to sync saved paper to cloud", "error");
       }
     }, 500);
   };
@@ -431,6 +468,8 @@ export default function RecommendationPage() {
       const newXP = addXP(10, userId);
       console.log(`+10 XP for reading. Total XP: ${newXP}`);
 
+      showToast("📖 Opening paper... +10 XP", "success");
+
       // Sync reading activity to cloud
       setTimeout(async () => {
         try {
@@ -439,15 +478,19 @@ export default function RecommendationPage() {
           console.log("✅ Reading activity synced to cloud");
         } catch (syncError) {
           console.error("❌ Failed to sync reading activity:", syncError);
+          showToast("❌ Failed to sync reading activity", "error");
         }
       }, 500);
     } else {
-      alert("Full paper link not available for this item.");
+      showToast("❌ Full paper link not available for this item.", "info");
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-hidden">
+      {/* Toast Container */}
+      <ToastContainer />
+
       {/* Enhanced Background */}
       <div className="fixed inset-0">
         <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(73,187,189,0.03)_50%,transparent_75%)] bg-[length:20px_20px]"></div>

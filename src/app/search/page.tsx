@@ -7,6 +7,7 @@ import { useZotero } from "@/context/ZoteroContext";
 import { useAuth } from "@/context/AuthContext";
 import { useSync } from "@/lib/hooks/useSync";
 import { BottomNav } from "@/components/navbar";
+import { useToast } from "@/components/ui/toast";
 import {
   addXP,
   unlockAchievement,
@@ -55,6 +56,7 @@ export default function SearchPage() {
   const { library } = useZotero();
   const { user } = useAuth();
   const { syncToCloud, triggerDataChange } = useSync();
+  const { showToast, ToastContainer } = useToast();
 
   // Get user ID for gamification
   const userId = user?.uid;
@@ -221,7 +223,7 @@ export default function SearchPage() {
     const existing = stored ? JSON.parse(stored) : [];
 
     if (existing.find((p: any) => p.id === paper.id)) {
-      alert("Already saved to your library!");
+      showToast("Already saved to your library!", "info");
       return;
     }
 
@@ -244,7 +246,11 @@ export default function SearchPage() {
 
     const updated = [...existing, newItem];
     localStorage.setItem(userLibraryKey, JSON.stringify(updated));
-    alert(`✅ Paper saved to your ${user ? "personal" : "guest"} library!`);
+
+    // Show toast notification instead of alert
+    showToast(
+      `✅ Paper saved to your ${user ? "personal" : "guest"} library! +10 XP`
+    );
 
     // Add XP and check achievements with user ID
     const newXP = addXP(10, userId);
@@ -306,7 +312,7 @@ export default function SearchPage() {
       window.dispatchEvent(new Event("storage"));
       window.dispatchEvent(new Event("dataChanged"));
     } else {
-      alert("Full paper link not available for this item.");
+      showToast("Full paper link not available for this item.", "info");
     }
   };
 
@@ -371,6 +377,9 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-hidden">
+      {/* Toast Container */}
+      <ToastContainer />
+
       {/* Enhanced Background */}
       <div className="fixed inset-0">
         <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(73,187,189,0.03)_50%,transparent_75%)] bg-[length:20px_20px]"></div>

@@ -10,6 +10,7 @@ import {
 } from "@/lib/gamification";
 import { motion } from "framer-motion";
 import { BottomNav } from "@/components/navbar";
+import { useToast } from "@/components/ui/toast";
 import {
   Search,
   BookOpen,
@@ -42,6 +43,7 @@ export default function ExplorePage() {
   const { papers, fetchPapers } = useApi();
   const { user } = useAuth();
   const router = useRouter();
+  const { showToast, ToastContainer } = useToast();
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeTopic, setActiveTopic] = useState("");
@@ -142,8 +144,12 @@ export default function ExplorePage() {
       const newXP = addXP(5, userId);
       console.log(`+5 XP for exploring. Total XP: ${newXP}`);
 
+      showToast(`🔍 Exploring "${searchTopic}" +5 XP`, "success");
+
       // Trigger storage update for real-time sync
       window.dispatchEvent(new Event("storage"));
+    } catch (error) {
+      showToast("❌ Failed to fetch papers. Please try again.", "error");
     } finally {
       setLoading(false);
     }
@@ -168,8 +174,12 @@ export default function ExplorePage() {
       const newXP = addXP(5, userId);
       console.log(`+5 XP for searching. Total XP: ${newXP}`);
 
+      showToast(`🔍 Searching "${search}" +5 XP`, "success");
+
       // Trigger storage update for real-time sync
       window.dispatchEvent(new Event("storage"));
+    } catch (error) {
+      showToast("❌ Search failed. Please try again.", "error");
     } finally {
       setLoading(false);
     }
@@ -182,6 +192,7 @@ export default function ExplorePage() {
       router.push(`/paper/${paperId}`);
     } else {
       console.error("Could not extract paper ID from:", paper.id);
+      showToast("❌ Could not navigate to paper details", "error");
     }
   };
 
@@ -197,6 +208,8 @@ export default function ExplorePage() {
       const newXP = addXP(10, userId);
       console.log(`+10 XP for reading. Total XP: ${newXP}`);
 
+      showToast("📖 Opening paper... +10 XP", "success");
+
       // Track read count with user-specific key
       const readKey = userId ? `reads_${userId}` : "reads_guest";
       const readCount = parseInt(localStorage.getItem(readKey) || "0") + 1;
@@ -211,6 +224,8 @@ export default function ExplorePage() {
       const newXP = addXP(10, userId);
       console.log(`+10 XP for reading. Total XP: ${newXP}`);
 
+      showToast("📖 Opening paper via DOI... +10 XP", "success");
+
       // Track read count with user-specific key
       const readKey = userId ? `reads_${userId}` : "reads_guest";
       const readCount = parseInt(localStorage.getItem(readKey) || "0") + 1;
@@ -219,8 +234,9 @@ export default function ExplorePage() {
       // Force update achievements page
       window.dispatchEvent(new Event("storage"));
     } else {
-      alert(
-        "❌ This paper is not freely available. Try using Zotero or your institution's library."
+      showToast(
+        "❌ This paper is not freely available. Try using Zotero or your institution's library.",
+        "info"
       );
     }
   };
@@ -231,7 +247,10 @@ export default function ExplorePage() {
     const stored = localStorage.getItem(userLibraryKey);
     const current = stored ? JSON.parse(stored) : [];
     const exists = current.some((p: any) => p.id === paper.id);
-    if (exists) return alert("Already saved to your library!");
+    if (exists) {
+      showToast("📚 Already saved to your library!", "info");
+      return;
+    }
 
     const newList = [
       ...current,
@@ -254,10 +273,10 @@ export default function ExplorePage() {
     // Check saved papers achievements
     checkSavedAchievements(userId);
 
-    alert(
-      `✅ Paper saved to your ${
-        user ? "personal" : "guest"
-      } library! +10 XP earned!`
+    // Show toast notification instead of alert
+    showToast(
+      `✅ Paper saved to your ${user ? "personal" : "guest"} library! +10 XP`,
+      "success"
     );
 
     // Force update achievements page
@@ -266,6 +285,9 @@ export default function ExplorePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-hidden">
+      {/* Toast Container */}
+      <ToastContainer />
+
       {/* Enhanced Background */}
       <div className="fixed inset-0">
         <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(73,187,189,0.03)_50%,transparent_75%)] bg-[length:20px_20px]"></div>
