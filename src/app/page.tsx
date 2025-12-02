@@ -802,7 +802,7 @@ export default function Homepage() {
                   },
                   {
                     icon: <Twitter size={20} />,
-                    href: "https://x.com/afolabi_ta578?t=9Wp2w1ISKya5NA8vsnPkmA&s=09",
+                    href: "https://x.com/DevTaiwoo",
                   },
                   {
                     icon: <Linkedin size={20} />,
@@ -810,7 +810,7 @@ export default function Homepage() {
                   },
                   {
                     icon: <Instagram size={20} />,
-                    href: "https://www.instagram.com/__taiwoafolabi?igsh=MWJ5OHQ3eTVud3d6Zw==",
+                    href: "https://www.instagram.com/taye.abc",
                   },
                 ].map((social, index) => (
                   <motion.a
