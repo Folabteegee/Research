@@ -7,7 +7,7 @@ import { ApiProvider } from "@/context/ApiContext";
 import { SyncInitializer } from "@/components/SyncInitializer";
 
 export const metadata = {
-  title: "Gurusearch",
+  title: "Gurusearch - Groundbreaking Research in one Seamless Platform",
   description:
     "Revolutionize Your Academic Journey with AI-Powered Research Excellence",
 };
