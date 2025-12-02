@@ -783,7 +783,7 @@ export default function Homepage() {
                     GURUSEARCH
                   </div>
                   <div className="text-sm text-slate-300">
-                    Built by Taiwo Afolabi
+                    Built by Taiwo G. Afolabi
                   </div>
                 </div>
               </div>
@@ -879,7 +879,7 @@ export default function Homepage() {
           >
             <div className="mb-4 md:mb-0 flex items-center gap-2">
               <span>© {new Date().getFullYear()} GURUSEARCH.</span>
-              <span>Built with ❤️ by Taiwo Afolabi</span>
+              <span>Built with ❤️ by Taiwo G. Afolabi</span>
             </div>
 
             <div className="flex items-center gap-6">

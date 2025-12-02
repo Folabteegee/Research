@@ -644,6 +644,9 @@ export default function ProfilePage() {
                   <Button
                     variant="outline"
                     className="w-full justify-start border-border"
+                    onClick={() =>
+                      window.open("mailto:taiwoglory136@gmail.com")
+                    }
                   >
                     <Mail className="w-4 h-4 mr-2" />
                     Contact Support
@@ -651,6 +654,7 @@ export default function ProfilePage() {
                   <Button
                     variant="outline"
                     className="w-full justify-start border-border"
+                    onClick={() => window.location.replace("/settings")}
                   >
                     <Settings className="w-4 h-4 mr-2" />
                     App Settings

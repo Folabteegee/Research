@@ -357,7 +357,10 @@ export default function ExplorePage() {
               </Button>
             </div>
             <div className="text-center mt-4">
-              <Badge variant="outline" className="bg-card/50 backdrop-blur-sm">
+              <Badge
+                variant="outline"
+                className="bg-card/50 text-[#49DBBB] backdrop-blur-sm"
+              >
                 🔍 +5 XP for searching/exploring • 💾 +10 XP for saving • 📖 +10
                 XP for reading
               </Badge>

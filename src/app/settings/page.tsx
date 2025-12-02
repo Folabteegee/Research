@@ -452,14 +452,6 @@ export default function SettingsPage() {
               />
             </div>
 
-            <SettingToggle
-              label="Reading Mode"
-              description="Distraction-free reading experience"
-              enabled={readingMode}
-              onEnabledChange={setReadingMode}
-              settingKey="readingMode"
-            />
-
             <div className="py-3">
               <label className="font-medium text-foreground mb-2 block">
                 Font Size
@@ -485,28 +477,6 @@ export default function SettingsPage() {
           </div>
         </SettingSection>
 
-        {/* Rest of your settings sections remain the same... */}
-        {/* Notifications & Sounds */}
-        <SettingSection title="Notifications & Sounds" icon={Bell}>
-          <div className="space-y-2">
-            <SettingToggle
-              label="Notifications"
-              description="Receive updates and recommendations"
-              enabled={notifications}
-              onEnabledChange={setNotifications}
-              settingKey="notifications"
-            />
-
-            <SettingToggle
-              label="Sound Effects"
-              description="Play sounds for interactions"
-              enabled={soundEffects}
-              onEnabledChange={setSoundEffects}
-              settingKey="soundEffects"
-            />
-          </div>
-        </SettingSection>
-
         {/* Account & Integration */}
         <SettingSection title="Account & Integration" icon={User}>
           <div className="space-y-4">
@@ -529,7 +499,7 @@ export default function SettingsPage() {
 
             <div className="flex justify-between items-center p-4 bg-muted/50 rounded-xl">
               <div>
-                <p className="font-medium text-foreground">OpenAlex API</p>
+                <p className="font-medium text-foreground">OpenAlex</p>
                 <p className="text-sm text-muted-foreground">
                   Research paper database
                 </p>

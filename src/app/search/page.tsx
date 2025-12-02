@@ -506,10 +506,12 @@ export default function SearchPage() {
             )}
 
             <div className="text-center mt-4">
-              <Badge variant="outline" className="bg-card/50 backdrop-blur-sm">
+              <Badge
+                variant="outline"
+                className="bg-card/50 text-[#49DBBB] backdrop-blur-sm"
+              >
                 🔍 +5 XP for searching • 💾 +10 XP for saving • 📖 +10 XP for
                 reading
-                {user && " • ☁️ Auto-sync enabled"}
               </Badge>
             </div>
           </motion.form>
