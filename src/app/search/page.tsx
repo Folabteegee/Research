@@ -170,13 +170,26 @@ export default function SearchPage() {
     const resultsKey = userId
       ? `previousResults_${userId}`
       : "previousResults_guest";
-    const stored = sessionStorage.getItem(resultsKey); // Use sessionStorage instead
+    const stored = sessionStorage.getItem(resultsKey);
+
     if (stored) {
       try {
         const previousData = JSON.parse(stored);
         if (previousData.query && previousData.results) {
           setQuery(previousData.query);
-          setResults(previousData.results);
+
+          // Check if we have full results stored separately
+          const fullResultsKey = `${resultsKey}_full`;
+          const fullStored = sessionStorage.getItem(fullResultsKey);
+
+          if (fullStored) {
+            // Load the full results
+            const fullResults = JSON.parse(fullStored);
+            setResults(fullResults);
+          } else {
+            // If no full results, use the minimal ones
+            setResults(previousData.results);
+          }
         }
       } catch (error) {
         console.error("Error loading previous results:", error);
@@ -247,29 +260,30 @@ export default function SearchPage() {
     setError("");
     try {
       const data = await searchPapers(finalQuery);
-      setResults(data.results || []);
+      const fetchedResults = data.results || [];
+      setResults(fetchedResults);
       setQuery(finalQuery);
 
       // Save to recent searches
       saveRecentSearch(finalQuery);
 
-      // Save current results with minimal data
+      // Save current results with both minimal and full versions
       const resultsKey = userId
         ? `previousResults_${userId}`
         : "previousResults_guest";
 
       try {
         // Store minimal data to save space
-        const minimalResults = (data.results || [])
+        const minimalResults = fetchedResults
           .map((paper: any) => ({
             id: paper.id,
             title: paper.display_name?.substring(0, 100) || "Untitled",
             author: paper.authorships?.[0]?.author?.display_name || "Unknown",
             year: paper.publication_year,
           }))
-          .slice(0, 20); // Store only first 20 results
+          .slice(0, 20); // Store only first 20 minimal results
 
-        // Use sessionStorage to avoid localStorage quota issues
+        // Save minimal data to sessionStorage
         sessionStorage.setItem(
           resultsKey,
           JSON.stringify({
@@ -278,8 +292,15 @@ export default function SearchPage() {
             timestamp: Date.now(),
           })
         );
+
+        // Save FULL results to sessionStorage (limited to 50 to save space)
+        const fullResultsKey = `${resultsKey}_full`;
+        const fullResultsToSave = fetchedResults.slice(0, 50); // Save only first 50 full results
+        sessionStorage.setItem(
+          fullResultsKey,
+          JSON.stringify(fullResultsToSave)
+        );
       } catch (storageError: any) {
-        // If sessionStorage also fails, just continue without saving
         console.log("Could not save search results");
       }
 
@@ -292,7 +313,6 @@ export default function SearchPage() {
       try {
         localStorage.setItem(searchesKey, String(currentSearches + 1));
       } catch (error) {
-        // If can't save search count, just continue
         console.log("Could not save search count");
       }
 
@@ -314,7 +334,6 @@ export default function SearchPage() {
       // Trigger storage update for real-time sync
       window.dispatchEvent(new Event("storage"));
     } catch (err: any) {
-      // Show user-friendly error
       if (err.message && err.message.includes("quota")) {
         setError(
           "Storage is getting full. We cleared some temporary data. Please try again."
@@ -333,13 +352,15 @@ export default function SearchPage() {
   };
 
   const handleNavigate = (id: string) => {
-    // Save minimal data to sessionStorage
+    // Save full results to sessionStorage before navigating
     const resultsKey = userId
       ? `previousResults_${userId}`
       : "previousResults_guest";
+    const fullResultsKey = `${resultsKey}_full`;
 
     try {
-      const minimalResults = results.slice(0, 10).map((paper: any) => ({
+      // Save minimal data
+      const minimalResults = results.slice(0, 20).map((paper: any) => ({
         id: paper.id,
         title: paper.display_name?.substring(0, 100) || "Untitled",
         author: paper.authorships?.[0]?.author?.display_name || "Unknown",
@@ -354,6 +375,10 @@ export default function SearchPage() {
           timestamp: Date.now(),
         })
       );
+
+      // Save FULL results (limited to 50 to save space)
+      const fullResultsToSave = results.slice(0, 50);
+      sessionStorage.setItem(fullResultsKey, JSON.stringify(fullResultsToSave));
     } catch (error) {
       console.log("Could not save navigation data");
     }
@@ -367,7 +392,7 @@ export default function SearchPage() {
     const existing = stored ? JSON.parse(stored) : [];
 
     if (existing.find((p: any) => p.id === paper.id)) {
-      showToast("Already saved to your library!", "info");
+      showToast("Already saved to your library!");
       return;
     }
 
@@ -433,7 +458,7 @@ export default function SearchPage() {
         clearTemporaryData();
       } else {
         // Other error
-        showToast("❌ Could not save paper. Please try again.", "error");
+        showToast("❌ Could not save paper. Please try again.");
       }
       console.error("Error saving paper:", error);
     }
@@ -481,7 +506,7 @@ export default function SearchPage() {
       window.dispatchEvent(new Event("storage"));
       window.dispatchEvent(new Event("dataChanged"));
     } else {
-      showToast("Full paper link not available for this item.", "info");
+      showToast("Full paper link not available for this item.");
     }
   };
 
@@ -500,7 +525,6 @@ export default function SearchPage() {
             readPapers = parsed;
           }
         } catch (error) {
-          // If parsing fails, start with empty array
           console.log("Starting fresh reading tracking array");
         }
       }
@@ -532,12 +556,84 @@ export default function SearchPage() {
     }
   };
 
+  // Helper function to get display name safely
+  const getDisplayName = (paper: any): string => {
+    if (!paper) return "Untitled";
+
+    // Try different property names
+    return (
+      paper.display_name ||
+      paper.title ||
+      paper.displayName ||
+      paper.name ||
+      "Untitled"
+    );
+  };
+
+  // Helper function to get authors safely
+  const getAuthors = (paper: any): string => {
+    if (!paper) return "Unknown author";
+
+    // Try different property structures
+    if (paper.authorships && Array.isArray(paper.authorships)) {
+      const authorNames = paper.authorships
+        .map((a: any) => a.author?.display_name || a.author?.name)
+        .filter(Boolean);
+      return authorNames.join(", ") || "Unknown author";
+    }
+
+    if (paper.author) return paper.author;
+    if (paper.authors) return paper.authors;
+
+    return "Unknown author";
+  };
+
+  // Helper function to get year safely
+  const getYear = (paper: any): string | number => {
+    if (!paper) return "N/A";
+
+    return (
+      paper.publication_year || paper.year || paper.publicationYear || "N/A"
+    );
+  };
+
+  // Helper function to get journal safely
+  const getJournal = (paper: any): string => {
+    if (!paper) return "N/A";
+
+    return (
+      paper.host_venue?.display_name ||
+      paper.journal ||
+      paper.hostVenue?.displayName ||
+      "N/A"
+    );
+  };
+
+  // Helper function to get abstract safely
+  const getAbstract = (paper: any): string => {
+    if (!paper) return "";
+
+    return paper.abstract || "";
+  };
+
+  // Helper function to get citation count
+  const getCitationCount = (paper: any): number => {
+    if (!paper) return 0;
+
+    return (
+      paper.cited_by_count || paper.citation_count || paper.citedByCount || 0
+    );
+  };
+
   // Filter results based on active filter
   const filteredResults = results.filter((paper) => {
+    if (!paper) return false;
+
     if (activeFilter === "recent") {
-      return paper.publication_year >= 2020;
+      const year = getYear(paper);
+      return typeof year === "number" && year >= 2020;
     } else if (activeFilter === "highly-cited") {
-      return paper.cited_by_count > 100;
+      return getCitationCount(paper) > 100;
     }
     return true;
   });
@@ -823,14 +919,14 @@ export default function SearchPage() {
               <div className="grid gap-6">
                 {filteredResults.map((item, index) => (
                   <motion.div
-                    key={item.id}
+                    key={item?.id || index}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 * index }}
                   >
                     <Card
                       className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300 cursor-pointer group hover:border-[#49BBBD]/30"
-                      onClick={() => handleNavigate(item.id?.split("/").pop())}
+                      onClick={() => handleNavigate(item?.id?.split("/").pop())}
                     >
                       <CardContent className="p-6">
                         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
@@ -838,9 +934,9 @@ export default function SearchPage() {
                           <div className="flex-1">
                             <div className="flex items-start justify-between mb-3">
                               <CardTitle className="text-xl group-hover:text-[#49BBBD] transition-colors duration-300 pr-4">
-                                {item.display_name}
+                                {getDisplayName(item)}
                               </CardTitle>
-                              {item.cited_by_count > 100 && (
+                              {getCitationCount(item) > 100 && (
                                 <Badge
                                   variant="outline"
                                   className="bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800"
@@ -851,51 +947,43 @@ export default function SearchPage() {
                             </div>
 
                             {/* Authors */}
-                            {item.authorships?.length > 0 && (
-                              <div className="flex items-center gap-2 mb-3">
-                                <User
-                                  size={16}
-                                  className="text-muted-foreground"
-                                />
-                                <span className="text-muted-foreground text-sm">
-                                  {item.authorships
-                                    .map((a: any) => a.author.display_name)
-                                    .join(", ")}
-                                </span>
-                              </div>
-                            )}
+                            <div className="flex items-center gap-2 mb-3">
+                              <User
+                                size={16}
+                                className="text-muted-foreground"
+                              />
+                              <span className="text-muted-foreground text-sm">
+                                {getAuthors(item)}
+                              </span>
+                            </div>
 
                             {/* Journal and Year */}
                             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
-                              {item.host_venue?.display_name && (
-                                <div className="flex items-center gap-1">
-                                  <Building size={14} />
-                                  <span>{item.host_venue.display_name}</span>
-                                </div>
-                              )}
-                              {item.publication_year && (
-                                <Badge
-                                  variant="outline"
-                                  className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800"
-                                >
-                                  <Calendar size={12} className="mr-1" />
-                                  {item.publication_year}
-                                </Badge>
-                              )}
-                              {item.cited_by_count > 0 && (
+                              <div className="flex items-center gap-1">
+                                <Building size={14} />
+                                <span>{getJournal(item)}</span>
+                              </div>
+                              <Badge
+                                variant="outline"
+                                className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800"
+                              >
+                                <Calendar size={12} className="mr-1" />
+                                {getYear(item)}
+                              </Badge>
+                              {getCitationCount(item) > 0 && (
                                 <Badge
                                   variant="outline"
                                   className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800"
                                 >
-                                  {item.cited_by_count} citations
+                                  {getCitationCount(item)} citations
                                 </Badge>
                               )}
                             </div>
 
                             {/* Abstract Preview */}
-                            {item.abstract && (
+                            {getAbstract(item) && (
                               <CardDescription className="leading-relaxed line-clamp-2">
-                                {item.abstract}
+                                {getAbstract(item)}
                               </CardDescription>
                             )}
                           </div>
