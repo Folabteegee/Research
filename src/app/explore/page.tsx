@@ -344,7 +344,7 @@ export default function ExplorePage() {
               />
               <Input
                 type="text"
-                placeholder="Search for specific papers, authors, or research topics..."
+                placeholder="Search for specific papers or research topics..."
                 className="w-full pl-12 pr-32 py-6 bg-card border-2 border-border rounded-2xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#49BBBD] focus:border-[#49BBBD] transition-all duration-300 shadow-sm text-lg"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}

@@ -70,7 +70,85 @@ export default function SearchPage() {
   useEffect(() => {
     loadRecentSearches();
     loadPreviousResults();
+
+    // Run storage cleanup on mount
+    cleanupStorage();
+
+    // Set up periodic cleanup every 5 minutes
+    const interval = setInterval(cleanupStorage, 5 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
+
+  // Helper function to clear temporary data
+  const clearTemporaryData = () => {
+    try {
+      // Clear temporary search data
+      const tempKeys = [
+        userId ? `previousResults_${userId}` : "previousResults_guest",
+        userId ? `recentSearches_${userId}` : "recentSearches_guest",
+        userId ? `temp_${userId}` : "temp_guest",
+      ];
+
+      tempKeys.forEach((key) => {
+        localStorage.removeItem(key);
+      });
+
+      // Also clear old reading data (keep only last 50)
+      const readKey = userId ? `reads_${userId}` : "reads_guest";
+      const readsData = localStorage.getItem(readKey);
+      if (readsData) {
+        try {
+          const reads = JSON.parse(readsData);
+          if (Array.isArray(reads) && reads.length > 50) {
+            const recentReads = reads.slice(-50);
+            localStorage.setItem(readKey, JSON.stringify(recentReads));
+          }
+        } catch (e) {
+          localStorage.removeItem(readKey);
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error clearing temporary data:", error);
+      return false;
+    }
+  };
+
+  // Clean up old storage data
+  const cleanupStorage = () => {
+    try {
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+
+      // Clean saved papers older than 1 month (keep max 1000)
+      const userLibraryKey = getUserLibraryKey();
+      const savedData = localStorage.getItem(userLibraryKey);
+      if (savedData) {
+        try {
+          const savedPapers = JSON.parse(savedData);
+          if (Array.isArray(savedPapers)) {
+            const recentPapers = savedPapers.filter((paper, index) => {
+              if (index < 1000) return true; // Keep first 1000 papers
+              const paperDate = new Date(paper.savedAt);
+              return paperDate > oneMonthAgo;
+            });
+
+            if (recentPapers.length < savedPapers.length) {
+              localStorage.setItem(
+                userLibraryKey,
+                JSON.stringify(recentPapers)
+              );
+            }
+          }
+        } catch (e) {
+          console.error("Error cleaning saved papers:", e);
+        }
+      }
+    } catch (error) {
+      console.error("Storage cleanup error:", error);
+    }
+  };
 
   const loadRecentSearches = () => {
     const searchesKey = userId
@@ -92,7 +170,7 @@ export default function SearchPage() {
     const resultsKey = userId
       ? `previousResults_${userId}`
       : "previousResults_guest";
-    const stored = localStorage.getItem(resultsKey);
+    const stored = sessionStorage.getItem(resultsKey); // Use sessionStorage instead
     if (stored) {
       try {
         const previousData = JSON.parse(stored);
@@ -115,10 +193,26 @@ export default function SearchPage() {
     const updatedSearches = [
       searchQuery.trim(),
       ...recentSearches.filter((s) => s !== searchQuery.trim()),
-    ].slice(0, 10); // Keep only last 10 searches
+    ].slice(0, 10);
 
-    setRecentSearches(updatedSearches);
-    localStorage.setItem(searchesKey, JSON.stringify(updatedSearches));
+    try {
+      localStorage.setItem(searchesKey, JSON.stringify(updatedSearches));
+      setRecentSearches(updatedSearches);
+    } catch (error: any) {
+      if (error.message && error.message.includes("quota")) {
+        clearTemporaryData();
+        // Try again after clearing
+        try {
+          localStorage.setItem(
+            searchesKey,
+            JSON.stringify(updatedSearches.slice(0, 5))
+          );
+          setRecentSearches(updatedSearches.slice(0, 5));
+        } catch (retryError) {
+          console.log("Could not save recent search after clearing");
+        }
+      }
+    }
   };
 
   const removeRecentSearch = (searchToRemove: string, e: React.MouseEvent) => {
@@ -128,8 +222,12 @@ export default function SearchPage() {
       : "recentSearches_guest";
     const updatedSearches = recentSearches.filter((s) => s !== searchToRemove);
 
-    setRecentSearches(updatedSearches);
-    localStorage.setItem(searchesKey, JSON.stringify(updatedSearches));
+    try {
+      localStorage.setItem(searchesKey, JSON.stringify(updatedSearches));
+      setRecentSearches(updatedSearches);
+    } catch (error) {
+      console.error("Error removing recent search:", error);
+    }
   };
 
   const clearRecentSearches = () => {
@@ -155,24 +253,48 @@ export default function SearchPage() {
       // Save to recent searches
       saveRecentSearch(finalQuery);
 
-      // Save current results for persistence
+      // Save current results with minimal data
       const resultsKey = userId
         ? `previousResults_${userId}`
         : "previousResults_guest";
-      localStorage.setItem(
-        resultsKey,
-        JSON.stringify({
-          query: finalQuery,
-          results: data.results || [],
-        })
-      );
+
+      try {
+        // Store minimal data to save space
+        const minimalResults = (data.results || [])
+          .map((paper: any) => ({
+            id: paper.id,
+            title: paper.display_name?.substring(0, 100) || "Untitled",
+            author: paper.authorships?.[0]?.author?.display_name || "Unknown",
+            year: paper.publication_year,
+          }))
+          .slice(0, 20); // Store only first 20 results
+
+        // Use sessionStorage to avoid localStorage quota issues
+        sessionStorage.setItem(
+          resultsKey,
+          JSON.stringify({
+            query: finalQuery,
+            results: minimalResults,
+            timestamp: Date.now(),
+          })
+        );
+      } catch (storageError: any) {
+        // If sessionStorage also fails, just continue without saving
+        console.log("Could not save search results");
+      }
 
       // Track search for gamification
       const searchesKey = userId ? `searches_${userId}` : "searches_guest";
       const currentSearches = parseInt(
         localStorage.getItem(searchesKey) || "0"
       );
-      localStorage.setItem(searchesKey, String(currentSearches + 1));
+
+      try {
+        localStorage.setItem(searchesKey, String(currentSearches + 1));
+      } catch (error) {
+        // If can't save search count, just continue
+        console.log("Could not save search count");
+      }
 
       // Add XP for searching
       const newXP = addXP(5, userId);
@@ -192,9 +314,18 @@ export default function SearchPage() {
       // Trigger storage update for real-time sync
       window.dispatchEvent(new Event("storage"));
     } catch (err: any) {
-      setError(
-        err.message || "Failed to fetch results. Please check your connection."
-      );
+      // Show user-friendly error
+      if (err.message && err.message.includes("quota")) {
+        setError(
+          "Storage is getting full. We cleared some temporary data. Please try again."
+        );
+        clearTemporaryData();
+      } else {
+        setError(
+          err.message ||
+            "Failed to fetch results. Please check your connection."
+        );
+      }
     } finally {
       setLoading(false);
       setShowRecentSearches(false);
@@ -202,17 +333,30 @@ export default function SearchPage() {
   };
 
   const handleNavigate = (id: string) => {
-    // Save current state before navigating
+    // Save minimal data to sessionStorage
     const resultsKey = userId
       ? `previousResults_${userId}`
       : "previousResults_guest";
-    localStorage.setItem(
-      resultsKey,
-      JSON.stringify({
-        query: query,
-        results: results,
-      })
-    );
+
+    try {
+      const minimalResults = results.slice(0, 10).map((paper: any) => ({
+        id: paper.id,
+        title: paper.display_name?.substring(0, 100) || "Untitled",
+        author: paper.authorships?.[0]?.author?.display_name || "Unknown",
+        year: paper.publication_year,
+      }));
+
+      sessionStorage.setItem(
+        resultsKey,
+        JSON.stringify({
+          query: query,
+          results: minimalResults,
+          timestamp: Date.now(),
+        })
+      );
+    } catch (error) {
+      console.log("Could not save navigation data");
+    }
 
     router.push(`/paper/${id}`);
   };
@@ -229,50 +373,70 @@ export default function SearchPage() {
 
     const newItem = {
       id: paper.id,
-      title: paper.display_name,
+      title: paper.display_name?.substring(0, 300) || "Untitled",
       author:
-        paper.authorships?.map((a: any) => a.author.display_name).join(", ") ||
-        "Unknown author",
+        paper.authorships
+          ?.map((a: any) => a.author.display_name)
+          .join(", ")
+          .substring(0, 200) || "Unknown author",
       year: paper.publication_year || "N/A",
-      journal: paper.host_venue?.display_name || "N/A",
+      journal: paper.host_venue?.display_name?.substring(0, 100) || "N/A",
       link:
         paper.primary_location?.source?.url ||
         paper.primary_location?.landing_page_url ||
         "",
-      abstract: paper.abstract || "",
-      tags: paper.tags || [],
+      abstract: paper.abstract ? paper.abstract.substring(0, 500) : "",
+      tags: paper.tags ? paper.tags.slice(0, 5) : [],
       savedAt: new Date().toISOString(),
     };
 
     const updated = [...existing, newItem];
-    localStorage.setItem(userLibraryKey, JSON.stringify(updated));
 
-    // Show toast notification instead of alert
-    showToast(
-      `✅ Paper saved to your ${user ? "personal" : "guest"} library! +10 XP`
-    );
+    try {
+      // Try to save to localStorage
+      localStorage.setItem(userLibraryKey, JSON.stringify(updated));
 
-    // Add XP and check achievements with user ID
-    const newXP = addXP(10, userId);
-    console.log(`+10 XP for saving. Total XP: ${newXP}`);
+      // Show success toast
+      showToast(
+        `✅ Paper saved to your ${user ? "personal" : "guest"} library! +10 XP`
+      );
 
-    // Check saved papers achievements
-    checkSavedAchievements(userId);
+      // Add XP and check achievements with user ID
+      const newXP = addXP(10, userId);
+      console.log(`+10 XP for saving. Total XP: ${newXP}`);
 
-    // Sync to cloud after saving
-    setTimeout(async () => {
-      try {
-        await syncToCloud();
-        triggerDataChange();
-        console.log("✅ Saved paper synced to cloud");
-      } catch (syncError) {
-        console.error("❌ Failed to sync saved paper:", syncError);
+      // Check saved papers achievements
+      checkSavedAchievements(userId);
+
+      // Sync to cloud after saving
+      setTimeout(async () => {
+        try {
+          await syncToCloud();
+          triggerDataChange();
+          console.log("✅ Saved paper synced to cloud");
+        } catch (syncError) {
+          console.error("❌ Failed to sync saved paper:", syncError);
+        }
+      }, 500);
+
+      // Force update achievements page
+      window.dispatchEvent(new Event("storage"));
+      window.dispatchEvent(new Event("dataChanged"));
+    } catch (error: any) {
+      // Check if it's a quota error
+      if (error.message && error.message.includes("quota")) {
+        showToast(
+          "⚠️ Storage is getting full! We cleared some temporary data. Please try saving again."
+        );
+
+        // Automatically clear temporary data
+        clearTemporaryData();
+      } else {
+        // Other error
+        showToast("❌ Could not save paper. Please try again.", "error");
       }
-    }, 500);
-
-    // Force update achievements page
-    window.dispatchEvent(new Event("storage"));
-    window.dispatchEvent(new Event("dataChanged"));
+      console.error("Error saving paper:", error);
+    }
   };
 
   const handleReadFullPaper = async (paper: any) => {
@@ -292,7 +456,12 @@ export default function SearchPage() {
       // Track read count with user-specific key
       const readKey = userId ? `reads_${userId}` : "reads_guest";
       const readCount = parseInt(localStorage.getItem(readKey) || "0") + 1;
-      localStorage.setItem(readKey, readCount.toString());
+
+      try {
+        localStorage.setItem(readKey, readCount.toString());
+      } catch (error) {
+        console.log("Could not save read count");
+      }
 
       // Track detailed reading data for analytics
       trackReading(paper);
@@ -321,7 +490,6 @@ export default function SearchPage() {
     const readKey = userId ? `reads_${userId}` : "reads_guest";
 
     try {
-      // Try to get existing reading data
       const existingData = localStorage.getItem(readKey);
       let readPapers: any[] = [];
 
@@ -331,7 +499,6 @@ export default function SearchPage() {
           if (Array.isArray(parsed)) {
             readPapers = parsed;
           }
-          // If it's a number (old format), we'll start fresh with array
         } catch (error) {
           // If parsing fails, start with empty array
           console.log("Starting fresh reading tracking array");
@@ -340,26 +507,26 @@ export default function SearchPage() {
 
       const readingRecord = {
         paperId: paper.id,
-        title: paper.display_name,
+        title: paper.display_name?.substring(0, 100) || "Untitled",
         readAt: new Date().toISOString(),
-        authors:
-          paper.authorships
-            ?.map((a: any) => a.author.display_name)
-            .join(", ") || "Unknown author",
-        journal: paper.host_venue?.display_name || "N/A",
-        year: paper.publication_year || "N/A",
-        url:
-          paper.primary_location?.landing_page_url ||
-          paper.primary_location?.source?.url ||
-          "",
-        abstract: paper.abstract || "",
       };
 
-      // Keep only the last 100 reads to prevent storage from growing too large
+      // Keep only the last 100 reads
       const updatedReads = [readingRecord, ...readPapers.slice(0, 99)];
-      localStorage.setItem(readKey, JSON.stringify(updatedReads));
 
-      console.log(`📖 Reading tracked: ${paper.display_name}`);
+      // Try to save, but don't crash if storage is full
+      try {
+        localStorage.setItem(readKey, JSON.stringify(updatedReads));
+        console.log(`📖 Reading tracked: ${paper.display_name}`);
+      } catch (error) {
+        console.log("Could not save reading data");
+        // If storage is full, keep only the new record
+        try {
+          localStorage.setItem(readKey, JSON.stringify([readingRecord]));
+        } catch (e) {
+          // If still fails, give up
+        }
+      }
     } catch (error) {
       console.error("Error tracking reading:", error);
     }
@@ -405,7 +572,7 @@ export default function SearchPage() {
               Research Paper Search
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Discover academic papers. Search by topic, author, or keywords.
+              Discover academic papers. Search by topic or keywords.
             </p>
             {user && (
               <p className="text-sm text-[#49BBBD] mt-2 flex items-center justify-center gap-2">
@@ -434,7 +601,7 @@ export default function SearchPage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={() => setShowRecentSearches(true)}
-                placeholder="Search for research papers, authors, topics, or keywords..."
+                placeholder="Search for research papers, topics or keywords..."
                 className="w-full pl-12 pr-32 py-6 bg-card border-2 border-border rounded-2xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#49BBBD] focus:border-[#49BBBD] transition-all duration-300 shadow-sm text-lg"
               />
               <Button
