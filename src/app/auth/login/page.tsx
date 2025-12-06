@@ -142,7 +142,6 @@ export default function LoginPage() {
               <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
               <p className="text-gray-600 mt-2">Log in to your account</p>
             </motion.div>
-
             {/* Messages */}
             {error && (
               <motion.div
@@ -153,7 +152,6 @@ export default function LoginPage() {
                 <p className="text-red-600 text-sm text-center">{error}</p>
               </motion.div>
             )}
-
             {success && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -166,7 +164,6 @@ export default function LoginPage() {
                 </p>
               </motion.div>
             )}
-
             {/* Google Login Button */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -194,7 +191,6 @@ export default function LoginPage() {
                 </span>
               </button>
             </motion.div>
-
             {/* Divider */}
             <div className="relative mb-6">
               <div className="absolute inset-0 flex items-center">
@@ -206,7 +202,6 @@ export default function LoginPage() {
                 </span>
               </div>
             </div>
-
             {/* Form Fields */}
             <div className="space-y-5">
               {/* Email Field */}
@@ -261,6 +256,16 @@ export default function LoginPage() {
               </motion.div>
             </div>
 
+            {/* // Add this near your login form submit button: */}
+            <div className="text-center">
+              <Link
+                href="/forgot-password"
+                className="text-sm text-[#49BBBD] hover:underline"
+              >
+                Forgot your password?
+              </Link>
+            </div>
+
             {/* Submit Button */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -289,7 +294,6 @@ export default function LoginPage() {
                 )}
               </button>
             </motion.div>
-
             {/* Sign Up Link */}
             <motion.div
               initial={{ opacity: 0 }}
