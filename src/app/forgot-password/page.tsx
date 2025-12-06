@@ -65,7 +65,7 @@ export default function ForgotPasswordPage() {
               variant="ghost"
               size="sm"
               className="absolute left-4 top-4"
-              onClick={() => router.push("/login")}
+              onClick={() => router.push("auth/login")}
             >
               <ArrowLeft className="w-4 h-4 mr-1" />
               Back
