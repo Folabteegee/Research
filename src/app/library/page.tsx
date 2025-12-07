@@ -10,12 +10,6 @@ import {
   Calendar,
   Building,
   ArrowRight,
-  Brain,
-  Library,
-  Filter,
-  Download,
-  Sparkles,
-  RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
@@ -33,13 +27,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 export default function LibraryPage() {
   const { user } = useAuth();
@@ -56,7 +43,7 @@ export default function LibraryPage() {
     return user ? `savedPapers_${user.uid}` : "savedPapers_guest";
   };
 
-  // Load papers with sync awareness - FIXED: Added cloud sync integration
+  // Load papers with sync awareness
   useEffect(() => {
     const loadPapers = () => {
       if (user) {
@@ -97,7 +84,7 @@ export default function LibraryPage() {
     };
   }, [user]);
 
-  // Update sync status - FIXED: Better sync status tracking
+  // Update sync status
   useEffect(() => {
     if (isSyncing) {
       setSyncStatus("syncing");
@@ -121,7 +108,7 @@ export default function LibraryPage() {
     const userLibraryKey = getUserLibraryKey();
     localStorage.setItem(userLibraryKey, JSON.stringify(updated));
 
-    // Sync after removal - FIXED: Better error handling
+    // Sync after removal
     setTimeout(async () => {
       try {
         await syncToCloud();
@@ -141,7 +128,7 @@ export default function LibraryPage() {
       const userLibraryKey = getUserLibraryKey();
       localStorage.removeItem(userLibraryKey);
 
-      // Sync after clearing - FIXED: Better error handling
+      // Sync after clearing
       setTimeout(async () => {
         try {
           await syncToCloud();
@@ -154,18 +141,7 @@ export default function LibraryPage() {
     }
   };
 
-  const handleExportLibrary = () => {
-    const dataStr = JSON.stringify(savedPapers, null, 2);
-    const dataBlob = new Blob([dataStr], { type: "application/json" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(dataBlob);
-    link.download = `research-library-${
-      new Date().toISOString().split("T")[0]
-    }.json`;
-    link.click();
-  };
-
-  // Enhanced sync functions - FIXED: Better sync handling
+  // Enhanced sync functions
   const enhancedSyncToCloud = async () => {
     setSyncStatus("syncing");
     try {
@@ -194,9 +170,9 @@ export default function LibraryPage() {
   // Filter and search papers
   const filteredPapers = savedPapers.filter((paper) => {
     const matchesSearch =
-      paper.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      paper.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      paper.journal.toLowerCase().includes(searchQuery.toLowerCase());
+      paper.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      paper.author?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      paper.journal?.toLowerCase().includes(searchQuery.toLowerCase());
 
     if (activeFilter === "recent") {
       const currentYear = new Date().getFullYear();
@@ -235,8 +211,6 @@ export default function LibraryPage() {
     }
   };
 
-  const userInitial = user?.email ? user.email.charAt(0).toUpperCase() : "U";
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-hidden">
       {/* Enhanced Background */}
@@ -246,7 +220,7 @@ export default function LibraryPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-[#49BBBD]/5 via-transparent to-transparent"></div>
       </div>
 
-      <div className="relative z-10 min-h-screen">
+      <div className="relative z-10 min-h-screen pb-24">
         <div className="p-6 max-w-7xl mx-auto">
           {/* Header */}
           <motion.header
@@ -266,7 +240,6 @@ export default function LibraryPage() {
                       variant="secondary"
                       className="bg-[#49BBBD]/10 text-[#49BBBD] border-[#49BBBD]/20"
                     >
-                      <Sparkles className="w-3 h-3 mr-1" />
                       {savedPapers.length} items
                     </Badge>
                   </div>
@@ -276,7 +249,7 @@ export default function LibraryPage() {
                 </div>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <Button asChild className="bg-[#49BBBD] hover:bg-[#3aa8a9]">
                   <Link href="/search">
                     <Search className="mr-2 h-4 w-4" />
@@ -284,30 +257,16 @@ export default function LibraryPage() {
                   </Link>
                 </Button>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline">
-                      <Filter className="mr-2 h-4 w-4" />
-                      Actions
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={handleExportLibrary}>
-                      <Download className="mr-2 h-4 w-4" />
-                      Export Library
-                    </DropdownMenuItem>
-
-                    {savedPapers.length > 0 && (
-                      <DropdownMenuItem
-                        onClick={handleRemoveAll}
-                        className="text-red-600 dark:text-red-400"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Clear All
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {savedPapers.length > 0 && (
+                  <Button
+                    variant="outline"
+                    onClick={handleRemoveAll}
+                    className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-900/20 whitespace-nowrap"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Clear All
+                  </Button>
+                )}
               </div>
             </div>
           </motion.header>
@@ -332,26 +291,16 @@ export default function LibraryPage() {
                       />
                     </div>
 
-                    <Tabs defaultValue="all" className="w-full lg:w-auto">
+                    <Tabs
+                      defaultValue="all"
+                      className="w-full lg:w-auto"
+                      value={activeFilter}
+                      onValueChange={setActiveFilter}
+                    >
                       <TabsList className="bg-background/50 border border-border/50">
-                        <TabsTrigger
-                          value="all"
-                          onClick={() => setActiveFilter("all")}
-                        >
-                          All Papers
-                        </TabsTrigger>
-                        <TabsTrigger
-                          value="recent"
-                          onClick={() => setActiveFilter("recent")}
-                        >
-                          Recent
-                        </TabsTrigger>
-                        <TabsTrigger
-                          value="oldest"
-                          onClick={() => setActiveFilter("oldest")}
-                        >
-                          Classic
-                        </TabsTrigger>
+                        <TabsTrigger value="all">All Papers</TabsTrigger>
+                        <TabsTrigger value="recent">Recent</TabsTrigger>
+                        <TabsTrigger value="oldest">Classic</TabsTrigger>
                       </TabsList>
                     </Tabs>
 
@@ -420,7 +369,7 @@ export default function LibraryPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"
             >
               {filteredPapers.map((paper, index) => (
                 <motion.div
