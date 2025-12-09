@@ -464,33 +464,10 @@ export default function CollectionsPage() {
               </CardDescription>
             </div>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="opacity-100 group-hover:opacity-100 transition-opacity"
-              >
-                <MoreHorizontal size={16} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => setEditingCollection(collection)}
-              >
-                <Edit3 className="w-4 h-4 mr-2" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => deleteCollection(collection.id)}
-                className="text-red-600 dark:text-red-400"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Trash2
+            onClick={() => deleteCollection(collection.id)}
+            className="text-red-600 dark:text-red-400 w-4 h-4 mr-2"
+          />
         </div>
       </CardHeader>
       <CardContent className="pb-3">
